@@ -37,6 +37,19 @@ java {
   targetCompatibility = JavaVersion.VERSION_17
 }
 
+spotless {
+  java {
+    googleJavaFormat()
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
+
+  kotlinGradle {
+    target("*.gradle.kts")
+    ktfmt()
+  }
+}
+
 tasks.withType<ShadowJar> {
   archiveClassifier.set("fat")
   manifest {
