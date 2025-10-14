@@ -1,10 +1,9 @@
 # Project title
 
-- [Author 1](mailto:author1@studio.unibo.it)
-- [Author 2](mailto:author2@studio.unibo.it)
-- [Author 3](mailto:author3@studio.unibo.it)
+- [Foschi Giacomo](mailto:giacomo.foschi3@studio.unibo.it)
+- [Terenzi Mirco](mailto:mirco.terenzi@studio.unibo.it)
 
-### AI Disclaimer (if needed)
+### AI Disclaimer @TODO
 
 ```
 "During the preparation of this work, the author(s) used [NAME TOOL /
@@ -14,25 +13,32 @@ content as needed and take(s) full responsibility for the content of the
 final report/artifact."
 ```
 
-## Abstract
+## Abstract @TODO
 
 Brief description of the project, its goals, and its achievements.
 
 ## Concept
 
-Here you should explain:
-- The type of product developed with that project, for example (non-exhaustive):
-    - Application (with GUI, be it mobile, web, or desktop)
-    - Command-line application (CLI could be used by humans or scripts)
-    - Library
-    - Web-service(s)
+Distributed Donkey Kong is a real-time multiplayer game in which two players compete against each other to complete
+a platforming level, drawing inspiration from the classic arcade
+game [Donkey Kong (1981)](https://en.wikipedia.org/wiki/Donkey_Kong_(1981_video_game)). The developed product is a
+desktop application that enables users to connect online and play against each other in real time. Players race to reach
+the top of the level while avoiding obstacles, and the first player to do so is declared the winner.
 
-- Use case collection
-    - _where_ are the users?
-    - _when_ and _how frequently_ do they interact with the system?
-    - _how_ do they _interact_ with the system? which _devices_ are they using?
-    - does the system need to _store_ user's __data__? _which_? _where_?
-    - most likely, there will be _multiple_ __roles__
+### Use case collection
+
+Users are geographically distributed and connect via a personal computer (PC, Mac or Linux). They interact with the
+system via the GUI during setup or keyboard controls during the game. A game session is expected to last under two
+minutes, during which time there will be continuous, high-frequency interaction as users send input commands to control
+their characters in real time.
+
+As the game does not require any persistent data, only temporary data for the duration of the match, the system does not
+need to store any user data on a server or database. However, a large amount of data will be exchanged between players
+during a game session, including information on player positions, updates on the game state, and input commands.
+
+The system will comprise three main roles: host, client and spectator. The host is the player who creates the game
+session, while the client is the player who joins it. Spectators are users who can watch the game session without
+participating.
 
 ## Requirements
 
