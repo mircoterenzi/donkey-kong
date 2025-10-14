@@ -5,14 +5,14 @@ plugins {
   java
   application
   id("com.github.johnrengelman.shadow") version "7.1.2"
+  id("com.diffplug.spotless") version "8.0.0"
 }
 
 group = "it.unibo"
+
 version = "1.0.0-SNAPSHOT"
 
-repositories {
-  mavenCentral()
-}
+repositories { mavenCentral() }
 
 val vertxVersion = "5.0.4"
 val junitJupiterVersion = "5.9.1"
@@ -20,9 +20,7 @@ val junitJupiterVersion = "5.9.1"
 val mainVerticleName = "it.unibo.donkeykong.MainVerticle"
 val launcherClassName = "io.vertx.launcher.application.VertxApplication"
 
-application {
-  mainClass.set(launcherClassName)
-}
+application { mainClass.set(launcherClassName) }
 
 dependencies {
   implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))
@@ -52,19 +50,13 @@ spotless {
 
 tasks.withType<ShadowJar> {
   archiveClassifier.set("fat")
-  manifest {
-    attributes(mapOf("Main-Verticle" to mainVerticleName))
-  }
+  manifest { attributes(mapOf("Main-Verticle" to mainVerticleName)) }
   mergeServiceFiles()
 }
 
 tasks.withType<Test> {
   useJUnitPlatform()
-  testLogging {
-    events = setOf(PASSED, SKIPPED, FAILED)
-  }
+  testLogging { events = setOf(PASSED, SKIPPED, FAILED) }
 }
 
-tasks.withType<JavaExec> {
-  args = listOf(mainVerticleName)
-}
+tasks.withType<JavaExec> { args = listOf(mainVerticleName) }
