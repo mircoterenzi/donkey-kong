@@ -42,22 +42,32 @@ participating.
 
 ## Requirements
 
-- The requirements must explain __what__ (not how) the software being produced should do.
-    * you should not focus on the particular problems, but exclusively on what you want the application to do.
+### Glossary
 
-- Requirements must be clearly identified, and possibly numbered
+| Term   | Definition                                                                                          |
+|:-------|:----------------------------------------------------------------------------------------------------|
+| Barrel | A dynamic obstacle that deals damage when a player comes into contact with it.                      |
+| Ladder | A climbable object in the game level that enables players to move vertically regardless of gravity. |
 
-- Requirements are divided into:
-    - **Functional**: some functionality the software should provide to the user
-    - **Non-functional**: requirements that do not directly concern behavioural aspects, such as consistency, availability, etc.
-    - **Implementation**: constrain the entire phase of system realization, for instance by requiring the use of a specific programming language and/or a specific software tool
-        + these constraints should be adequately justified by political / economic / administrative reasons...
-        + ... otherwise, implementation choices should emerge _as a consequence of_ design
+### Functional requirements
 
-- If there are domain-specific terms, these should be explained in a glossary
+| ID  | Requirement                                                                                                                                                    | Acceptance Criteria |
+|:----|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------|
+| FR1 | The system must enable users to start a multiplayer session either by hosting or by connecting to an active game via a network address.                        | @TODO               |
+| FR2 | The system must enable real-time, simultaneous control of two competing players (e.g., horizontal movement, jumping and climbing ladders).                     |                     |
+| FR3 | The system must allow additional users to join an active session as spectators, providing them with a view, but preventing any interactive input.              |                     |
+| FR4 | As long as the host remains online, the system must allow a disconnected player to attempt to rejoin the active session.                                       |                     |
+| FR5 | The system must spawn and manage barrels, determining if a player contacts a barrel registering a lost life. If a player loses all lives, they are eliminated. |                     |
+| FR6 | The system must track each player's progress, announce the winner when they complete a level, notify all connected users of the outcome, and end the session.  |                     |
+| FR7 | The system must apply the same gravity model consistently to all players and dynamic entities, except when climbing ladders.                                   |                     |
 
-- Each requirement must have its own __acceptance criteria__
-    + these will be important for the validation phase
+### Non-functional requirements
+
+| ID   | Requirement                                                                                                                                           | Acceptance Criteria                                                                                                                        |
+|:-----|:------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------|
+| NFR1 | The system must minimize the visual delay (input lag) between a player pressing a control key and the character beginning the action on their screen. | The visual delay between pressing a control key and the start of the character's movement must be below 50ms.                              |
+| NFR2 | The system must enforce state consistency across all players, ensuring that the Host resolves and prevents critical discrepancies.                    | In a test scenario where network delay causes conflicting results, the host's determination of the winner is accepted by the other player. |
+| NFR3 | The application must maintain a consistent and fully functional game experience regardless of the host operating system (Windows, macOS, or Linux).   | The game successfully builds and runs on all three target operating systems.                                                               |
 
 ## Design
 
@@ -172,7 +182,7 @@ Ideally, the design should be the same, regardless of the technological choices 
     * e.g. token verification,
     * e.g. data encryption, etc.
 
---- 
+---
 <!-- Riparti da qui  -->
 
 ## Implementation
