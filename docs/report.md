@@ -1,4 +1,4 @@
-# Project title
+# Donkey Kong Rush
 
 - [Foschi Giacomo](mailto:giacomo.foschi3@studio.unibo.it)
 - [Terenzi Mirco](mailto:mirco.terenzi@studio.unibo.it)
