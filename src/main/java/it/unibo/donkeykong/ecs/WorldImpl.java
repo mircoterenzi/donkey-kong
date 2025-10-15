@@ -2,7 +2,7 @@ package it.unibo.donkeykong.ecs;
 
 import it.unibo.donkeykong.ecs.component.Component;
 import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.ecs.systems.System;
+import it.unibo.donkeykong.ecs.systems.GameSystem;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -11,7 +11,7 @@ public class WorldImpl implements World {
 
   private int nextEntityId;
   private final Map<Entity, Set<Component>> componentsByEntity;
-  private final List<System> systems;
+  private final List<GameSystem> systems;
 
   /** Implementation of the Entity interface. */
   private record EntityImpl(int id, World world) implements Entity {
@@ -90,7 +90,7 @@ public class WorldImpl implements World {
   }
 
   @Override
-  public void addSystem(System system) {
+  public void addSystem(GameSystem system) {
     this.systems.add(system);
   }
 

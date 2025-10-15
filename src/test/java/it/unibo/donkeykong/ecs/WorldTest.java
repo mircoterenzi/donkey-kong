@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import it.unibo.donkeykong.ecs.component.Component;
 import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.ecs.systems.System;
+import it.unibo.donkeykong.ecs.systems.GameSystem;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ public class WorldTest {
   private static final class AnotherComponent implements Component {}
 
   /** A simple test system that records the last delta time and world it was updated with. */
-  private static class TestSystem implements System {
+  private static class TestSystem implements GameSystem {
     private long lastDeltaTime = -1;
     private World lastWorld = null;
     private int updateCount = 0;

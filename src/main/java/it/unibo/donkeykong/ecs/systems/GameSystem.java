@@ -7,7 +7,7 @@ import it.unibo.donkeykong.ecs.World;
  * responsible for processing entities that possess specific components, applying game logic, and
  * updating the state of those entities accordingly.
  */
-public interface System {
+public interface GameSystem {
   /**
    * Updates the system, processing all relevant entities.
    *

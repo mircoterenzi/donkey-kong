@@ -2,7 +2,7 @@ package it.unibo.donkeykong.ecs;
 
 import it.unibo.donkeykong.ecs.component.Component;
 import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.ecs.systems.System;
+import it.unibo.donkeykong.ecs.systems.GameSystem;
 import java.util.Set;
 
 /**
@@ -58,11 +58,11 @@ public interface World {
   Set<Entity> getEntitiesWithComponent(Class<? extends Component> componentClass);
 
   /**
-   * Adds a {@link System} to the world, which will be updated during the world's update cycle.
+   * Adds a {@link GameSystem} to the world, which will be updated during the world's update cycle.
    *
    * @param system the system to add
    */
-  void addSystem(System system);
+  void addSystem(GameSystem system);
 
   /**
    * Updates the world state, including all entities and their components.
