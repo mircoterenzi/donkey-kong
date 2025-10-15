@@ -40,4 +40,12 @@ public interface Entity {
    * @return this entity
    */
   Entity addComponent(Component component);
+
+  /**
+   * Removes a {@link Component} from this entity.
+   *
+   * @param component the component to remove
+   * @return this entity
+   */
+  Entity removeComponent(Component component);
 }
