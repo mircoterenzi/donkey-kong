@@ -3,15 +3,11 @@
 - [Foschi Giacomo](mailto:giacomo.foschi3@studio.unibo.it)
 - [Terenzi Mirco](mailto:mirco.terenzi@studio.unibo.it)
 
-### AI Disclaimer @TODO
+### AI Disclaimer
 
-```
-"During the preparation of this work, the author(s) used [NAME TOOL /
-SERVICE] to [REASON].
-After using this tool/service, the author(s) reviewed and edited the
-content as needed and take(s) full responsibility for the content of the
-final report/artifact."
-```
+During the preparation of this work, the authors used GitHub Copilot and DeepL to assist with writing the Javadoc and to
+check the grammar of this report. After using this tool/service, the authors reviewed and edited the content as
+needed and take(s) full responsibility for the content of the final report/artifact.
 
 ## Abstract @TODO
 
