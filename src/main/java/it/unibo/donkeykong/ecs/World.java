@@ -2,6 +2,7 @@ package it.unibo.donkeykong.ecs;
 
 import it.unibo.donkeykong.ecs.component.Component;
 import it.unibo.donkeykong.ecs.entity.Entity;
+import it.unibo.donkeykong.ecs.systems.System;
 import java.util.Set;
 
 /**
