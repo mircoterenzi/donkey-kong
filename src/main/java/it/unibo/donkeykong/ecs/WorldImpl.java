@@ -45,6 +45,13 @@ public class WorldImpl implements World {
       this.world.removeComponentFromEntity(this, component);
       return this;
     }
+
+    @Override
+    public Entity updateComponent(Component oldComponent, Component newComponent) {
+      this.world.removeComponentFromEntity(this, oldComponent);
+      this.world.addComponentToEntity(this, newComponent);
+      return this;
+    }
   }
 
   /** Constructor for WorldImpl. */
