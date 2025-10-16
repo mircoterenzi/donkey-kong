@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import it.unibo.donkeykong.ecs.component.Component;
 import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.ecs.systems.GameSystem;
+import it.unibo.donkeykong.ecs.system.GameSystem;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

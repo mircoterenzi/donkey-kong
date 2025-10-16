@@ -1,4 +1,4 @@
-package it.unibo.donkeykong.ecs.systems;
+package it.unibo.donkeykong.ecs.system;
 
 import it.unibo.donkeykong.ecs.World;
 
