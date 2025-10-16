@@ -88,7 +88,7 @@ cmake-buildTool-debug/
 
 # IntelliJ
 /out/
-.build/
+build/
 .idea/
 
 # mpeltonen/sbt-idea plugin
