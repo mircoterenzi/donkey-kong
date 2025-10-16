@@ -6,4 +6,4 @@ package it.unibo.donkeykong.ecs.component;
  * @param x the x-coordinate
  * @param y the y-coordinate
  */
-public record Position(int x, int y) implements Component {}
+public record Position(double x, double y) implements Component {}

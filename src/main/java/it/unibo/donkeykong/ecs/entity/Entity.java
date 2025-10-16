@@ -48,4 +48,12 @@ public interface Entity {
    * @return this entity
    */
   Entity removeComponent(Component component);
+
+  /**
+   * Updates an existing {@link Component} with a new one.
+   *
+   * @param oldComponent the component to be replaced
+   * @param newComponent the new component to add
+   */
+  Entity updateComponent(Component oldComponent, Component newComponent);
 }

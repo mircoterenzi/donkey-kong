@@ -6,4 +6,4 @@ package it.unibo.donkeykong.ecs.component;
  * @param dx the change in x-coordinate
  * @param dy the change in y-coordinate
  */
-public record Velocity(int dx, int dy) implements Component {}
+public record Velocity(double dx, double dy) implements Component {}
