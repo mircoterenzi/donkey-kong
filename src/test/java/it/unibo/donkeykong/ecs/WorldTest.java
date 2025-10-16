@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import it.unibo.donkeykong.ecs.component.Component;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import it.unibo.donkeykong.ecs.system.GameSystem;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,7 @@ public class WorldTest {
     }
 
     public Set<Entity> getEntitiesToProcess(World currentWorld) {
-      return currentWorld.getEntitiesWithComponent(TestComponent.class);
+      return currentWorld.getEntitiesWithComponents(List.of(TestComponent.class));
     }
   }
 
@@ -67,12 +68,12 @@ public class WorldTest {
     TestComponent comp = new TestComponent();
     world.addComponentToEntity(entity, comp);
 
-    Set<Entity> entitiesWithComp = world.getEntitiesWithComponent(TestComponent.class);
+    Set<Entity> entitiesWithComp = world.getEntitiesWithComponents(List.of(TestComponent.class));
     assertTrue(entitiesWithComp.contains(entity));
 
     world.removeEntity(entity);
 
-    entitiesWithComp = world.getEntitiesWithComponent(TestComponent.class);
+    entitiesWithComp = world.getEntitiesWithComponents(List.of(TestComponent.class));
     assertFalse(entitiesWithComp.contains(entity));
     assertTrue(world.getComponentsOfEntity(entity).isEmpty());
   }
@@ -130,13 +131,14 @@ public class WorldTest {
     world.addComponentToEntity(e2, new TestComponent());
     world.addComponentToEntity(e3, new AnotherComponent());
 
-    Set<Entity> entitiesWithTest = world.getEntitiesWithComponent(TestComponent.class);
+    Set<Entity> entitiesWithTest = world.getEntitiesWithComponents(List.of(TestComponent.class));
     assertEquals(2, entitiesWithTest.size());
     assertTrue(entitiesWithTest.contains(e1));
     assertTrue(entitiesWithTest.contains(e2));
     assertFalse(entitiesWithTest.contains(e3));
 
-    Set<Entity> entitiesWithAnother = world.getEntitiesWithComponent(AnotherComponent.class);
+    Set<Entity> entitiesWithAnother =
+        world.getEntitiesWithComponents(List.of(AnotherComponent.class));
     assertEquals(2, entitiesWithAnother.size());
     assertTrue(entitiesWithAnother.contains(e1));
     assertTrue(entitiesWithAnother.contains(e3));

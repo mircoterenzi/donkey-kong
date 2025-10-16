@@ -82,9 +82,12 @@ public class WorldImpl implements World {
   }
 
   @Override
-  public Set<Entity> getEntitiesWithComponent(Class<? extends Component> componentClass) {
+  public Set<Entity> getEntitiesWithComponents(List<Class<? extends Component>> componentClass) {
     return this.componentsByEntity.entrySet().stream()
-        .filter(entry -> entry.getValue().stream().anyMatch(componentClass::isInstance))
+        .filter(
+            entry ->
+                componentClass.stream()
+                    .allMatch(cc -> entry.getValue().stream().anyMatch(cc::isInstance)))
         .map(Map.Entry::getKey)
         .collect(Collectors.toSet());
   }

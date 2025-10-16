@@ -3,6 +3,7 @@ package it.unibo.donkeykong.ecs;
 import it.unibo.donkeykong.ecs.component.Component;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import it.unibo.donkeykong.ecs.system.GameSystem;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -55,7 +56,7 @@ public interface World {
    * @param componentClass the class of the component to filter entities by
    * @return a set of entities that have the specified component
    */
-  Set<Entity> getEntitiesWithComponent(Class<? extends Component> componentClass);
+  Set<Entity> getEntitiesWithComponents(List<Class<? extends Component>> componentClass);
 
   /**
    * Adds a {@link GameSystem} to the world, which will be updated during the world's update cycle.
