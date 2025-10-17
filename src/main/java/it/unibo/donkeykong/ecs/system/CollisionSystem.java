@@ -9,10 +9,6 @@ import java.util.Set;
 /** CollisionSystem handles collision detection and response between entities in the game world. */
 public class CollisionSystem implements GameSystem {
 
-  private static double distance(Position p1, Position p2) {
-    return Math.sqrt(Math.pow(p1.x() - p2.x(), 2) + Math.pow(p1.y() - p2.y(), 2));
-  }
-
   private static double clampOnRange(double value, double min, double max) {
     return Math.max(min, Math.min(value, max));
   }
@@ -46,7 +42,7 @@ public class CollisionSystem implements GameSystem {
       CircleCollider collider,
       Position otherPosition,
       CircleCollider otherCollider) {
-    return distance(position, otherPosition) <= (collider.radius() + otherCollider.radius());
+    return position.distanceFrom(otherPosition) <= (collider.radius() + otherCollider.radius());
   }
 
   private static boolean checkCollisionRectangleRectangle(
