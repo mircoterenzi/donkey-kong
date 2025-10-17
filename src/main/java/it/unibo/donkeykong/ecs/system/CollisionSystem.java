@@ -58,18 +58,22 @@ public class CollisionSystem implements GameSystem {
 
   private boolean isColliding(
       Position position, Collider collider, Position otherPosition, Collider otherCollider) {
-    if (collider instanceof RectangleCollider && otherCollider instanceof RectangleCollider) {
+    if (collider instanceof RectangleCollider rectangleCollider
+        && otherCollider instanceof RectangleCollider otherRectangleCollider) {
       return checkCollisionRectangleRectangle(
-          position, (RectangleCollider) collider, otherPosition, (RectangleCollider) otherCollider);
-    } else if (collider instanceof RectangleCollider && otherCollider instanceof CircleCollider) {
+          position, rectangleCollider, otherPosition, otherRectangleCollider);
+    } else if (collider instanceof RectangleCollider rectangleCollider
+        && otherCollider instanceof CircleCollider circleCollider) {
       return checkCollisionRectangleCircle(
-          position, (RectangleCollider) collider, otherPosition, (CircleCollider) otherCollider);
-    } else if (collider instanceof CircleCollider && otherCollider instanceof RectangleCollider) {
+          position, rectangleCollider, otherPosition, circleCollider);
+    } else if (collider instanceof CircleCollider circleCollider
+        && otherCollider instanceof RectangleCollider rectangleCollider) {
       return checkCollisionRectangleCircle(
-          otherPosition, (RectangleCollider) otherCollider, position, (CircleCollider) collider);
-    } else if (collider instanceof CircleCollider && otherCollider instanceof CircleCollider) {
+          otherPosition, rectangleCollider, position, circleCollider);
+    } else if (collider instanceof CircleCollider circleCollider
+        && otherCollider instanceof CircleCollider otherCircleCollider) {
       return checkCollisionCircleCircle(
-          position, (CircleCollider) collider, otherPosition, (CircleCollider) otherCollider);
+          position, circleCollider, otherPosition, otherCircleCollider);
     } else {
       throw new IllegalArgumentException("One or more unknown collider types");
     }
