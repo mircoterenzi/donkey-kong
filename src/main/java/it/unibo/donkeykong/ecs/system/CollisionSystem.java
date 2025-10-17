@@ -6,7 +6,7 @@ import it.unibo.donkeykong.ecs.entity.Entity;
 import java.util.List;
 import java.util.Set;
 
-/** CollisionSystem handles collision detection and response between entities in the game world. */
+/** CollisionSystem handles collision detection between entities in the game world. */
 public class CollisionSystem implements GameSystem {
 
   private static double clampOnRange(double value, double min, double max) {
