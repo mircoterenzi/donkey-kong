@@ -50,11 +50,10 @@ public class CollisionSystem implements GameSystem {
       RectangleCollider collider,
       Position otherPosition,
       RectangleCollider otherCollider) {
-    return !(position.x() + collider.width() / 2.0 < otherPosition.x() - otherCollider.width() / 2.0
-        || position.x() - collider.width() / 2.0 > otherPosition.x() + otherCollider.width() / 2.0
-        || position.y() + collider.height() / 2.0 < otherPosition.y() - otherCollider.height() / 2.0
-        || position.y() - collider.height() / 2.0
-            > otherPosition.y() + otherCollider.height() / 2.0);
+    return Math.abs(position.x() - otherPosition.x())
+            <= (collider.width() + otherCollider.width()) / 2.0
+        && Math.abs(position.y() - otherPosition.y())
+            <= (collider.height() + otherCollider.height()) / 2.0;
   }
 
   private boolean isColliding(
