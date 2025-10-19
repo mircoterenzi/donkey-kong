@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+/** MovementSystem updates the position of entities based on their velocity over time. */
 public class MovementSystem implements GameSystem {
 
   @Override
