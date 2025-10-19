@@ -13,7 +13,7 @@ public class CollisionSystem implements GameSystem {
     return Math.max(min, Math.min(value, max));
   }
 
-  /* Credits to "2D Game CollisionEvent Detection" by Thomas Schwarzl */
+  /* Credits to "2D Game Collision Detection" by Thomas Schwarzl */
   private static Position clampOnRectangle(
       Position position, Position rectanglePosition, RectangleCollider rectangleCollider) {
     double halfWidth = rectangleCollider.width() / 2.0;
