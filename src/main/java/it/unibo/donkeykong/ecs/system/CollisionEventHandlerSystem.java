@@ -30,7 +30,6 @@ public abstract class CollisionEventHandlerSystem implements GameSystem {
       CollisionEvent event = entity.getComponent(CollisionEvent.class).orElseThrow();
       collisionLogic.accept(entity);
       world.removeComponentFromEntity(entity, event);
-      world.removeComponentFromEntity(event.otherEntity(), event);
     }
   }
 }
