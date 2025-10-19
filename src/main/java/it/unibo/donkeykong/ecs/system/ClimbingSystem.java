@@ -20,8 +20,7 @@ public class ClimbingSystem extends CollisionEventHandlerSystem {
             Position entityPos = entity.getComponent(Position.class).orElseThrow();
             Position otherPos = otherEntity.getComponent(Position.class).orElseThrow();
             if (entityPos.x() == otherPos.x()) {
-              Gravity gravity = entity.getComponent(Gravity.class).orElseThrow();
-              entity.removeComponent(gravity);
+              entity.getComponent(Gravity.class).ifPresent(entity::removeComponent);
             }
           }
         });

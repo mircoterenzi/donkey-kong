@@ -18,7 +18,7 @@ public class HealthSystem extends CollisionEventHandlerSystem {
           Entity otherEntity =
               entity.getComponent(CollisionEvent.class).orElseThrow().otherEntity();
           if (otherEntity.getComponent(Damage.class).isPresent()) {
-            Damage damage = otherEntity.getComponent(Damage.class).orElseThrow();
+            Damage damage = otherEntity.getComponent(Damage.class).get();
             world.removeComponentFromEntity(entity, health);
             entity.addComponent(
                 new Health(
