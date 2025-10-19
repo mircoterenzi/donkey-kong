@@ -4,6 +4,7 @@ import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.component.CollisionEvent;
 import it.unibo.donkeykong.ecs.component.Component;
 import it.unibo.donkeykong.ecs.entity.Entity;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -17,13 +18,13 @@ public abstract class CollisionEventHandlerSystem implements GameSystem {
    * entities.
    *
    * @param world the game world
-   * @param componentsRequired the list of components required for the entities to be processed
+   * @param components the list of components required for the entities to be processed
    * @param collisionLogic the logic to apply on collision
    */
   protected void handleCollision(
-      World world,
-      List<Class<? extends Component>> componentsRequired,
-      Consumer<Entity> collisionLogic) {
+      World world, List<Class<? extends Component>> components, Consumer<Entity> collisionLogic) {
+    List<Class<? extends Component>> componentsRequired = new ArrayList<>(components);
+    componentsRequired.add(CollisionEvent.class);
     Set<Entity> targetEntities = world.getEntitiesWithComponents(componentsRequired);
     for (Entity entity : targetEntities) {
       CollisionEvent event = entity.getComponent(CollisionEvent.class).orElseThrow();
