@@ -121,6 +121,13 @@ public class WorldTest {
   }
 
   @Test
+  void testEntityIdsAreReused() {
+    Entity entity = world.createEntity();
+    world.removeEntity(entity);
+    assertEquals(entity.getId(), world.createEntity().getId());
+  }
+
+  @Test
   void testGetEntitiesWithComponent() {
     Entity e1 = world.createEntity();
     Entity e2 = world.createEntity();

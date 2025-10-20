@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 public class WorldImpl implements World {
 
   private int nextEntityId;
+  private final Queue<Integer> availableIds;
   private final Map<Entity, Set<Component>> componentsByEntity;
   private final List<GameSystem> systems;
 
@@ -65,13 +66,15 @@ public class WorldImpl implements World {
   /** Constructor for WorldImpl. */
   public WorldImpl() {
     this.nextEntityId = 0;
+    this.availableIds = new LinkedList<>();
     this.componentsByEntity = new HashMap<>();
     this.systems = new ArrayList<>();
   }
 
   @Override
   public Entity createEntity() {
-    Entity entity = new EntityImpl(this.nextEntityId++, this);
+    Entity entity =
+        new EntityImpl(availableIds.isEmpty() ? nextEntityId++ : availableIds.poll(), this);
     this.componentsByEntity.put(entity, new HashSet<>());
     return entity;
   }
@@ -93,6 +96,7 @@ public class WorldImpl implements World {
 
   @Override
   public void removeEntity(Entity entity) {
+    this.availableIds.add(entity.getId());
     this.componentsByEntity.remove(entity);
   }
 
