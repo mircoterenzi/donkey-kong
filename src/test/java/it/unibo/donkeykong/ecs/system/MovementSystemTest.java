@@ -19,12 +19,10 @@ public class MovementSystemTest {
   private static final long DELTA_TIME_MILLISECONDS = 1000L;
   private static final float DELTA_TIME_SECONDS = DELTA_TIME_MILLISECONDS / 1000f;
 
-  // Initial Positions
   private static final int INITIAL_X = 10;
   private static final int INITIAL_Y = 20;
   private static final int ORIGIN = 0;
 
-  // Velocities
   private static final int POSITIVE_VELOCITY_X = 100;
   private static final int POSITIVE_VELOCITY_Y = 50;
   private static final int NEGATIVE_VELOCITY_X = -200;
