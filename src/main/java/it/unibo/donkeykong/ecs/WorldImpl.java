@@ -56,10 +56,12 @@ public class WorldImpl implements World {
 
     @Override
     public boolean equals(Object obj) {
-      if (obj instanceof Entity entity) {
-        return entity.getId() == this.id;
-      }
-      return false;
+      return obj instanceof Entity entity && entity.getId() == this.id;
+    }
+
+    @Override
+    public int hashCode() {
+      return Long.hashCode(id);
     }
   }
 
