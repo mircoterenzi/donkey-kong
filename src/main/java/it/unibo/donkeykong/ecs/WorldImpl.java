@@ -52,6 +52,14 @@ public class WorldImpl implements World {
       this.world.addComponentToEntity(this, newComponent);
       return this;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj instanceof Entity entity) {
+        return entity.getId() == this.id;
+      }
+      return false;
+    }
   }
 
   /** Constructor for WorldImpl. */
