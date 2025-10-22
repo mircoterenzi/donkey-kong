@@ -50,8 +50,6 @@ public class InputProcessorSystem implements GameSystem {
                 else
                   newDy = oldVelocity.dy();
                 input.setJumpPressed(false);
-              } else if (isGrounded) {
-                newDy = 0;
               } else if (isClimbing) {
                 newDy =
                     switch (input.getCurrentVInput()) {
@@ -59,6 +57,8 @@ public class InputProcessorSystem implements GameSystem {
                       case MOVE_DOWN -> DY_PLAYER_VELOCITY;
                       default -> 0;
                     };
+              } else if (isGrounded) {
+                newDy = 0;
               } else if (input.getCurrentVInput() == Input.VerticalInput.MOVE_DOWN) {
                 newDy = DY_PLAYER_VELOCITY * GRAVITY;
               } else {
