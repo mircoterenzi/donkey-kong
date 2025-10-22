@@ -40,7 +40,7 @@ public class InputProcessorSystem implements GameSystem {
                       case MOVE_DOWN -> DY_PLAYER_VELOCITY;
                       default -> 0;
                     };
-              } else if (input.isJumpPressed()) {
+              } else if (input.isJumpPressed() && (isGrounded || isClimbing)) {
                 newDy = -DY_PLAYER_VELOCITY * 2;
                 input.setJumpPressed(false);
               } else if (input.getCurrentVInput() == Input.VerticalInput.MOVE_DOWN && !isGrounded) {
