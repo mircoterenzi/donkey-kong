@@ -1,8 +1,8 @@
 package it.unibo.donkeykong.ecs.system;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,50 +35,46 @@ public class GravitySystemTest {
 
   private Velocity getVelocityComponent(Entity entity) {
     return entity
-      .getComponent(Velocity.class)
-      .orElseThrow(() -> new AssertionError("Velocity component not present in the entity"));
+        .getComponent(Velocity.class)
+        .orElseThrow(() -> new AssertionError("Velocity component not present in the entity"));
   }
 
   @Test
   void testEntityWithAllComponentsIsAffectedByGravity() {
     Velocity initialVelocity = new Velocity(INITIAL_DX, INITIAL_DY);
     Entity entity =
-      world
-        .createEntity()
-        .addComponent(new Gravity())
-        .addComponent(initialVelocity)
-        .addComponent(new Position(0, 0));
+        world
+            .createEntity()
+            .addComponent(new Gravity())
+            .addComponent(initialVelocity)
+            .addComponent(new Position(0, 0));
 
     world.update(DELTA_TIME_ONE_SECOND);
 
     Velocity newVelocity = getVelocityComponent(entity);
 
     assertNotEquals(
-      initialVelocity.dy(),
-      newVelocity.dy(),
-      "Vertical velocity should change due to gravity.");
+        initialVelocity.dy(), newVelocity.dy(), "Vertical velocity should change due to gravity.");
     assertEquals(
-      initialVelocity.dx(),
-      newVelocity.dx(),
-      "Horizontal velocity should remain unchanged.");
+        initialVelocity.dx(), newVelocity.dx(), "Horizontal velocity should remain unchanged.");
     assertNotSame(
-      initialVelocity,
-      newVelocity,
-      "A new Velocity component instance should have been created.");
+        initialVelocity,
+        newVelocity,
+        "A new Velocity component instance should have been created.");
     assertFalse(
-      world.getComponentsOfEntity(entity).contains(initialVelocity),
-      "The old Velocity component should have been removed.");
+        world.getComponentsOfEntity(entity).contains(initialVelocity),
+        "The old Velocity component should have been removed.");
   }
 
   @Test
   void testGravityCalculationIsCorrect() {
     Velocity initialVelocity = new Velocity(INITIAL_DX, INITIAL_DY);
     Entity entity =
-      world
-        .createEntity()
-        .addComponent(new Gravity())
-        .addComponent(initialVelocity)
-        .addComponent(new Position(0, 0));
+        world
+            .createEntity()
+            .addComponent(new Gravity())
+            .addComponent(initialVelocity)
+            .addComponent(new Position(0, 0));
 
     world.update(DELTA_TIME_HALF_SECOND);
 
@@ -86,46 +82,45 @@ public class GravitySystemTest {
     Velocity newVelocity = getVelocityComponent(entity);
 
     assertEquals(
-      expectedDy,
-      newVelocity.dy(),
-      FLOATING_POINT_DELTA,
-      "The new vertical velocity is not calculated correctly.");
+        expectedDy,
+        newVelocity.dy(),
+        FLOATING_POINT_DELTA,
+        "The new vertical velocity is not calculated correctly.");
     assertEquals(
-      INITIAL_DX,
-      newVelocity.dx(),
-      FLOATING_POINT_DELTA,
-      "Horizontal velocity should not change.");
+        INITIAL_DX,
+        newVelocity.dx(),
+        FLOATING_POINT_DELTA,
+        "Horizontal velocity should not change.");
   }
 
   @Test
   void testEntityWithoutGravityIsNotAffected() {
     Velocity initialVelocity = new Velocity(INITIAL_DX, INITIAL_DY);
     Entity entity =
-      world.createEntity().addComponent(initialVelocity).addComponent(new Position(0, 0));
+        world.createEntity().addComponent(initialVelocity).addComponent(new Position(0, 0));
 
     world.update(DELTA_TIME_ONE_SECOND);
 
     Velocity newVelocity = getVelocityComponent(entity);
     assertEquals(
-      initialVelocity,
-      newVelocity,
-      "Velocity should not change if Gravity component is missing.");
+        initialVelocity,
+        newVelocity,
+        "Velocity should not change if Gravity component is missing.");
     assertSame(
-      initialVelocity,
-      newVelocity,
-      "The component instance should not have been replaced.");
+        initialVelocity, newVelocity, "The component instance should not have been replaced.");
   }
 
   @Test
   void testEntityWithoutVelocityIsIgnored() {
-    Entity entity = world.createEntity().addComponent(new Gravity()).addComponent(new Position(0, 0));
+    Entity entity =
+        world.createEntity().addComponent(new Gravity()).addComponent(new Position(0, 0));
 
     // L'azione principale è verificare che l'aggiornamento non lanci un'eccezione
     world.update(DELTA_TIME_ONE_SECOND);
 
     assertTrue(
-      entity.getComponent(Velocity.class).isEmpty(),
-      "Entity should not gain a Velocity component.");
+        entity.getComponent(Velocity.class).isEmpty(),
+        "Entity should not gain a Velocity component.");
   }
 
   @Test
@@ -137,12 +132,10 @@ public class GravitySystemTest {
 
     Velocity newVelocity = getVelocityComponent(entity);
     assertEquals(
-      initialVelocity,
-      newVelocity,
-      "Velocity should not change if Position component is missing.");
+        initialVelocity,
+        newVelocity,
+        "Velocity should not change if Position component is missing.");
     assertSame(
-      initialVelocity,
-      newVelocity,
-      "The component instance should not have been replaced.");
+        initialVelocity, newVelocity, "The component instance should not have been replaced.");
   }
 }
