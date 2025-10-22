@@ -1,9 +1,13 @@
 package it.unibo.donkeykong.ui;
 
+import static it.unibo.donkeykong.ecs.component.Graphic.EntityState.*;
+
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.WorldImpl;
 import it.unibo.donkeykong.ecs.component.Graphic;
 import it.unibo.donkeykong.ecs.component.Position;
+import java.util.List;
+import java.util.Map;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -21,7 +25,7 @@ public class DonkeyKongRushUI extends Application {
     world
         .createEntity()
         .addComponent(new Position(242, 260))
-        .addComponent(new Graphic("player", 64, 64));
+        .addComponent(new Graphic(64, 64, 100, IDLE, 0, Map.of(IDLE, List.of("player"))));
 
     final Canvas canvas = new Canvas(ConfigurationUI.WINDOW_WIDTH, ConfigurationUI.WINDOW_HEIGHT);
     final Pane root = new Pane(canvas);

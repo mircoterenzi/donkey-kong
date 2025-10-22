@@ -47,7 +47,7 @@ public class RenderingSystem implements GameSystem {
         world.getEntitiesWithComponents(List.of(Position.class, Graphic.class))) {
       final Position position = entity.getComponent(Position.class).orElseThrow();
       final Graphic graphic = entity.getComponent(Graphic.class).orElseThrow();
-      final Image image = assetCache.get(graphic.id());
+      final Image image = assetCache.get(graphic.currentFrame());
       if (image != null) {
         context.drawImage(image, position.x(), position.y(), graphic.width(), graphic.height());
       }
