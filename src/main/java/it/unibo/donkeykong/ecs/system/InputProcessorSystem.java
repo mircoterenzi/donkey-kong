@@ -17,7 +17,8 @@ public class InputProcessorSystem implements GameSystem {
               Velocity oldVelocity = entity.getComponent(Velocity.class).orElseThrow();
 
               double newDx, newDy;
-              final boolean isClimbing = entity.getComponent(Climbable.class).isPresent();
+              final boolean isClimbing = world.getEntitiesWithComponents(List.of(Climbable.class)).stream()
+                .anyMatch(e -> e.getComponent(CollisionEvent.class).orElseThrow().otherEntity().equals(entity));
 
               newDx =
                   switch (input.getCurrentHInput()) {
