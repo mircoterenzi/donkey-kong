@@ -2,9 +2,8 @@ package it.unibo.donkeykong.ui;
 
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.WorldImpl;
+import it.unibo.donkeykong.ecs.component.Graphic;
 import it.unibo.donkeykong.ecs.component.Position;
-import it.unibo.donkeykong.ecs.entity.EntityFactory;
-import it.unibo.donkeykong.ecs.entity.EntityFactoryImpl;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -17,8 +16,12 @@ public class DonkeyKongRushUI extends Application {
   @Override
   public void start(Stage primaryStage) {
     final World world = new WorldImpl();
-    final EntityFactory factory = new EntityFactoryImpl(world);
-    factory.createFirstPlayer().addComponent(new Position(242, 260));
+
+    // TODO: entity creation should be handled by a dedicated class (using entity factory)
+    world
+        .createEntity()
+        .addComponent(new Position(242, 260))
+        .addComponent(new Graphic("player", 64, 64));
 
     final Canvas canvas = new Canvas(ConfigurationUI.WINDOW_WIDTH, ConfigurationUI.WINDOW_HEIGHT);
     final Pane root = new Pane(canvas);
