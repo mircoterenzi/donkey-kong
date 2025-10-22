@@ -38,17 +38,17 @@ public class InputProcessorSystemTest {
     playerInput = new Input();
     initialVelocity = new Velocity(0, 0);
     player =
-      world
-        .createEntity()
-        .addComponent(playerInput)
-        .addComponent(initialVelocity)
-        .addComponent(new Position(0, 0));
+        world
+            .createEntity()
+            .addComponent(playerInput)
+            .addComponent(initialVelocity)
+            .addComponent(new Position(0, 0));
   }
 
   private Velocity getVelocityComponent(Entity entity) {
     return entity
-      .getComponent(Velocity.class)
-      .orElseThrow(() -> new AssertionError("Velocity component missing"));
+        .getComponent(Velocity.class)
+        .orElseThrow(() -> new AssertionError("Velocity component missing"));
   }
 
   private void simulateGrounded() {
@@ -102,7 +102,7 @@ public class InputProcessorSystemTest {
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
     assertEquals(
-      INITIAL_DY, newVelocity.dy(), "Player should not jump if airborne (dy remains old dy)");
+        INITIAL_DY, newVelocity.dy(), "Player should not jump if airborne (dy remains old dy)");
     assertFalse(playerInput.isJumpPressed(), "Jump press should be consumed");
   }
 
@@ -167,8 +167,7 @@ public class InputProcessorSystemTest {
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
-    assertEquals(
-      0, newVelocity.dy(), "Player should not fast fall when grounded (dy should be 0)");
+    assertEquals(0, newVelocity.dy(), "Player should not fast fall when grounded (dy should be 0)");
   }
 
   @Test
@@ -181,8 +180,7 @@ public class InputProcessorSystemTest {
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
-    assertEquals(
-      INITIAL_DY, newVelocity.dy(), "Vertical velocity should be preserved if airborne");
+    assertEquals(INITIAL_DY, newVelocity.dy(), "Vertical velocity should be preserved if airborne");
   }
 
   @Test
@@ -196,8 +194,8 @@ public class InputProcessorSystemTest {
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
     assertEquals(
-      -DY_PLAYER_VELOCITY,
-      newVelocity.dy(),
-      "Climbing (dy=-VEL) should have priority over grounded state (dy=0)");
+        -DY_PLAYER_VELOCITY,
+        newVelocity.dy(),
+        "Climbing (dy=-VEL) should have priority over grounded state (dy=0)");
   }
 }

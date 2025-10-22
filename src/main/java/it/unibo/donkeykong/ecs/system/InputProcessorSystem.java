@@ -20,35 +20,33 @@ public class InputProcessorSystem implements GameSystem {
 
               double newDx, newDy;
               final boolean isClimbing =
-                world.getEntitiesWithComponents(List.of(Climbable.class)).stream()
-                  .anyMatch(
-                    e ->
-                      e.getComponent(CollisionEvent.class)
-                        .orElseThrow()
-                        .otherEntity()
-                        .equals(entity));
+                  world.getEntitiesWithComponents(List.of(Climbable.class)).stream()
+                      .anyMatch(
+                          e ->
+                              e.getComponent(CollisionEvent.class)
+                                  .orElseThrow()
+                                  .otherEntity()
+                                  .equals(entity));
               final boolean isGrounded =
-                world.getEntitiesWithComponents(List.of(Position.class)).stream()
-                  .filter(e -> !e.equals(entity))
-                  .anyMatch(
-                    e ->
-                      e.getComponent(CollisionEvent.class)
-                        .orElseThrow()
-                        .otherEntity()
-                        .equals(entity));
+                  world.getEntitiesWithComponents(List.of(Position.class)).stream()
+                      .filter(e -> !e.equals(entity))
+                      .anyMatch(
+                          e ->
+                              e.getComponent(CollisionEvent.class)
+                                  .orElseThrow()
+                                  .otherEntity()
+                                  .equals(entity));
 
               newDx =
-                switch (input.getCurrentHInput()) {
-                  case MOVE_LEFT -> -DX_PLAYER_VELOCITY;
-                  case MOVE_RIGHT -> DX_PLAYER_VELOCITY;
-                  default -> 0;
-                };
+                  switch (input.getCurrentHInput()) {
+                    case MOVE_LEFT -> -DX_PLAYER_VELOCITY;
+                    case MOVE_RIGHT -> DX_PLAYER_VELOCITY;
+                    default -> 0;
+                  };
 
               if (input.isJumpPressed()) {
-                if (isGrounded || isClimbing)
-                  newDy = -DY_PLAYER_VELOCITY * 2;
-                else
-                  newDy = oldVelocity.dy();
+                if (isGrounded || isClimbing) newDy = -DY_PLAYER_VELOCITY * 2;
+                else newDy = oldVelocity.dy();
                 input.setJumpPressed(false);
               } else if (isClimbing) {
                 newDy =
