@@ -45,8 +45,10 @@ public class InputProcessorSystem implements GameSystem {
                 input.setJumpPressed(false);
               } else if (input.getCurrentVInput() == Input.VerticalInput.MOVE_DOWN && !isGrounded) {
                 newDy = DY_PLAYER_VELOCITY * GRAVITY;
-              } else {
+              } else if (isGrounded){
                 newDy = 0;
+              } else {
+                newDy = oldVelocity.dy();
               }
 
               entity.updateComponent(oldVelocity, new Velocity(newDx, newDy));
