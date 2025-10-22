@@ -1,8 +1,20 @@
 package it.unibo.donkeykong.ecs.component;
 
+/** Input component, which represents the user input for an entity. */
 public class Input implements Component {
-  public enum HorizontalInput { MOVE_LEFT, MOVE_RIGHT, NONE }
-  public enum VerticalInput { MOVE_UP, MOVE_DOWN, NONE }
+  /** Possible horizontal inputs. */
+  public enum HorizontalInput {
+    MOVE_LEFT,
+    MOVE_RIGHT,
+    NONE
+  }
+
+  /** Possible vertical inputs. */
+  public enum VerticalInput {
+    MOVE_UP,
+    MOVE_DOWN,
+    NONE
+  }
 
   private HorizontalInput currentHInput;
   private VerticalInput currentVInput;
