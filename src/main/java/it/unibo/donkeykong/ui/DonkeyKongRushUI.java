@@ -17,6 +17,9 @@ import javafx.stage.Stage;
 
 public class DonkeyKongRushUI extends Application {
 
+  /** Target frame duration in nanoseconds for 60 FPS. */
+  private static final long TARGET_FPS_NANO = 1_000_000_000L / 60;
+
   @Override
   public void start(Stage primaryStage) {
     final World world = new WorldImpl();
@@ -40,11 +43,11 @@ public class DonkeyKongRushUI extends Application {
 
       @Override
       public void handle(long now) {
-        if (lastUpdate > 0) {
+        if (now - lastUpdate >= TARGET_FPS_NANO) {
           final long deltaTime = (now - lastUpdate) / 1_000_000;
           world.update(deltaTime);
+          lastUpdate = now;
         }
-        lastUpdate = now;
       }
     }.start();
 
