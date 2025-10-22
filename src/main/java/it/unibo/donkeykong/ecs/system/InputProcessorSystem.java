@@ -2,7 +2,10 @@ package it.unibo.donkeykong.ecs.system;
 
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.component.*;
+
 import java.util.List;
+
+import static it.unibo.donkeykong.utilities.Constants.*;
 
 /** System that processes player input and updates entity velocities accordingly. */
 public class InputProcessorSystem implements GameSystem {
@@ -19,24 +22,29 @@ public class InputProcessorSystem implements GameSystem {
               double newDx, newDy;
               final boolean isClimbing = world.getEntitiesWithComponents(List.of(Climbable.class)).stream()
                 .anyMatch(e -> e.getComponent(CollisionEvent.class).orElseThrow().otherEntity().equals(entity));
+              final boolean isGrounded = world.getEntitiesWithComponents(List.of(Position.class)).stream()
+                .filter(e -> !e.equals(entity))
+                .anyMatch(e -> e.getComponent(CollisionEvent.class).orElseThrow().otherEntity().equals(entity));
 
               newDx =
                   switch (input.getCurrentHInput()) {
-                    case MOVE_LEFT -> -oldVelocity.dx();
-                    case MOVE_RIGHT -> oldVelocity.dx();
+                    case MOVE_LEFT -> -DX_PLAYER_VELOCITY;
+                    case MOVE_RIGHT -> DX_PLAYER_VELOCITY;
                     default -> 0;
                   };
 
-              if (isClimbing) {
+              if (isClimbing && !input.isJumpPressed()) {
                 newDy =
                     switch (input.getCurrentVInput()) {
-                      case MOVE_UP -> -oldVelocity.dy();
-                      case MOVE_DOWN -> oldVelocity.dy();
+                      case MOVE_UP -> -DY_PLAYER_VELOCITY;
+                      case MOVE_DOWN -> DY_PLAYER_VELOCITY;
                       default -> 0;
                     };
               } else if (input.isJumpPressed()) {
-                newDy = -oldVelocity.dy() * 2;
+                newDy = -DY_PLAYER_VELOCITY * 2;
                 input.setJumpPressed(false);
+              } else if (input.getCurrentVInput() == Input.VerticalInput.MOVE_DOWN && !isGrounded) {
+                newDy = DY_PLAYER_VELOCITY * GRAVITY;
               } else {
                 newDy = 0;
               }
