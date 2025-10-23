@@ -15,7 +15,7 @@ public class GravitySystem implements GameSystem {
               var gravity = entity.getComponent(Gravity.class).orElseThrow();
               var velocity = entity.getComponent(Velocity.class).orElseThrow();
 
-              double newDy = velocity.dy() + gravity.getGravity() * (deltaTime / 1000.0);
+              double newDy = velocity.dy() + gravity.gravity() * (deltaTime / 1000.0);
               Velocity newVelocity = new Velocity(velocity.dx(), newDy);
               entity.updateComponent(velocity, newVelocity);
             });
