@@ -1,5 +1,6 @@
 package it.unibo.donkeykong.ecs.system;
 
+import static it.unibo.donkeykong.utilities.Constants.GRAVITY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -13,7 +14,6 @@ import it.unibo.donkeykong.ecs.component.Gravity;
 import it.unibo.donkeykong.ecs.component.Position;
 import it.unibo.donkeykong.ecs.component.Velocity;
 import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.utilities.Constants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +45,7 @@ public class GravitySystemTest {
     Entity entity =
         world
             .createEntity()
-            .addComponent(new Gravity())
+            .addComponent(new Gravity(GRAVITY))
             .addComponent(initialVelocity)
             .addComponent(new Position(0, 0));
 
@@ -72,13 +72,13 @@ public class GravitySystemTest {
     Entity entity =
         world
             .createEntity()
-            .addComponent(new Gravity())
+            .addComponent(new Gravity(GRAVITY))
             .addComponent(initialVelocity)
             .addComponent(new Position(0, 0));
 
     world.update(DELTA_TIME_HALF_SECOND);
 
-    double expectedDy = INITIAL_DY + Constants.GRAVITY * (DELTA_TIME_HALF_SECOND / 1000.0);
+    double expectedDy = INITIAL_DY + GRAVITY * (DELTA_TIME_HALF_SECOND / 1000.0);
     Velocity newVelocity = getVelocityComponent(entity);
 
     assertEquals(
@@ -113,7 +113,7 @@ public class GravitySystemTest {
   @Test
   void testEntityWithoutVelocityIsIgnored() {
     Entity entity =
-        world.createEntity().addComponent(new Gravity()).addComponent(new Position(0, 0));
+        world.createEntity().addComponent(new Gravity(GRAVITY)).addComponent(new Position(0, 0));
 
     // L'azione principale è verificare che l'aggiornamento non lanci un'eccezione
     world.update(DELTA_TIME_ONE_SECOND);
@@ -126,7 +126,8 @@ public class GravitySystemTest {
   @Test
   void testEntityWithoutPositionIsIgnored() {
     Velocity initialVelocity = new Velocity(INITIAL_DX, INITIAL_DY);
-    Entity entity = world.createEntity().addComponent(new Gravity()).addComponent(initialVelocity);
+    Entity entity =
+        world.createEntity().addComponent(new Gravity(GRAVITY)).addComponent(initialVelocity);
 
     world.update(DELTA_TIME_ONE_SECOND);
 
