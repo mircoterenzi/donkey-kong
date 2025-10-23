@@ -1,5 +1,6 @@
 package it.unibo.donkeykong.ecs.system;
 
+import static it.unibo.donkeykong.utilities.Constants.GRAVITY;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,7 +33,7 @@ public class ClimbingSystemTest {
   void testEntityLosesGravityWhenCollidingWithClimbableAtSameX() {
     Entity entityWithGravity = world.createEntity();
     entityWithGravity.addComponent(new Position(SHARED_X, Y_POSITION));
-    entityWithGravity.addComponent(new Gravity());
+    entityWithGravity.addComponent(new Gravity(GRAVITY));
     entityWithGravity.addComponent(new Velocity(0, 0));
     Entity climbableEntity =
         world
@@ -64,7 +65,7 @@ public class ClimbingSystemTest {
         world
             .createEntity()
             .addComponent(new Position(SHARED_X, Y_POSITION))
-            .addComponent(new Gravity())
+            .addComponent(new Gravity(GRAVITY))
             .addComponent(new Velocity(0, 0));
     Entity climbableEntity =
         world
