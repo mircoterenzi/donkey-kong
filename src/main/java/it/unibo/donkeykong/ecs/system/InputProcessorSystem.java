@@ -40,7 +40,7 @@ public class InputProcessorSystem implements GameSystem {
 
               if (input.isJumpPressed()) {
                 if (isGrounded || isClimbing) {
-                  newDy = -oldVelocity.dy() + JUMP_FACTOR;
+                  newDy = -(oldVelocity.dy() + JUMP_FACTOR);
                   newState = new PlayerState(State.JUMP);
                 } else {
                   newDy = oldVelocity.dy();
@@ -50,15 +50,15 @@ public class InputProcessorSystem implements GameSystem {
               } else if (isClimbing) {
                   switch (input.getCurrentVInput()) {
                     case MOVE_UP -> {
-                      newDy = oldVelocity.dy() + GRAVITY - PLAYER_VELOCITY;
+                      newDy = oldVelocity.dy() - (GRAVITY + PLAYER_VELOCITY);
                       newState = new PlayerState(State.CLIMB_UP);
                     }
                     case MOVE_DOWN -> {
-                      newDy = oldVelocity.dy() + GRAVITY + PLAYER_VELOCITY;
+                      newDy = oldVelocity.dy() - GRAVITY + PLAYER_VELOCITY;
                       newState = new PlayerState(State.CLIMB_DOWN);
                     }
                     default -> {
-                      newDy = oldVelocity.dy() + GRAVITY;
+                      newDy = oldVelocity.dy() - GRAVITY;
                       newState = new PlayerState(State.STOP_CLIMB);
                     }
                   };
@@ -72,7 +72,7 @@ public class InputProcessorSystem implements GameSystem {
                   newState = new PlayerState(State.STOP_GROUND);
                 }
               } else if (input.getCurrentVInput() == Input.VerticalInput.MOVE_DOWN) {
-                newDy = PLAYER_VELOCITY * GRAVITY;
+                newDy = oldVelocity.dy() + FALL_FACTOR;
                 newState = new PlayerState(State.FALL);
               } else {
                 newDy = oldVelocity.dy();
