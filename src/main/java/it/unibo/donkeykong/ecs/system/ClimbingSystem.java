@@ -24,7 +24,6 @@ public class ClimbingSystem implements GameSystem {
           entity.getComponent(Gravity.class).ifPresent(entity::removeComponent);
         }
       }
-      world.removeComponentFromEntity(entity, event);
     }
   }
 }

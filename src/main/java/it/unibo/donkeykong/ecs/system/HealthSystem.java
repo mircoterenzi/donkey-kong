@@ -24,7 +24,6 @@ public class HealthSystem implements GameSystem {
         entity.addComponent(
             new Health(health.livesCount() - damage.damageAmount())); // TODO: handle player death
       }
-      world.removeComponentFromEntity(entity, event);
     }
   }
 }
