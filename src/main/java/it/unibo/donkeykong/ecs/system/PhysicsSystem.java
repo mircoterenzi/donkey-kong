@@ -25,6 +25,9 @@ public class PhysicsSystem implements GameSystem {
       entity.addComponent( // TODO: refine velocity update logic based on collision direction
           new Velocity(isBouncing ? -velocity.dx() : 0, isBouncing ? -velocity.dy() : 0));
       world.removeComponentFromEntity(entity, event);
+      if (event.otherEntity().getComponent(GroundComponent.class).isPresent()) {
+        entity.addComponent(new GroundedEvent());
+      }
     }
   }
 }
