@@ -1,7 +1,6 @@
 package it.unibo.donkeykong.ecs.system;
 
-import static it.unibo.donkeykong.utilities.Constants.DX_PLAYER_VELOCITY;
-import static it.unibo.donkeykong.utilities.Constants.DY_PLAYER_VELOCITY;
+import static it.unibo.donkeykong.utilities.Constants.PLAYER_VELOCITY;
 import static it.unibo.donkeykong.utilities.Constants.GRAVITY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -22,8 +21,8 @@ public class InputProcessorSystemTest {
 
   private static final long DELTA_TIME_IGNORED = 0L;
   private static final double INITIAL_DY = 10.0;
-  private static final double JUMP_SPEED = -DY_PLAYER_VELOCITY * 2;
-  private static final double FAST_FALL_SPEED = DY_PLAYER_VELOCITY * GRAVITY;
+  private static final double JUMP_SPEED = -PLAYER_VELOCITY * 2;
+  private static final double FAST_FALL_SPEED = PLAYER_VELOCITY * GRAVITY;
 
   private World world;
   private Entity player;
@@ -67,7 +66,7 @@ public class InputProcessorSystemTest {
     playerInput.setCurrentHInput(Input.HorizontalInput.MOVE_RIGHT);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
-    assertEquals(DX_PLAYER_VELOCITY, newVelocity.dx());
+    assertEquals(PLAYER_VELOCITY, newVelocity.dx());
     assertEquals(0, newVelocity.dy(), "Player grounded should not move vertically");
     assertNotSame(initialVelocity, newVelocity);
   }
@@ -78,7 +77,7 @@ public class InputProcessorSystemTest {
     playerInput.setCurrentHInput(Input.HorizontalInput.MOVE_LEFT);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
-    assertEquals(-DX_PLAYER_VELOCITY, newVelocity.dx());
+    assertEquals(-PLAYER_VELOCITY, newVelocity.dx());
     assertEquals(0, newVelocity.dy());
   }
 
@@ -113,7 +112,7 @@ public class InputProcessorSystemTest {
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
-    assertEquals(-DY_PLAYER_VELOCITY, newVelocity.dy(), "Player should move up");
+    assertEquals(-PLAYER_VELOCITY, newVelocity.dy(), "Player should move up");
   }
 
   @Test
@@ -123,7 +122,7 @@ public class InputProcessorSystemTest {
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
-    assertEquals(DY_PLAYER_VELOCITY, newVelocity.dy(), "Player should move down");
+    assertEquals(PLAYER_VELOCITY, newVelocity.dy(), "Player should move down");
   }
 
   @Test
@@ -144,7 +143,7 @@ public class InputProcessorSystemTest {
     playerInput.setCurrentVInput(Input.VerticalInput.MOVE_UP); // Input verticale
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
-    assertEquals(DX_PLAYER_VELOCITY, newVelocity.dx(), "Horizontal input should be processed");
+    assertEquals(PLAYER_VELOCITY, newVelocity.dx(), "Horizontal input should be processed");
     assertEquals(JUMP_SPEED, newVelocity.dy(), "Player should jump off the ladder");
     assertFalse(playerInput.isJumpPressed(), "Jump press should be consumed");
   }
@@ -194,7 +193,7 @@ public class InputProcessorSystemTest {
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
     assertEquals(
-        -DY_PLAYER_VELOCITY,
+        -PLAYER_VELOCITY,
         newVelocity.dy(),
         "Climbing (dy=-VEL) should have priority over grounded state (dy=0)");
   }
