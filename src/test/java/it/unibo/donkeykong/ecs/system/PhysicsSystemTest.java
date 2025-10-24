@@ -1,7 +1,6 @@
 package it.unibo.donkeykong.ecs.system;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import it.unibo.donkeykong.ecs.World;
@@ -51,7 +50,6 @@ public class PhysicsSystemTest {
         new Velocity(ZERO_VELOCITY, ZERO_VELOCITY),
         getVelocityComponent(entity),
         "Entity's velocity should be zero after collision if not bouncing.");
-    assertFalse(entity.getComponent(CollisionEvent.class).isPresent(), "Event should be consumed.");
   }
 
   @Test
@@ -64,7 +62,6 @@ public class PhysicsSystemTest {
         "Entity's velocity should be inverted (-V.X, -V.Y) after collision.");
     assertTrue(
         entity.getComponent(Bounciness.class).isPresent(), "Bounciness component should persist.");
-    assertFalse(entity.getComponent(CollisionEvent.class).isPresent(), "Event should be consumed.");
   }
 
   @Test

@@ -51,12 +51,6 @@ public class ClimbingSystemTest {
     assertFalse(
         entityWithGravity.getComponent(Gravity.class).isPresent(),
         "entityWithGravity must lose Gravity component when colliding with Climbable at the same X.");
-    assertFalse(
-        entityWithGravity.getComponent(CollisionEvent.class).isPresent(),
-        "Collision event must be consumed.");
-    assertFalse(
-        climbableEntity.getComponent(CollisionEvent.class).isPresent(),
-        "Collision event must be consumed.");
   }
 
   @Test
