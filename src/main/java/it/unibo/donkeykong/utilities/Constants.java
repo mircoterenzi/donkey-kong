@@ -4,4 +4,7 @@ public class Constants {
   public static final int WORLD_WIDTH = 896;
   public static final int WORLD_HEIGHT = 1024;
   public static final double GRAVITY = 9.81;
+  public static final double PLAYER_VELOCITY = 7.0;
+  public static final double JUMP_FACTOR = 5.0;
+  public static final double FALL_FACTOR = 3.0;
 }

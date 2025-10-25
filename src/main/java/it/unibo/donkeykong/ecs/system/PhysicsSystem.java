@@ -19,14 +19,10 @@ public class PhysicsSystem implements GameSystem {
             List.of(Velocity.class, CollisionEvent.class, CollisionEvent.class));
     for (Entity entity : targetEntities) {
       Velocity velocity = entity.getComponent(Velocity.class).orElseThrow();
-      CollisionEvent event = entity.getComponent(CollisionEvent.class).orElseThrow();
       boolean isBouncing = entity.getComponent(Bounciness.class).isPresent();
       world.removeComponentFromEntity(entity, velocity);
       entity.addComponent( // TODO: refine velocity update logic based on collision direction
           new Velocity(isBouncing ? -velocity.dx() : 0, isBouncing ? -velocity.dy() : 0));
-      if (event.otherEntity().getComponent(GroundComponent.class).isPresent()) {
-        entity.addComponent(new GroundedEvent());
-      }
     }
   }
 }
