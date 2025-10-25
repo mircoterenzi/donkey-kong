@@ -4,6 +4,7 @@ import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /** CollisionSystem handles collision detection between entities in the game world. */
@@ -97,7 +98,15 @@ public class CollisionSystem implements GameSystem {
                 Collider otherCollider = otherEntity.getComponent(Collider.class).orElseThrow();
                 return isColliding(position, collider, otherPosition, otherCollider);
               })
-          .forEach(otherEntity -> entity.addComponent(new CollisionEvent(otherEntity)));
+          .forEach(
+              otherEntity -> {
+                Optional<CollisionEvent> event = entity.getComponent(CollisionEvent.class);
+                if (event.isPresent()) {
+                  event.get().addCollision(otherEntity);
+                } else {
+                  entity.addComponent(new CollisionEvent(otherEntity));
+                }
+              });
     }
   }
 }

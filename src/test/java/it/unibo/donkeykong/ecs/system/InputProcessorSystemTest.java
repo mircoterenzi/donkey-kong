@@ -53,12 +53,12 @@ public class InputProcessorSystemTest {
 
   private void simulateGrounded() {
     Entity ground = world.createEntity().addComponent(new GroundComponent());
-    ground.addComponent(new CollisionEvent(player));
+    player.addComponent(new CollisionEvent(ground));
   }
 
   private void simulateClimbing() {
     Entity ladder = world.createEntity().addComponent(new Climbable());
-    ladder.addComponent(new CollisionEvent(player));
+    player.addComponent(new CollisionEvent(ladder));
   }
 
   @Test
