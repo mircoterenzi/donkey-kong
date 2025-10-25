@@ -1,22 +1,12 @@
 package it.unibo.donkeykong.ecs.system;
 
-import static it.unibo.donkeykong.utilities.Constants.PLAYER_VELOCITY;
-import static it.unibo.donkeykong.utilities.Constants.GRAVITY;
-import static it.unibo.donkeykong.utilities.Constants.JUMP_FACTOR;
-import static it.unibo.donkeykong.utilities.Constants.FALL_FACTOR;
+import static it.unibo.donkeykong.utilities.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 
-import it.unibo.donkeykong.ecs.World;
-import it.unibo.donkeykong.ecs.WorldImpl;
-import it.unibo.donkeykong.ecs.component.Climbable;
-import it.unibo.donkeykong.ecs.component.CollisionEvent;
-import it.unibo.donkeykong.ecs.component.GroundedEvent;
-import it.unibo.donkeykong.ecs.component.Input;
-import it.unibo.donkeykong.ecs.component.PlayerState;
-import it.unibo.donkeykong.ecs.component.Position;
-import it.unibo.donkeykong.ecs.component.Velocity;
+import it.unibo.donkeykong.ecs.*;
+import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,10 +17,8 @@ public class InputProcessorSystemTest {
   private static final double INITIAL_DY = 10.0;
 
   private static final double JUMP_SPEED = -(GRAVITY + JUMP_FACTOR);
-  private static final double CLIMB_UP_SPEED =
-    -(GRAVITY + PLAYER_VELOCITY);
-  private static final double CLIMB_DOWN_SPEED =
-    -GRAVITY + PLAYER_VELOCITY;
+  private static final double CLIMB_UP_SPEED = -(GRAVITY + PLAYER_VELOCITY);
+  private static final double CLIMB_DOWN_SPEED = -GRAVITY + PLAYER_VELOCITY;
   private static final double STOP_CLIMB_SPEED = -GRAVITY;
   private static final double GROUNDED_DY = -GRAVITY;
 
@@ -49,22 +37,23 @@ public class InputProcessorSystemTest {
     PlayerState initialPlayerState = new PlayerState(PlayerState.State.STOP_GROUND);
 
     player =
-      world
-        .createEntity()
-        .addComponent(playerInput)
-        .addComponent(initialVelocity)
-        .addComponent(new Position(0, 0))
-        .addComponent(initialPlayerState);
+        world
+            .createEntity()
+            .addComponent(playerInput)
+            .addComponent(initialVelocity)
+            .addComponent(new Position(0, 0))
+            .addComponent(initialPlayerState);
   }
 
   private Velocity getVelocityComponent(Entity entity) {
     return entity
-      .getComponent(Velocity.class)
-      .orElseThrow(() -> new AssertionError("Velocity component missing"));
+        .getComponent(Velocity.class)
+        .orElseThrow(() -> new AssertionError("Velocity component missing"));
   }
 
   private void simulateGrounded() {
-    player.addComponent(new GroundedEvent());
+    Entity ground = world.createEntity().addComponent(new GroundComponent());
+    ground.addComponent(new CollisionEvent(player));
   }
 
   private void simulateClimbing() {
@@ -79,8 +68,7 @@ public class InputProcessorSystemTest {
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(PLAYER_VELOCITY, newVelocity.dx());
-    assertEquals(
-      GROUNDED_DY, newVelocity.dy(), "Player grounded should be affected by gravity");
+    assertEquals(GROUNDED_DY, newVelocity.dy(), "Player grounded should be affected by gravity");
     assertNotSame(initialVelocity, newVelocity);
   }
 
@@ -114,7 +102,7 @@ public class InputProcessorSystemTest {
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
     assertEquals(
-      INITIAL_DY, newVelocity.dy(), "Player should not jump if airborne (dy remains old dy)");
+        INITIAL_DY, newVelocity.dy(), "Player should not jump if airborne (dy remains old dy)");
     assertFalse(playerInput.isJumpPressed(), "Jump press should be consumed");
   }
 
@@ -146,9 +134,9 @@ public class InputProcessorSystemTest {
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
     assertEquals(
-      STOP_CLIMB_SPEED,
-      newVelocity.dy(),
-      "Player should stop vertical movement but be affected by gravity");
+        STOP_CLIMB_SPEED,
+        newVelocity.dy(),
+        "Player should stop vertical movement but be affected by gravity");
   }
 
   @Test
@@ -173,8 +161,7 @@ public class InputProcessorSystemTest {
     Velocity newVelocity = getVelocityComponent(player);
     double expectedFallSpeed = INITIAL_DY + FALL_FACTOR; // 10.0 + 3.0
     assertEquals(0, newVelocity.dx());
-    assertEquals(
-      expectedFallSpeed, newVelocity.dy(), "Player should fast fall when in air");
+    assertEquals(expectedFallSpeed, newVelocity.dy(), "Player should fast fall when in air");
   }
 
   @Test
@@ -185,9 +172,9 @@ public class InputProcessorSystemTest {
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
     assertEquals(
-      GROUNDED_DY,
-      newVelocity.dy(),
-      "Player should not fast fall when grounded (dy should be gravity)");
+        GROUNDED_DY,
+        newVelocity.dy(),
+        "Player should not fast fall when grounded (dy should be gravity)");
   }
 
   @Test
@@ -200,8 +187,7 @@ public class InputProcessorSystemTest {
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
-    assertEquals(
-      INITIAL_DY, newVelocity.dy(), "Vertical velocity should be preserved if airborne");
+    assertEquals(INITIAL_DY, newVelocity.dy(), "Vertical velocity should be preserved if airborne");
   }
 
   @Test
@@ -215,8 +201,8 @@ public class InputProcessorSystemTest {
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
     assertEquals(
-      CLIMB_UP_SPEED,
-      newVelocity.dy(),
-      "Climbing (dy=CLIMB_UP_SPEED) should have priority over grounded state (dy=GROUNDED_DY)");
+        CLIMB_UP_SPEED,
+        newVelocity.dy(),
+        "Climbing (dy=CLIMB_UP_SPEED) should have priority over grounded state (dy=GROUNDED_DY)");
   }
 }

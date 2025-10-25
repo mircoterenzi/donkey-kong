@@ -29,18 +29,25 @@ public class InputProcessorSystem implements GameSystem {
                                   .orElseThrow()
                                   .otherEntity()
                                   .equals(entity));
-              final boolean isGrounded = entity.getComponent(GroundedEvent.class).isPresent();
+              final boolean isGrounded =
+                  world.getEntitiesWithComponents(List.of(GroundComponent.class)).stream()
+                      .anyMatch(
+                          e ->
+                              e.getComponent(CollisionEvent.class)
+                                  .orElseThrow()
+                                  .otherEntity()
+                                  .equals(entity));
 
               newDx =
-                switch (input.getCurrentHInput()) {
-                  case MOVE_LEFT -> -PLAYER_VELOCITY;
-                  case MOVE_RIGHT -> PLAYER_VELOCITY;
-                  default -> 0;
-              };
+                  switch (input.getCurrentHInput()) {
+                    case MOVE_LEFT -> -PLAYER_VELOCITY;
+                    case MOVE_RIGHT -> PLAYER_VELOCITY;
+                    default -> 0;
+                  };
 
               if (input.isJumpPressed()) {
                 if (isGrounded || isClimbing) {
-                  newDy = - (GRAVITY + JUMP_FACTOR);
+                  newDy = -(GRAVITY + JUMP_FACTOR);
                   newState = new PlayerState(State.JUMP);
                 } else {
                   newDy = oldVelocity.dy();
@@ -48,22 +55,22 @@ public class InputProcessorSystem implements GameSystem {
                 }
                 input.setJumpPressed(false);
               } else if (isClimbing) {
-                  switch (input.getCurrentVInput()) {
-                    case MOVE_UP -> {
-                      newDy = -(GRAVITY + PLAYER_VELOCITY);
-                      newState = new PlayerState(State.CLIMB_UP);
-                    }
-                    case MOVE_DOWN -> {
-                      newDy = - GRAVITY + PLAYER_VELOCITY;
-                      newState = new PlayerState(State.CLIMB_DOWN);
-                    }
-                    default -> {
-                      newDy = - GRAVITY;
-                      newState = new PlayerState(State.STOP_CLIMB);
-                    }
-                  };
+                switch (input.getCurrentVInput()) {
+                  case MOVE_UP -> {
+                    newDy = -(GRAVITY + PLAYER_VELOCITY);
+                    newState = new PlayerState(State.CLIMB_UP);
+                  }
+                  case MOVE_DOWN -> {
+                    newDy = -GRAVITY + PLAYER_VELOCITY;
+                    newState = new PlayerState(State.CLIMB_DOWN);
+                  }
+                  default -> {
+                    newDy = -GRAVITY;
+                    newState = new PlayerState(State.STOP_CLIMB);
+                  }
+                }
               } else if (isGrounded) {
-                newDy = - GRAVITY;
+                newDy = -GRAVITY;
                 if (newDx < 0) {
                   newState = new PlayerState(State.RUN_LEFT);
                 } else if (newDx > 0) {
