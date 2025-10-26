@@ -43,7 +43,7 @@ public class BoundariesSystemTest {
     assertEquals(
         new Position(DEFAULT_WIDTH, expectedY),
         finalPos,
-        "Entity is not correctly update if is out of min bounds.");
+        "Entity is not correctly updated if is out of min bounds.");
   }
 
   @Test
@@ -55,6 +55,6 @@ public class BoundariesSystemTest {
     assertEquals(
         new Position(DEFAULT_WIDTH, expectedY),
         position,
-        "Entity is not correctly update if is out of max bounds.");
+        "Entity is not correctly updated if is out of max bounds.");
   }
 }
