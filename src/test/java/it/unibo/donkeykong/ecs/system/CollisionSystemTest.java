@@ -93,8 +93,7 @@ public class CollisionSystemTest {
             new Position(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
     createMovingSolidEntity(
-      new Position(POSITION_FAR, POSITION_FAR),
-      new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
+        new Position(POSITION_FAR, POSITION_FAR), new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
     assertNoCollision(entity1);
@@ -132,7 +131,7 @@ public class CollisionSystemTest {
         createMovingSolidEntity(
             new Position(POSITION_ZERO, POSITION_ZERO), new CircleCollider(SIZE_SMALL));
     createMovingSolidEntity(
-      new Position(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
+        new Position(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
     assertNoCollision(entity1);
@@ -187,7 +186,7 @@ public class CollisionSystemTest {
             new Position(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
     createMovingSolidEntity(
-      new Position(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
+        new Position(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
     assertNoCollision(entity1);
