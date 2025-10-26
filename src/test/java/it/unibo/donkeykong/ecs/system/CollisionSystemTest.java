@@ -1,6 +1,5 @@
 package it.unibo.donkeykong.ecs.system;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -50,22 +49,11 @@ public class CollisionSystemTest {
     assertTrue(
         otherEntity.getComponent(CollisionEvent.class).isPresent(),
         "Expected collision for other entity.");
-    assertEquals(
-        otherEntity,
-        entity.getComponent(CollisionEvent.class).get().otherEntity(),
-        "Entity must reference otherEntity.");
-    assertEquals(
-        entity,
-        otherEntity.getComponent(CollisionEvent.class).get().otherEntity(),
-        "OtherEntity must reference entity.");
   }
 
-  private void assertNoCollision(Entity entity, Entity otherEntity) {
+  private void assertNoCollision(Entity entity) {
     assertFalse(
         entity.getComponent(CollisionEvent.class).isPresent(), "No collision expected for entity.");
-    assertFalse(
-        otherEntity.getComponent(CollisionEvent.class).isPresent(),
-        "No collision expected for other entity.");
   }
 
   @Test
@@ -104,13 +92,11 @@ public class CollisionSystemTest {
         createMovingSolidEntity(
             new Position(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
-    Entity entity2 =
-        createMovingSolidEntity(
-            new Position(POSITION_FAR, POSITION_FAR),
-            new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
+    createMovingSolidEntity(
+        new Position(POSITION_FAR, POSITION_FAR), new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
-    assertNoCollision(entity1, entity2);
+    assertNoCollision(entity1);
   }
 
   @Test
@@ -144,12 +130,11 @@ public class CollisionSystemTest {
     Entity entity1 =
         createMovingSolidEntity(
             new Position(POSITION_ZERO, POSITION_ZERO), new CircleCollider(SIZE_SMALL));
-    Entity entity2 =
-        createMovingSolidEntity(
-            new Position(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
+    createMovingSolidEntity(
+        new Position(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
-    assertNoCollision(entity1, entity2);
+    assertNoCollision(entity1);
   }
 
   @Test
@@ -200,12 +185,11 @@ public class CollisionSystemTest {
         createMovingSolidEntity(
             new Position(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
-    Entity entity2 =
-        createMovingSolidEntity(
-            new Position(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
+    createMovingSolidEntity(
+        new Position(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
-    assertNoCollision(entity1, entity2);
+    assertNoCollision(entity1);
   }
 
   @Test

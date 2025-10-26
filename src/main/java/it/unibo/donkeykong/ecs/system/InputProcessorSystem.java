@@ -6,6 +6,7 @@ import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.PlayerState.State;
 import java.util.List;
+import java.util.Optional;
 
 /** System that processes player input and updates entity velocities accordingly. */
 public class InputProcessorSystem implements GameSystem {
@@ -18,25 +19,18 @@ public class InputProcessorSystem implements GameSystem {
               Input input = entity.getComponent(Input.class).orElseThrow();
               Velocity oldVelocity = entity.getComponent(Velocity.class).orElseThrow();
               PlayerState oldState = entity.getComponent(PlayerState.class).orElseThrow();
+              Optional<CollisionEvent> collisionEvent = entity.getComponent(CollisionEvent.class);
 
               double newDx, newDy;
               PlayerState newState;
               final boolean isClimbing =
-                  world.getEntitiesWithComponents(List.of(Climbable.class)).stream()
-                      .anyMatch(
-                          e ->
-                              e.getComponent(CollisionEvent.class)
-                                  .orElseThrow()
-                                  .otherEntity()
-                                  .equals(entity));
+                  collisionEvent
+                      .map(event -> event.hasCollisionsWith(Climbable.class))
+                      .orElse(false);
               final boolean isGrounded =
-                  world.getEntitiesWithComponents(List.of(GroundComponent.class)).stream()
-                      .anyMatch(
-                          e ->
-                              e.getComponent(CollisionEvent.class)
-                                  .orElseThrow()
-                                  .otherEntity()
-                                  .equals(entity));
+                  collisionEvent
+                      .map(event -> event.hasCollisionsWith(GroundComponent.class))
+                      .orElse(false);
 
               newDx =
                   switch (input.getCurrentHInput()) {

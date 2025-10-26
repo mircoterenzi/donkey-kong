@@ -12,17 +12,40 @@ import java.util.Set;
  */
 public class PhysicsSystem implements GameSystem {
 
+  private static void handleCollision(long deltaTime, Entity entity, Entity otherEntity) {
+    Velocity velocity = entity.getComponent(Velocity.class).orElseThrow();
+    Position position = entity.getComponent(Position.class).orElseThrow();
+    Position otherPosition = otherEntity.getComponent(Position.class).orElseThrow();
+    double overlapX = position.x() - otherPosition.x();
+    double overlapY = position.y() - otherPosition.y();
+    if (Math.abs(overlapY) < Math.abs(overlapX)) {
+      entity.updateComponent(
+          position, new Position(position.x() + (-velocity.dx() * deltaTime), position.y()));
+    } else {
+      entity.updateComponent(
+          position, new Position(position.x(), position.y() + (-velocity.dy() * deltaTime)));
+    }
+    entity
+        .getComponent(Bounciness.class)
+        .ifPresent(
+            bounciness ->
+                entity.updateComponent(velocity, new Velocity(-velocity.dx(), -velocity.dy())));
+  }
+
   @Override
   public void update(World world, long deltaTime) {
     Set<Entity> targetEntities =
         world.getEntitiesWithComponents(
-            List.of(Velocity.class, CollisionEvent.class, CollisionEvent.class));
-    for (Entity entity : targetEntities) {
-      Velocity velocity = entity.getComponent(Velocity.class).orElseThrow();
-      boolean isBouncing = entity.getComponent(Bounciness.class).isPresent();
-      world.removeComponentFromEntity(entity, velocity);
-      entity.addComponent( // TODO: refine velocity update logic based on collision direction
-          new Velocity(isBouncing ? -velocity.dx() : 0, isBouncing ? -velocity.dy() : 0));
-    }
+            List.of(CollisionEvent.class, Position.class, Velocity.class, Collider.class));
+    targetEntities.forEach(
+        entity ->
+            entity
+                .getComponent(CollisionEvent.class)
+                .ifPresent(
+                    collisionEvent ->
+                        collisionEvent
+                            .getCollisionsWith(Position.class)
+                            .forEach(
+                                otherEntity -> handleCollision(deltaTime, entity, otherEntity))));
   }
 }
