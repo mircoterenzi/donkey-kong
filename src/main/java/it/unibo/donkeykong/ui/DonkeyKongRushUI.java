@@ -37,8 +37,8 @@ public class DonkeyKongRushUI extends Application {
     final Scene scene =
         new Scene(root, ConfigurationUI.WINDOW_WIDTH, ConfigurationUI.WINDOW_HEIGHT);
     final InputHandler inputHandler = new InputHandler(world);
-    scene.setOnKeyPressed(e -> inputHandler.handleKeyPress(e.getCode()));
-    scene.setOnKeyReleased(e -> inputHandler.handleKeyRelease(e.getCode()));
+    scene.setOnKeyPressed(e -> inputHandler.handleKeyEvent(e.getCode(), true));
+    scene.setOnKeyReleased(e -> inputHandler.handleKeyEvent(e.getCode(), false));
 
     final RenderingSystem renderingSystem = new RenderingSystem(canvas);
     world.addSystem(renderingSystem);
