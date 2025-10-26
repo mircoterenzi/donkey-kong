@@ -8,6 +8,8 @@ import it.unibo.donkeykong.ecs.component.Graphic;
 import it.unibo.donkeykong.ecs.component.Position;
 import java.util.List;
 import java.util.Map;
+
+import it.unibo.donkeykong.utilities.InputHandler;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -34,6 +36,9 @@ public class DonkeyKongRushUI extends Application {
     final Pane root = new Pane(canvas);
     final Scene scene =
         new Scene(root, ConfigurationUI.WINDOW_WIDTH, ConfigurationUI.WINDOW_HEIGHT);
+    final InputHandler inputHandler = new InputHandler(world);
+    scene.setOnKeyPressed(e -> inputHandler.handleKeyPress(e.getCode()));
+    scene.setOnKeyReleased(e -> inputHandler.handleKeyRelease(e.getCode()));
 
     final RenderingSystem renderingSystem = new RenderingSystem(canvas);
     world.addSystem(renderingSystem);
