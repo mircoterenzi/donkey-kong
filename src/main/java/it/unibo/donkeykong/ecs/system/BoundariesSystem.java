@@ -23,8 +23,8 @@ public class BoundariesSystem implements GameSystem {
       } else {
         throw new IllegalArgumentException("Unknown collider type");
       }
-      entity.removeComponent(position);
-      entity.addComponent(
+      entity.updateComponent(
+          position,
           new Position(
               Math.min(Math.max(position.x(), halfWidth), Constants.WORLD_WIDTH - halfWidth),
               Math.min(Math.max(position.y(), halfHeight), Constants.WORLD_HEIGHT - halfHeight)));
