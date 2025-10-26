@@ -1,14 +1,13 @@
 package it.unibo.donkeykong.utilities;
 
-import it.unibo.donkeykong.ecs.World;
-import it.unibo.donkeykong.ecs.component.Input;
-import javafx.scene.input.KeyCode;
-
-import java.util.List;
-import java.util.function.Consumer;
-
 import static it.unibo.donkeykong.ecs.component.Input.HorizontalInput.*;
 import static it.unibo.donkeykong.ecs.component.Input.VerticalInput.*;
+
+import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.ecs.component.Input;
+import java.util.List;
+import java.util.function.Consumer;
+import javafx.scene.input.KeyCode;
 
 public class InputHandler {
   private final World world;
@@ -75,15 +74,16 @@ public class InputHandler {
       vInput = Input.VerticalInput.NONE;
     }
 
-    applyToInput(i -> {
-      i.setCurrentHInput(hInput);
-      i.setCurrentVInput(vInput);
-    });
+    applyToInput(
+        i -> {
+          i.setCurrentHInput(hInput);
+          i.setCurrentVInput(vInput);
+        });
   }
 
   private void applyToInput(final Consumer<Input> inputLogic) {
     world
-      .getEntitiesWithComponents(List.of(Input.class))
-      .forEach(e -> e.getComponent(Input.class).ifPresent(inputLogic));
+        .getEntitiesWithComponents(List.of(Input.class))
+        .forEach(e -> e.getComponent(Input.class).ifPresent(inputLogic));
   }
 }

@@ -6,10 +6,9 @@ import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.WorldImpl;
 import it.unibo.donkeykong.ecs.component.Graphic;
 import it.unibo.donkeykong.ecs.component.Position;
+import it.unibo.donkeykong.utilities.InputHandler;
 import java.util.List;
 import java.util.Map;
-
-import it.unibo.donkeykong.utilities.InputHandler;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Scene;
