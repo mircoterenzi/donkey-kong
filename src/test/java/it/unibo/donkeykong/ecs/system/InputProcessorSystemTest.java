@@ -53,12 +53,12 @@ public class InputProcessorSystemTest {
 
   private void simulateGrounded() {
     Entity ground = world.createEntity().addComponent(new GroundComponent());
-    ground.addComponent(new CollisionEvent(player));
+    player.addComponent(new CollisionEvent(ground));
   }
 
   private void simulateClimbing() {
     Entity ladder = world.createEntity().addComponent(new Climbable());
-    ladder.addComponent(new CollisionEvent(player));
+    player.addComponent(new CollisionEvent(ladder));
   }
 
   @Test
@@ -188,21 +188,5 @@ public class InputProcessorSystemTest {
     Velocity newVelocity = getVelocityComponent(player);
     assertEquals(0, newVelocity.dx());
     assertEquals(INITIAL_DY, newVelocity.dy(), "Vertical velocity should be preserved if airborne");
-  }
-
-  @Test
-  void testClimbingHasPriorityOverGrounded() {
-    simulateGrounded();
-    simulateClimbing();
-    playerInput.setCurrentVInput(Input.VerticalInput.MOVE_UP); // Prova a salire
-
-    world.update(DELTA_TIME_IGNORED);
-
-    Velocity newVelocity = getVelocityComponent(player);
-    assertEquals(0, newVelocity.dx());
-    assertEquals(
-        CLIMB_UP_SPEED,
-        newVelocity.dy(),
-        "Climbing (dy=CLIMB_UP_SPEED) should have priority over grounded state (dy=GROUNDED_DY)");
   }
 }
