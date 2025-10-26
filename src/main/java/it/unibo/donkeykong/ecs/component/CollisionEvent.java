@@ -19,7 +19,6 @@ public class CollisionEvent implements EventComponent {
   }
 
   public void addCollision(Entity otherEntity) {
-    this.entities.remove(otherEntity);
     this.entities.add(otherEntity);
   }
 
