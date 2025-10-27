@@ -15,6 +15,7 @@ public class PhysicsSystemTest {
 
   private static final long DELTA_TIME = 1L;
   private static final double VELOCITY_VALUE = 10.0;
+  private static final double NO_VELOCITY_VALUE = 0;
   private static final int COLLIDER_SIZE = 15;
   private static final Collider COLLIDER = new RectangleCollider(COLLIDER_SIZE, COLLIDER_SIZE);
   private static final int OBSTACLE_POSITION_COORDINATE = 0;
@@ -92,24 +93,26 @@ public class PhysicsSystemTest {
   }
 
   @Test
-  void testNonBouncyEntityVelocityUnchangedOnCollision() {
+  void testNonBouncyEntityVelocityZeroAfterCollision() {
     this.entity.addComponent(
-        new Position(COLLIDED_ENTITY_POSITION_COORDINATE, COLLIDED_ENTITY_POSITION_COORDINATE));
+        new Position(COLLIDED_ENTITY_POSITION_COORDINATE, UNCOLLIDED_ENTITY_POSITION_COORDINATE));
     this.entity.addComponent(new CollisionEvent(this.obstacle));
     this.world.update(DELTA_TIME);
-    assertEntityComponentEquals(Velocity.class, VELOCITY, this.entity);
+    assertEntityComponentEquals(
+        Velocity.class, new Velocity(NO_VELOCITY_VALUE, VELOCITY_VALUE), this.entity);
   }
 
   @Test
   void testBouncyEntityVelocityReversedOnCollision() {
     this.entity
         .addComponent(
-            new Position(COLLIDED_ENTITY_POSITION_COORDINATE, COLLIDED_ENTITY_POSITION_COORDINATE))
+            new Position(
+                COLLIDED_ENTITY_POSITION_COORDINATE, UNCOLLIDED_ENTITY_POSITION_COORDINATE))
         .addComponent(new Bounciness());
     this.obstacle.addComponent(new Bounciness());
     this.entity.addComponent(new CollisionEvent(this.obstacle));
     this.world.update(DELTA_TIME);
     assertEntityComponentEquals(
-        Velocity.class, new Velocity(-VELOCITY_VALUE, -VELOCITY_VALUE), this.entity);
+        Velocity.class, new Velocity(-VELOCITY_VALUE, VELOCITY_VALUE), this.entity);
   }
 }
