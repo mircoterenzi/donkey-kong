@@ -1,5 +1,7 @@
 package it.unibo.donkeykong.ecs.system;
 
+import static it.unibo.donkeykong.ecs.component.StateComponent.Direction.*;
+import static it.unibo.donkeykong.ecs.component.StateComponent.State.*;
 import static it.unibo.donkeykong.utilities.Constants.*;
 
 import it.unibo.donkeykong.ecs.World;
@@ -7,9 +9,6 @@ import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import java.util.List;
 import java.util.Optional;
-
-import static it.unibo.donkeykong.ecs.component.StateComponent.State.*;
-import static it.unibo.donkeykong.ecs.component.StateComponent.Direction.*;
 
 /** System that processes player input and updates entity velocities accordingly. */
 public class InputProcessorSystem implements GameSystem {
@@ -23,7 +22,7 @@ public class InputProcessorSystem implements GameSystem {
               Velocity oldVelocity = entity.getComponent(Velocity.class).orElseThrow();
               StateComponent oldState = entity.getComponent(StateComponent.class).orElseThrow();
               Optional<CollisionEvent> collisionEvent = entity.getComponent(CollisionEvent.class);
-              Gravity gravity = entity.getComponent(Gravity.class).orElseThrow();
+              Gravity gravity = entity.getComponent(Gravity.class).orElse(new Gravity(0));
 
               double newDx, newDy;
               State newState;
@@ -50,11 +49,11 @@ public class InputProcessorSystem implements GameSystem {
                   newDir = oldState.direction();
                   newDx = 0;
                 }
-              };
+              }
 
               if (input.isJumpPressed()) {
                 if (isGrounded || isClimbing) {
-                  newDy = -(gravity.gravity() + JUMP_FACTOR);
+                  newDy = JUMP_FACTOR;
                   newState = JUMP;
                 } else {
                   newDy = oldVelocity.dy();
@@ -64,7 +63,7 @@ public class InputProcessorSystem implements GameSystem {
               } else if (isClimbing) {
                 switch (input.getCurrentVInput()) {
                   case MOVE_UP -> {
-                    newDy = -(gravity.gravity() +PLAYER_VELOCITY);
+                    newDy = -(gravity.gravity() + PLAYER_VELOCITY);
                     newState = UP;
                   }
                   case MOVE_DOWN -> {
@@ -77,16 +76,16 @@ public class InputProcessorSystem implements GameSystem {
                   }
                 }
               } else if (isGrounded) {
-                newDy = -gravity.gravity();
+                newDy = 0;
                 newState = MOVING;
                 if (newDx == 0) {
                   newState = IDLE;
                 }
               } else if (input.getCurrentVInput() == Input.VerticalInput.MOVE_DOWN) {
-                newDy = oldVelocity.dy() + FALL_FACTOR;
+                newDy = FALL_FACTOR;
                 newState = FALL;
               } else {
-                newDy = oldVelocity.dy();
+                newDy = 0;
                 newState = oldState.state();
               }
 

@@ -12,7 +12,7 @@ public class GravitySystem implements GameSystem {
         .getEntitiesWithComponents(List.of(Gravity.class, Velocity.class, Position.class))
         .forEach(
             entity -> {
-              var gravity = entity.getComponent(Gravity.class).orElseThrow();
+              var gravity = entity.getComponent(Gravity.class).orElse(new Gravity(0));
               var velocity = entity.getComponent(Velocity.class).orElseThrow();
 
               double newDy = velocity.dy() + gravity.gravity() * (deltaTime / 1000.0);

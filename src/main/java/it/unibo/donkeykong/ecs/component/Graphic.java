@@ -1,8 +1,8 @@
 package it.unibo.donkeykong.ecs.component;
 
+import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import java.util.List;
 import java.util.Map;
-import it.unibo.donkeykong.ecs.component.StateComponent.*;
 
 public record Graphic(
     double width,
