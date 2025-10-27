@@ -13,7 +13,7 @@ import java.util.Optional;
 /** System that processes player input and updates entity velocities accordingly. */
 public class InputProcessorSystem implements GameSystem {
   @Override
-  public void update(World world, long deltaTime) {
+  public void update(World world, float deltaTime) {
     world
         .getEntitiesWithComponents(List.of(Input.class))
         .forEach(

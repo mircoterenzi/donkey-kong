@@ -7,7 +7,7 @@ import java.util.List;
 /** GravitySystem applies gravitational force to entities with Gravity and Velocity components. */
 public class GravitySystem implements GameSystem {
   @Override
-  public void update(World world, long deltaTime) {
+  public void update(World world, float deltaTime) {
     world
         .getEntitiesWithComponents(List.of(Gravity.class, Velocity.class, Position.class))
         .forEach(

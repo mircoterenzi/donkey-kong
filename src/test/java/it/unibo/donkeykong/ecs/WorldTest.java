@@ -23,18 +23,18 @@ public class WorldTest {
 
   /** A simple test system that records the last delta time and world it was updated with. */
   private static class TestSystem implements GameSystem {
-    private long deltaTime = -1;
+    private float deltaTime = -1;
     private World world = null;
     private int updateCount = 0;
 
     @Override
-    public void update(World world, long deltaTime) {
+    public void update(World world, float deltaTime) {
       this.world = world;
       this.deltaTime = deltaTime;
       this.updateCount++;
     }
 
-    public long getDeltaTime() {
+    public float getDeltaTime() {
       return deltaTime;
     }
 

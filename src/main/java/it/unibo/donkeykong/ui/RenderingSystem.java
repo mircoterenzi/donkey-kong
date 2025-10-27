@@ -35,7 +35,7 @@ public class RenderingSystem implements GameSystem {
   }
 
   @Override
-  public void update(World world, long deltaTime) {
+  public void update(World world, float deltaTime) {
     context.clearRect(0, 0, context.getCanvas().getWidth(), context.getCanvas().getHeight());
     context.drawImage(
         assetCache.get("background"),

@@ -12,7 +12,7 @@ import java.util.Set;
  */
 public class PhysicsSystem implements GameSystem {
 
-  private static void handleCollision(long deltaTime, Entity entity, Entity otherEntity) {
+  private static void handleCollision(float deltaTime, Entity entity, Entity otherEntity) {
     Velocity velocity = entity.getComponent(Velocity.class).orElseThrow();
     Position position = entity.getComponent(Position.class).orElseThrow();
     Position otherPosition = otherEntity.getComponent(Position.class).orElseThrow();
@@ -33,7 +33,7 @@ public class PhysicsSystem implements GameSystem {
   }
 
   @Override
-  public void update(World world, long deltaTime) {
+  public void update(World world, float deltaTime) {
     Set<Entity> targetEntities =
         world.getEntitiesWithComponents(
             List.of(CollisionEvent.class, Position.class, Velocity.class, Collider.class));

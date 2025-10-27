@@ -119,7 +119,7 @@ public class WorldImpl implements World {
   }
 
   @Override
-  public void update(long deltaTime) {
+  public void update(float deltaTime) {
     for (final var system : this.systems) {
       system.update(this, deltaTime);
     }

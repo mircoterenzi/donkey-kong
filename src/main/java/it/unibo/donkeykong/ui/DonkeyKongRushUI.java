@@ -53,7 +53,7 @@ public class DonkeyKongRushUI extends Application {
       @Override
       public void handle(long now) {
         if (now - lastUpdate >= TARGET_FPS_NANO) {
-          final long deltaTime = (now - lastUpdate) / 1_000_000;
+          final float deltaTime = (now - lastUpdate) / 1_000_000_000f;
           world.update(deltaTime);
           lastUpdate = now;
         }
