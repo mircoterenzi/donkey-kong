@@ -112,6 +112,31 @@ public class WorldTest {
   }
 
   @Test
+  void testUpdateComponent() {
+    Component oldComponent = new TestComponent();
+    Component newComponent = new TestComponent();
+    Entity entity = world.createEntity().addComponent(oldComponent);
+
+    assertTrue(
+        entity.getComponent(TestComponent.class).isPresent(), "Old component should be present.");
+    assertSame(
+        oldComponent,
+        entity.getComponent(TestComponent.class).get(),
+        "Instance should be the old one.");
+
+    entity.updateComponent(oldComponent, newComponent);
+
+    Set<Component> components = world.getComponentsOfEntity(entity);
+    assertFalse(components.contains(oldComponent), "Old component should be removed.");
+    assertTrue(components.contains(newComponent), "New component should be added.");
+    assertSame(
+        newComponent,
+        entity.getComponent(TestComponent.class).get(),
+        "Instance should be the new one.");
+    assertEquals(1, components.size(), "Should only be one component.");
+  }
+
+  @Test
   void testEntityIdsAreUnique() {
     Entity entity = world.createEntity();
     Entity anotherEntity = world.createEntity();
