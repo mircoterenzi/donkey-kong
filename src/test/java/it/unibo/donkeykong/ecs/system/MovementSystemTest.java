@@ -16,8 +16,7 @@ import org.junit.jupiter.api.Test;
 
 public class MovementSystemTest {
 
-  private static final long DELTA_TIME_MILLISECONDS = 1000L;
-  private static final float DELTA_TIME_SECONDS = DELTA_TIME_MILLISECONDS / 1000f;
+  private static final float DELTA_TIME_SECONDS = 1000f;
 
   private static final int INITIAL_X = 10;
   private static final int INITIAL_Y = 20;
@@ -56,7 +55,7 @@ public class MovementSystemTest {
     Entity entity = world.createEntity();
     world.addComponentToEntity(entity, initialPosition);
     world.addComponentToEntity(entity, velocity);
-    world.update(DELTA_TIME_MILLISECONDS);
+    world.update(DELTA_TIME_SECONDS);
     Position actualPosition = getPositionComponent(entity);
     assertEquals(expectedPosition, actualPosition, "Entity did not move to the expected position.");
     assertNotSame(initialPosition, actualPosition, "Position component must be a new instance.");
@@ -76,7 +75,7 @@ public class MovementSystemTest {
     Entity entity = world.createEntity();
     world.addComponentToEntity(entity, initialPosition);
     world.addComponentToEntity(entity, velocity);
-    world.update(DELTA_TIME_MILLISECONDS);
+    world.update(DELTA_TIME_SECONDS);
     Position actualPosition = getPositionComponent(entity);
     assertEquals(
         expectedPosition,
@@ -90,7 +89,7 @@ public class MovementSystemTest {
     Entity entity = world.createEntity();
     world.addComponentToEntity(entity, initialPosition);
     world.addComponentToEntity(entity, new TestComponent());
-    world.update(DELTA_TIME_MILLISECONDS);
+    world.update(DELTA_TIME_SECONDS);
     Position actualPosition = getPositionComponent(entity);
     assertEquals(
         initialPosition,
@@ -108,7 +107,7 @@ public class MovementSystemTest {
     Entity entity = world.createEntity();
     world.addComponentToEntity(entity, initialPosition);
     world.addComponentToEntity(entity, velocity);
-    world.update(DELTA_TIME_MILLISECONDS);
+    world.update(DELTA_TIME_SECONDS);
     Position actualPosition = getPositionComponent(entity);
     assertEquals(INITIAL_X, actualPosition.x());
     assertEquals(INITIAL_Y, actualPosition.y());
@@ -125,10 +124,10 @@ public class MovementSystemTest {
     Entity entity = world.createEntity();
     world.addComponentToEntity(entity, position);
     world.addComponentToEntity(entity, velocity);
-    world.update(DELTA_TIME_MILLISECONDS);
+    world.update(DELTA_TIME_SECONDS);
     Position positionAfterFirstMove = getPositionComponent(entity);
     world.removeComponentFromEntity(entity, velocity);
-    world.update(DELTA_TIME_MILLISECONDS);
+    world.update(DELTA_TIME_SECONDS);
     Position posAfterSecondMove = getPositionComponent(entity);
     assertEquals(
         positionAfterFirstMove.x(),
