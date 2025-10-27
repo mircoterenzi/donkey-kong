@@ -48,8 +48,17 @@ public class RenderingSystem implements GameSystem {
       final Position position = entity.getComponent(Position.class).orElseThrow();
       final Graphic graphic = entity.getComponent(Graphic.class).orElseThrow();
       final Image image = assetCache.get(graphic.currentFrame());
+      double renderPositionY = position.y() - graphic.height() / 2;
+      double renderPositionX = position.x() - graphic.width() / 2;
       if (image != null) {
-        context.drawImage(image, position.x(), position.y(), graphic.width(), graphic.height());
+        context.drawImage(
+            image, renderPositionX, renderPositionY, graphic.width(), graphic.height());
+      } else {
+        context.setStroke(javafx.scene.paint.Color.GREEN);
+        context.setLineWidth(2);
+        context.strokeRect(renderPositionX, renderPositionY, graphic.width(), graphic.height());
+        context.setFill(javafx.scene.paint.Color.BLUE);
+        context.fillRect(renderPositionX, renderPositionY, graphic.width(), graphic.height());
       }
     }
   }
