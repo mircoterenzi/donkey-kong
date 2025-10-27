@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 import it.unibo.donkeykong.ecs.*;
 import it.unibo.donkeykong.ecs.component.*;
+import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,7 @@ public class InputProcessorSystemTest {
 
     playerInput = new Input();
     initialVelocity = new Velocity(0, 0);
-    PlayerState initialPlayerState = new PlayerState(PlayerState.State.STOP_GROUND);
+    StateComponent initialPlayerState = new StateComponent(State.IDLE, Direction.LEFT);
 
     player =
         world
