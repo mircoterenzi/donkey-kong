@@ -36,6 +36,7 @@ public class DonkeyKongRushUI extends Application {
     final Scene scene =
         new Scene(root, ConfigurationUI.WINDOW_WIDTH, ConfigurationUI.WINDOW_HEIGHT);
     final InputHandler inputHandler = new InputHandler(world);
+    // TODO: move input handling where game main scene is created
     scene.setOnKeyPressed(e -> inputHandler.handleKeyEvent(e.getCode(), true));
     scene.setOnKeyReleased(e -> inputHandler.handleKeyEvent(e.getCode(), false));
 

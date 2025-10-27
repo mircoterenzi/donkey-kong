@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.function.Consumer;
 import javafx.scene.input.KeyCode;
 
+/**
+ * InputHandler is responsible for handling keyboard input events and updating the Input
+ * components of entities in the game world accordingly.
+ */
 public class InputHandler {
   private final World world;
   private boolean leftPressed, rightPressed, upPressed, downPressed;
