@@ -8,14 +8,17 @@ import it.unibo.donkeykong.ecs.WorldImpl;
 import it.unibo.donkeykong.ecs.component.Graphic;
 import it.unibo.donkeykong.ecs.component.Position;
 import it.unibo.donkeykong.ecs.component.StateComponent;
+import it.unibo.donkeykong.utilities.Constants;
 import it.unibo.donkeykong.utilities.InputHandler;
 import java.util.List;
 import java.util.Map;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.Pane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public class DonkeyKongRushUI extends Application {
@@ -35,10 +38,15 @@ public class DonkeyKongRushUI extends Application {
             new Graphic(
                 64, 64, 100, new StateComponent(IDLE, LEFT), 0, Map.of(IDLE, List.of("player"))));
 
-    final Canvas canvas = new Canvas(ConfigurationUI.WINDOW_WIDTH, ConfigurationUI.WINDOW_HEIGHT);
+    final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
+    final Rectangle2D screen = Screen.getPrimary().getVisualBounds();
+    final double windowHeight = screen.getHeight() * 0.9;
+    final double windowWidth = windowHeight * aspectRatio;
+
+    final Canvas canvas = new Canvas(windowWidth, windowHeight);
     final Pane root = new Pane(canvas);
     final Scene scene =
-        new Scene(root, ConfigurationUI.WINDOW_WIDTH, ConfigurationUI.WINDOW_HEIGHT);
+        new Scene(root, windowWidth, windowHeight);
     final InputHandler inputHandler = new InputHandler(world);
     // TODO: move input handling where game main scene is created
     scene.setOnKeyPressed(e -> inputHandler.handleKeyEvent(e.getCode(), true));

@@ -5,7 +5,11 @@ import it.unibo.donkeykong.ecs.component.Graphic;
 import it.unibo.donkeykong.ecs.component.Position;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import it.unibo.donkeykong.ecs.system.GameSystem;
+
+import java.lang.constant.Constable;
 import java.util.*;
+
+import it.unibo.donkeykong.utilities.Constants;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -14,11 +18,15 @@ public class RenderingSystem implements GameSystem {
 
   private final GraphicsContext context;
   private final Map<String, Image> assetCache;
+  private final double scaleX;
+  private final double scaleY;
 
   public RenderingSystem(final Canvas canvas) {
     this.context = canvas.getGraphicsContext2D();
     this.context.setImageSmoothing(false);
     this.assetCache = new HashMap<>();
+    this.scaleX = canvas.getWidth() / Constants.WORLD_WIDTH;
+    this.scaleY = canvas.getHeight() / Constants.WORLD_HEIGHT;
     this.loadAssets();
   }
 
@@ -36,13 +44,16 @@ public class RenderingSystem implements GameSystem {
 
   @Override
   public void update(World world, float deltaTime) {
-    context.clearRect(0, 0, context.getCanvas().getWidth(), context.getCanvas().getHeight());
+    context.save();
+    context.scale(scaleX, scaleY);
+
+    context.clearRect(0, 0, Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
     context.drawImage(
         assetCache.get("background"),
         0,
         0,
-        ConfigurationUI.WINDOW_WIDTH,
-        ConfigurationUI.WINDOW_HEIGHT);
+        Constants.WORLD_WIDTH,
+        Constants.WORLD_HEIGHT);
     for (final Entity entity :
         world.getEntitiesWithComponents(List.of(Position.class, Graphic.class))) {
       final Position position = entity.getComponent(Position.class).orElseThrow();
@@ -61,5 +72,7 @@ public class RenderingSystem implements GameSystem {
         context.fillRect(renderPositionX, renderPositionY, graphic.width(), graphic.height());
       }
     }
+
+    context.restore();
   }
 }
