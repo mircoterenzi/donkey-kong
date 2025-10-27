@@ -5,11 +5,8 @@ import it.unibo.donkeykong.ecs.component.Graphic;
 import it.unibo.donkeykong.ecs.component.Position;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import it.unibo.donkeykong.ecs.system.GameSystem;
-
-import java.lang.constant.Constable;
-import java.util.*;
-
 import it.unibo.donkeykong.utilities.Constants;
+import java.util.*;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -49,11 +46,7 @@ public class RenderingSystem implements GameSystem {
 
     context.clearRect(0, 0, Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
     context.drawImage(
-        assetCache.get("background"),
-        0,
-        0,
-        Constants.WORLD_WIDTH,
-        Constants.WORLD_HEIGHT);
+        assetCache.get("background"), 0, 0, Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
     for (final Entity entity :
         world.getEntitiesWithComponents(List.of(Position.class, Graphic.class))) {
       final Position position = entity.getComponent(Position.class).orElseThrow();

@@ -45,8 +45,7 @@ public class DonkeyKongRushUI extends Application {
 
     final Canvas canvas = new Canvas(windowWidth, windowHeight);
     final Pane root = new Pane(canvas);
-    final Scene scene =
-        new Scene(root, windowWidth, windowHeight);
+    final Scene scene = new Scene(root, windowWidth, windowHeight);
     final InputHandler inputHandler = new InputHandler(world);
     // TODO: move input handling where game main scene is created
     scene.setOnKeyPressed(e -> inputHandler.handleKeyEvent(e.getCode(), true));
