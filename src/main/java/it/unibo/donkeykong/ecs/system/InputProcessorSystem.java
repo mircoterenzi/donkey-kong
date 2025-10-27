@@ -4,9 +4,12 @@ import static it.unibo.donkeykong.utilities.Constants.*;
 
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.component.*;
-import it.unibo.donkeykong.ecs.component.PlayerState.State;
+import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import java.util.List;
 import java.util.Optional;
+
+import static it.unibo.donkeykong.ecs.component.StateComponent.State.*;
+import static it.unibo.donkeykong.ecs.component.StateComponent.Direction.*;
 
 /** System that processes player input and updates entity velocities accordingly. */
 public class InputProcessorSystem implements GameSystem {
@@ -18,11 +21,12 @@ public class InputProcessorSystem implements GameSystem {
             entity -> {
               Input input = entity.getComponent(Input.class).orElseThrow();
               Velocity oldVelocity = entity.getComponent(Velocity.class).orElseThrow();
-              PlayerState oldState = entity.getComponent(PlayerState.class).orElseThrow();
+              StateComponent oldState = entity.getComponent(StateComponent.class).orElseThrow();
               Optional<CollisionEvent> collisionEvent = entity.getComponent(CollisionEvent.class);
 
               double newDx, newDy;
-              PlayerState newState;
+              State newState;
+              Direction newDir;
               final boolean isClimbing =
                   collisionEvent
                       .map(event -> event.hasCollisionsWith(Climbable.class))
@@ -32,55 +36,61 @@ public class InputProcessorSystem implements GameSystem {
                       .map(event -> event.hasCollisionsWith(GroundComponent.class))
                       .orElse(false);
 
-              newDx =
-                  switch (input.getCurrentHInput()) {
-                    case MOVE_LEFT -> -PLAYER_VELOCITY;
-                    case MOVE_RIGHT -> PLAYER_VELOCITY;
-                    default -> 0;
-                  };
+              switch (input.getCurrentHInput()) {
+                case MOVE_LEFT -> {
+                  newDir = LEFT;
+                  newDx = -PLAYER_VELOCITY;
+                }
+                case MOVE_RIGHT -> {
+                  newDir = RIGHT;
+                  newDx = PLAYER_VELOCITY;
+                }
+                default -> {
+                  newDir = oldState.direction();
+                  newDx = 0;
+                }
+              };
 
               if (input.isJumpPressed()) {
                 if (isGrounded || isClimbing) {
                   newDy = -(GRAVITY + JUMP_FACTOR);
-                  newState = new PlayerState(State.JUMP);
+                  newState = JUMP;
                 } else {
                   newDy = oldVelocity.dy();
-                  newState = oldState;
+                  newState = oldState.state();
                 }
                 input.setJumpPressed(false);
               } else if (isClimbing) {
                 switch (input.getCurrentVInput()) {
                   case MOVE_UP -> {
                     newDy = -(GRAVITY + PLAYER_VELOCITY);
-                    newState = new PlayerState(State.CLIMB_UP);
+                    newState = UP;
                   }
                   case MOVE_DOWN -> {
                     newDy = -GRAVITY + PLAYER_VELOCITY;
-                    newState = new PlayerState(State.CLIMB_DOWN);
+                    newState = DOWN;
                   }
                   default -> {
                     newDy = -GRAVITY;
-                    newState = new PlayerState(State.STOP_CLIMB);
+                    newState = STOP_CLIMB;
                   }
                 }
               } else if (isGrounded) {
                 newDy = -GRAVITY;
-                if (newDx < 0) {
-                  newState = new PlayerState(State.RUN_LEFT);
-                } else if (newDx > 0) {
-                  newState = new PlayerState(State.RUN_RIGHT);
-                } else {
-                  newState = new PlayerState(State.STOP_GROUND);
+                newState = MOVING;
+                if (newDx == 0) {
+                  newState = IDLE;
                 }
               } else if (input.getCurrentVInput() == Input.VerticalInput.MOVE_DOWN) {
                 newDy = oldVelocity.dy() + FALL_FACTOR;
-                newState = new PlayerState(State.FALL);
+                newState = FALL;
               } else {
                 newDy = oldVelocity.dy();
-                newState = oldState;
+                newState = oldState.state();
               }
 
-              entity.updateComponent(oldState, newState);
+              var state = new StateComponent(newState, newDir);
+              entity.updateComponent(oldState, state);
               entity.updateComponent(oldVelocity, new Velocity(newDx, newDy));
             });
   }

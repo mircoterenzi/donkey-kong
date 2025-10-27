@@ -2,28 +2,19 @@ package it.unibo.donkeykong.ecs.component;
 
 import java.util.List;
 import java.util.Map;
+import it.unibo.donkeykong.ecs.component.StateComponent.*;
 
 public record Graphic(
     double width,
     double height,
     long frameDuration,
-    EntityState state,
+    StateComponent state,
     int frameIndex,
-    Map<EntityState, List<String>> framesMap)
+    Map<State, List<String>> framesMap)
     implements Component {
 
-  public enum EntityState {
-    IDLE,
-    MOVING_LEFT,
-    MOVING_RIGHT,
-    JUMPING,
-    FALLING,
-    CLIMBING,
-    DYING
-  }
-
   public String currentFrame() {
-    return this.framesMap.get(this.state).get(this.frameIndex);
+    return this.framesMap.get(this.state.state()).get(this.frameIndex);
   }
 
   public Graphic copyWithUpdatedIndex(final int frameIndex) {
@@ -32,11 +23,11 @@ public record Graphic(
         this.height,
         this.frameDuration,
         this.state,
-        frameIndex % this.framesMap.get(this.state).size(),
+        frameIndex % this.framesMap.get(this.state.state()).size(),
         framesMap);
   }
 
-  public Graphic copyWithUpdatedState(final EntityState state) {
+  public Graphic copyWithUpdatedState(final StateComponent state) {
     return new Graphic(this.width, this.height, this.frameDuration, state, 0, framesMap);
   }
 }
