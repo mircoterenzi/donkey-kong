@@ -76,7 +76,7 @@ public class InputProcessorSystem implements GameSystem {
                   }
                 }
               } else if (isGrounded) {
-                newDy = 0;
+                newDy = oldVelocity.dy();
                 newState = MOVING;
                 if (newDx == 0) {
                   newState = IDLE;
@@ -85,7 +85,7 @@ public class InputProcessorSystem implements GameSystem {
                 newDy = FALL_FACTOR;
                 newState = FALL;
               } else {
-                newDy = 0;
+                newDy = oldVelocity.dy();
                 newState = oldState.state();
               }
 
