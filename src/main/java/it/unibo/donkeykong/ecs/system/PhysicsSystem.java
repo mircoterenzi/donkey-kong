@@ -16,20 +16,18 @@ public class PhysicsSystem implements GameSystem {
     Velocity velocity = entity.getComponent(Velocity.class).orElseThrow();
     Position position = entity.getComponent(Position.class).orElseThrow();
     Position otherPosition = otherEntity.getComponent(Position.class).orElseThrow();
+    boolean isBouncy = entity.getComponent(Bounciness.class).isPresent();
     double overlapX = position.x() - otherPosition.x();
     double overlapY = position.y() - otherPosition.y();
     if (Math.abs(overlapY) < Math.abs(overlapX)) {
       entity.updateComponent(
           position, new Position(position.x() + (-velocity.dx() * deltaTime), position.y()));
+      entity.updateComponent(velocity, new Velocity(isBouncy ? -velocity.dx() : 0, velocity.dy()));
     } else {
       entity.updateComponent(
           position, new Position(position.x(), position.y() + (-velocity.dy() * deltaTime)));
+      entity.updateComponent(velocity, new Velocity(velocity.dx(), isBouncy ? -velocity.dy() : 0));
     }
-    entity
-        .getComponent(Bounciness.class)
-        .ifPresent(
-            bounciness ->
-                entity.updateComponent(velocity, new Velocity(-velocity.dx(), -velocity.dy())));
   }
 
   @Override
