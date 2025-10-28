@@ -1,4 +1,8 @@
-package it.unibo.donkeykong.ecs.entity;
+package it.unibo.donkeykong.ecs.factory;
+
+import it.unibo.donkeykong.ecs.component.Position;
+import it.unibo.donkeykong.ecs.component.StateComponent.Direction;
+import it.unibo.donkeykong.ecs.entity.Entity;
 
 /** Factory interface for creating the main entities of the Donkey Kong game. */
 public interface EntityFactory {
@@ -33,21 +37,25 @@ public interface EntityFactory {
   /**
    * Creates a barrel entity.
    *
+   * @param position the spawn position of the barrel
+   * @param direction the initial direction of the barrel
    * @return a new entity representing a barrel
    */
-  Entity createBarrel();
+  Entity createBarrel(Position position, Direction direction);
 
   /**
    * Creates a platform entity.
    *
+   * @param position the position of the platform
    * @return a new entity representing a platform
    */
-  Entity createPlatform();
+  Entity createPlatform(Position position);
 
   /**
    * Creates a ladder entity.
    *
+   * @param position the position of the ladder
    * @return a new entity representing a ladder
    */
-  Entity createLadder();
+  Entity createLadder(Position position);
 }
