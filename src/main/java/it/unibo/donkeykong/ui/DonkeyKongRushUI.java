@@ -5,13 +5,12 @@ import static it.unibo.donkeykong.ecs.component.StateComponent.State.*;
 
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.WorldImpl;
-import it.unibo.donkeykong.ecs.component.Graphic;
+import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.Position;
 import it.unibo.donkeykong.ecs.component.StateComponent;
+import it.unibo.donkeykong.ecs.system.*;
 import it.unibo.donkeykong.utilities.Constants;
 import it.unibo.donkeykong.utilities.InputHandler;
-import java.util.List;
-import java.util.Map;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
@@ -29,14 +28,49 @@ public class DonkeyKongRushUI extends Application {
   @Override
   public void start(Stage primaryStage) {
     final World world = new WorldImpl();
+    world.addSystem(new MovementSystem());
+    world.addSystem(new BoundariesSystem());
+    world.addSystem(new CollisionSystem());
+    world.addSystem(new PhysicsSystem());
+    world.addSystem(new InputProcessorSystem());
+    world.addSystem(new GravitySystem());
+    world.addSystem(new EventDispatchSystem());
 
     // TODO: entity creation should be handled by a dedicated class (using entity factory)
     world
         .createEntity()
-        .addComponent(new Position(242, 260))
+        .addComponent(new Position(242, 500))
+        .addComponent(new GroundComponent())
         .addComponent(
             new Graphic(
-                64, 64, 100, new StateComponent(IDLE, LEFT), 0, Map.of(IDLE, List.of("player"))));
+                "/sprites/player.png",
+                250,
+                16,
+                1,
+                20,
+                (state) -> new Graphic.AnimationSettings(0, 0, 1)))
+        .addComponent(new RectangleCollider(500, 32));
+    world
+        .createEntity()
+        .addComponent(new Position(242, 200))
+        .addComponent(new Input())
+        .addComponent(new Gravity(Constants.GRAVITY))
+        .addComponent(new Velocity(0, 0))
+        .addComponent(new StateComponent(IDLE, RIGHT))
+        .addComponent(
+            new Graphic(
+                "/sprites/mario.png",
+                16,
+                16,
+                0.25,
+                0.15f,
+                (state) -> {
+                  if (state == MOVING) {
+                    return new Graphic.AnimationSettings(1, 0, 2);
+                  }
+                  return new Graphic.AnimationSettings(0, 0, 1);
+                }))
+        .addComponent(new CircleCollider(16));
 
     final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
     final Rectangle2D screen = Screen.getPrimary().getVisualBounds();
@@ -51,8 +85,8 @@ public class DonkeyKongRushUI extends Application {
     scene.setOnKeyPressed(e -> inputHandler.handleKeyEvent(e.getCode(), true));
     scene.setOnKeyReleased(e -> inputHandler.handleKeyEvent(e.getCode(), false));
 
-    final RenderingSystem renderingSystem = new RenderingSystem(canvas);
-    world.addSystem(renderingSystem);
+    world.addSystem(new AnimationSystem());
+    world.addSystem(new RenderingSystem(canvas));
 
     new AnimationTimer() {
       private long lastUpdate = 0;
