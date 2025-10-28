@@ -71,5 +71,6 @@ public class DonkeyKongRushUI extends Application {
     primaryStage.setScene(scene);
     primaryStage.show();
     primaryStage.setResizable(false);
+    primaryStage.toFront();
   }
 }
