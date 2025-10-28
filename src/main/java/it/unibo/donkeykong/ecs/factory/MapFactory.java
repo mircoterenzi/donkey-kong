@@ -20,10 +20,13 @@ public class MapFactory {
   }
 
   public void generateMap() {
-    positions.entrySet().stream()
-      .map(e -> e.getValue().equals("platform") ?
-        entityFactory.createPlatform(e.getKey()) :
-        entityFactory.createLadder(e.getKey()));
+    positions.forEach((key, value) -> {
+      if (value.equals("platform")) {
+        entityFactory.createPlatform(key);
+      } else if (value.equals("ladder")) {
+        entityFactory.createLadder(key);
+      }
+    });
   }
 
   private void populatePositions() {
