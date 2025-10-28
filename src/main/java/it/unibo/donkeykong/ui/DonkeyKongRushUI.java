@@ -47,7 +47,8 @@ public class DonkeyKongRushUI extends Application {
                 250,
                 16,
                 1,
-                20,
+                2,
+                0,
                 (state) -> new Graphic.AnimationSettings(0, 0, 1)))
         .addComponent(new RectangleCollider(500, 32));
     world
@@ -63,6 +64,7 @@ public class DonkeyKongRushUI extends Application {
                 16,
                 16,
                 0.25,
+                2,
                 0.15f,
                 (state) -> {
                   if (state == MOVING) {

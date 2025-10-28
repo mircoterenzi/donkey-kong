@@ -91,8 +91,8 @@ public class RenderingSystem implements GameSystem {
       final Optional<AnimationComponent> optAnimation =
           entity.getComponent(AnimationComponent.class);
       final Optional<StateComponent> optState = entity.getComponent(StateComponent.class);
-      final double renderPositionY = position.y() - graphic.height();
-      final double renderPositionX = position.x() - graphic.width();
+      final double renderPositionY = position.y() - (graphic.scaledHeight() / 2);
+      final double renderPositionX = position.x() - (graphic.scaledWidth() / 2);
       if (optAnimation.isPresent() && optState.isPresent()) {
         final AnimationComponent animation = optAnimation.get();
         final State state = optState.get().state();
@@ -109,15 +109,19 @@ public class RenderingSystem implements GameSystem {
             && frames.get(animation.frameIndex()) != null) {
           final Image image = frames.get(animation.frameIndex());
           context.drawImage(
-              image, renderPositionX, renderPositionY, graphic.width() * 2, graphic.height() * 2);
+              image,
+              renderPositionX,
+              renderPositionY,
+              graphic.scaledWidth(),
+              graphic.scaledHeight());
           // TODO: manage reflection
         } else {
           drawFallbackRectangle(
-              renderPositionX, renderPositionY, graphic.width() * 2, graphic.height() * 2);
+              renderPositionX, renderPositionY, graphic.scaledWidth(), graphic.scaledHeight());
         }
       } else {
         drawFallbackRectangle(
-            renderPositionX, renderPositionY, graphic.width() * 2, graphic.height() * 2);
+            renderPositionX, renderPositionY, graphic.scaledWidth(), graphic.scaledHeight());
       }
     }
     context.restore();
