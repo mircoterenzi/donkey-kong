@@ -5,13 +5,11 @@ import static it.unibo.donkeykong.ecs.component.StateComponent.State.*;
 
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.WorldImpl;
-import it.unibo.donkeykong.ecs.component.Graphic;
-import it.unibo.donkeykong.ecs.component.Position;
-import it.unibo.donkeykong.ecs.component.StateComponent;
+import it.unibo.donkeykong.ecs.factory.EntityFactory;
+import it.unibo.donkeykong.ecs.factory.EntityFactoryImpl;
+import it.unibo.donkeykong.ecs.factory.MapFactory;
 import it.unibo.donkeykong.utilities.Constants;
 import it.unibo.donkeykong.utilities.InputHandler;
-import java.util.List;
-import java.util.Map;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
@@ -30,14 +28,11 @@ public class DonkeyKongRushUI extends Application {
   public void start(Stage primaryStage) {
     final World world = new WorldImpl();
 
-    // TODO: entity creation should be handled by a dedicated class (using entity factory)
-    world
-        .createEntity()
-        .addComponent(new Position(242, 260))
-        .addComponent(
-            new Graphic(
-                64, 64, 100, new StateComponent(IDLE, LEFT), 0, Map.of(IDLE, List.of("player"))));
-
+    //TODO: entity generation here? Not so sure, in dedicated controller class for mvc
+    final EntityFactory entityFactory = new EntityFactoryImpl(world);
+    final MapFactory mapFactory = new MapFactory(entityFactory);
+    entityFactory.createFirstPlayer();
+    mapFactory.generateMap();
     final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
     final Rectangle2D screen = Screen.getPrimary().getVisualBounds();
     final double windowHeight = screen.getHeight() * 0.9;
