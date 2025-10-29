@@ -26,21 +26,21 @@ public class FactoryTest {
   }
 
   private <C extends Component> void assertComponentPresence(
-      Entity entity, Class<C> componentClass, C expectedComponent) {
+    Entity entity, Class<C> componentClass, C expectedComponent) {
     assertTrue(
-        entity.getComponent(componentClass).isPresent(),
-        "Component " + componentClass.getSimpleName() + " should be present.");
+      entity.getComponent(componentClass).isPresent(),
+      "Component " + componentClass.getSimpleName() + " should be present.");
     assertEquals(
-        expectedComponent,
-        entity.getComponent(componentClass).get(),
-        "Component " + componentClass.getSimpleName() + " has wrong values.");
+      expectedComponent,
+      entity.getComponent(componentClass).get(),
+      "Component " + componentClass.getSimpleName() + " has wrong values.");
   }
 
   private <C extends Component> void assertComponentPresence(
-      Entity entity, Class<C> componentClass) {
+    Entity entity, Class<C> componentClass) {
     assertTrue(
-        entity.getComponent(componentClass).isPresent(),
-        "Component " + componentClass.getSimpleName() + " should be present.");
+      entity.getComponent(componentClass).isPresent(),
+      "Component " + componentClass.getSimpleName() + " should be present.");
   }
 
   @Test
@@ -53,9 +53,10 @@ public class FactoryTest {
     assertComponentPresence(player, Health.class, new Health(PLAYER_LIVES));
     assertComponentPresence(player, Input.class);
     assertComponentPresence(
-        player, StateComponent.class, new StateComponent(State.IDLE, Direction.LEFT));
+      player, StateComponent.class, new StateComponent(State.IDLE, Direction.LEFT));
     assertComponentPresence(
-        player, CircleCollider.class, new CircleCollider(PLAYER_COLLISION_RADIUS));
+      player, CircleCollider.class, new CircleCollider(PLAYER_COLLISION_RADIUS));
+    assertComponentPresence(player, Graphic.class); // Aggiunto controllo per Graphic
   }
 
   @Test
@@ -91,35 +92,33 @@ public class FactoryTest {
     assertComponentPresence(barrel, Bounciness.class);
     assertComponentPresence(barrel, Gravity.class, new Gravity(GRAVITY));
     assertComponentPresence(
-        barrel, StateComponent.class, new StateComponent(State.MOVING, testDir));
+      barrel, StateComponent.class, new StateComponent(State.MOVING, testDir));
     assertComponentPresence(
-        barrel, CircleCollider.class, new CircleCollider(BARREL_COLLISION_RADIUS));
+      barrel, CircleCollider.class, new CircleCollider(BARREL_COLLISION_RADIUS));
   }
 
   @Test
   void testCreatePlatform() {
     Position testPos = new Position(50, 50);
-    Entity platform = entityFactory.createPlatform(testPos);
+    RectangleCollider testCollider = new RectangleCollider(100, 20);
+    Entity platform = entityFactory.createPlatform(testPos, testCollider);
 
     assertNotNull(platform);
     assertComponentPresence(platform, Position.class, testPos);
     assertComponentPresence(platform, GroundComponent.class);
-    assertComponentPresence(
-        platform,
-        RectangleCollider.class,
-        new RectangleCollider(BLOCKS_COLLISION, BLOCKS_COLLISION));
+    assertComponentPresence(platform, RectangleCollider.class, testCollider);
   }
 
   @Test
   void testCreateLadder() {
     Position testPos = new Position(30, 60);
-    Entity ladder = entityFactory.createLadder(testPos);
+    RectangleCollider testCollider = new RectangleCollider(10, 80);
+    Entity ladder = entityFactory.createLadder(testPos, testCollider);
 
     assertNotNull(ladder);
     assertComponentPresence(ladder, Position.class, testPos);
     assertComponentPresence(ladder, Climbable.class);
-    assertComponentPresence(
-        ladder, RectangleCollider.class, new RectangleCollider(BLOCKS_COLLISION, BLOCKS_COLLISION));
+    assertComponentPresence(ladder, RectangleCollider.class, testCollider);
   }
 
   @Test
@@ -130,36 +129,33 @@ public class FactoryTest {
     Set<Entity> platforms = world.getEntitiesWithComponents(List.of(GroundComponent.class));
     Set<Entity> ladders = world.getEntitiesWithComponents(List.of(Climbable.class));
 
-    // TODO: andrà cambiato in base alla mappa che si crea nel MapFactory
-    Position expectedPlatformPos = new Position(1, 1);
-    Position expectedLadderPos = new Position(2, 1);
+    Position expectedPlatformPos = new Position(448, 1008);
+    RectangleCollider expectedPlatformCollider = new RectangleCollider(894, 29);
+    Position expectedLadderPos = new Position(112, 928);
+    RectangleCollider expectedLadderCollider = new RectangleCollider(30, 128);
 
     assertTrue(
-        platforms.stream()
-            .anyMatch(
-                e -> e.getComponent(Position.class).orElseThrow().equals(expectedPlatformPos)),
-        "Nessuna piattaforma trovata alla posizione " + expectedPlatformPos);
+      platforms.stream()
+        .anyMatch(
+          e -> e.getComponent(Position.class).orElseThrow().equals(expectedPlatformPos)),
+      "Nessuna piattaforma trovata alla posizione " + expectedPlatformPos);
     assertTrue(
-        ladders.stream()
-            .anyMatch(e -> e.getComponent(Position.class).orElseThrow().equals(expectedLadderPos)),
-        "Nessuna scala trovata alla posizione " + expectedLadderPos);
+      ladders.stream()
+        .anyMatch(e -> e.getComponent(Position.class).orElseThrow().equals(expectedLadderPos)),
+      "Nessuna scala trovata alla posizione " + expectedLadderPos);
 
     Entity platform =
-        platforms.stream()
-            .filter(e -> e.getComponent(Position.class).orElseThrow().equals(expectedPlatformPos))
-            .findFirst()
-            .orElseThrow();
+      platforms.stream()
+        .filter(e -> e.getComponent(Position.class).orElseThrow().equals(expectedPlatformPos))
+        .findFirst()
+        .orElseThrow();
     Entity ladder =
-        ladders.stream()
-            .filter(e -> e.getComponent(Position.class).orElseThrow().equals(expectedLadderPos))
-            .findFirst()
-            .orElseThrow();
+      ladders.stream()
+        .filter(e -> e.getComponent(Position.class).orElseThrow().equals(expectedLadderPos))
+        .findFirst()
+        .orElseThrow();
 
-    assertComponentPresence(
-        platform,
-        RectangleCollider.class,
-        new RectangleCollider(BLOCKS_COLLISION, BLOCKS_COLLISION));
-    assertComponentPresence(
-        ladder, RectangleCollider.class, new RectangleCollider(BLOCKS_COLLISION, BLOCKS_COLLISION));
+    assertComponentPresence(platform, RectangleCollider.class, expectedPlatformCollider);
+    assertComponentPresence(ladder, RectangleCollider.class, expectedLadderCollider);
   }
 }
