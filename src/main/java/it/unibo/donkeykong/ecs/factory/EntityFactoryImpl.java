@@ -30,7 +30,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 PLAYER_FRAME_DURATION,
                 new StateComponent(State.IDLE, Direction.LEFT),
                 0,
-                Map.of(State.IDLE, List.of("player"))));
+                Map.of(State.IDLE, List.of("player1"))));
   }
 
   @Override
@@ -45,7 +45,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 PLAYER_FRAME_DURATION,
                 new StateComponent(State.IDLE, Direction.LEFT),
                 0,
-                Map.of(State.IDLE, List.of("player"))));
+                Map.of(State.IDLE, List.of("player2"))));
   }
 
   @Override

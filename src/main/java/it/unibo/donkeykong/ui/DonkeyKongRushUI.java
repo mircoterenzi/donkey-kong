@@ -1,10 +1,8 @@
 package it.unibo.donkeykong.ui;
 
-import static it.unibo.donkeykong.ecs.component.StateComponent.Direction.*;
-import static it.unibo.donkeykong.ecs.component.StateComponent.State.*;
-
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.WorldImpl;
+import it.unibo.donkeykong.ecs.system.*;
 import it.unibo.donkeykong.ecs.factory.EntityFactory;
 import it.unibo.donkeykong.ecs.factory.EntityFactoryImpl;
 import it.unibo.donkeykong.ecs.factory.MapFactory;

@@ -9,7 +9,7 @@ public class Constants {
   public static final double GRAVITY = 9.81;
   public static final double JUMP_FACTOR = 5.0;
   public static final double FALL_FACTOR = 3.0;
-  public static final int BLOCKS_COLLISION = 2;
+  public static final float SPAWN_INTERVAL = 2500;
 
   public static final double PLAYER_VELOCITY = 7.0;
   public static final int PLAYER_WIDTH = 64;
@@ -20,6 +20,8 @@ public class Constants {
   public static final Position FIRST_PLAYER_SPAWN = new Position(242, 260);
   public static final Position SECOND_PLAYER_SPAWN = new Position(300, 260);
 
+  public static final Position RIGHT_BARREL_SPAWN = new Position(525, 334);
+  public static final Position LEFT_BARREL_SPAWN = new Position(328, 334);
   public static final double BARREL_VELOCITY = 4.0;
   public static final int BARREL_WIDTH = 48;
   public static final int BARREL_HEIGHT = 48;

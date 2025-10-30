@@ -43,10 +43,10 @@ public class MapFactory {
     ladders.put(new Position(592, 768), new RectangleCollider(30, 128));
     ladders.put(new Position(272, 768), new RectangleCollider(30, 128));
     ladders.put(new Position(112, 608), new RectangleCollider(30, 128));
-    ladders.put(new Position(336, 640), new RectangleCollider(30, 64));
+    ladders.put(new Position(336, 640), new RectangleCollider(30, 128));
     ladders.put(new Position(560, 608), new RectangleCollider(30, 128));
     ladders.put(new Position(784, 608), new RectangleCollider(30, 128));
-    ladders.put(new Position(80, 480), new RectangleCollider(30, 64));
+    ladders.put(new Position(80, 480), new RectangleCollider(30, 128));
     ladders.put(new Position(816, 448), new RectangleCollider(30, 128));
     ladders.put(new Position(272, 240), new RectangleCollider(30, 222));
     ladders.put(new Position(336, 240), new RectangleCollider(30, 222));
