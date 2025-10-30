@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 import it.unibo.donkeykong.ecs.*;
 import it.unibo.donkeykong.ecs.component.*;
+import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,18 +15,14 @@ import org.junit.jupiter.api.Test;
 public class InputProcessorSystemTest {
 
   private static final long DELTA_TIME_IGNORED = 0L;
-  private static final double INITIAL_DY = 10.0;
-
-  private static final double JUMP_SPEED = -(GRAVITY + JUMP_FACTOR);
-  private static final double CLIMB_UP_SPEED = -(GRAVITY + PLAYER_VELOCITY);
-  private static final double CLIMB_DOWN_SPEED = -GRAVITY + PLAYER_VELOCITY;
-  private static final double STOP_CLIMB_SPEED = -GRAVITY;
-  private static final double GROUNDED_DY = -GRAVITY;
+  private static final double INITIAL_DY = 0.0;
+  private static final double INITIAL_DX = 0.0;
 
   private World world;
   private Entity player;
   private Input playerInput;
   private Velocity initialVelocity;
+  private StateComponent initialPlayerState;
 
   @BeforeEach
   void setUp() {
@@ -33,22 +30,28 @@ public class InputProcessorSystemTest {
     world.addSystem(new InputProcessorSystem());
 
     playerInput = new Input();
-    initialVelocity = new Velocity(0, 0);
-    PlayerState initialPlayerState = new PlayerState(PlayerState.State.STOP_GROUND);
+    initialVelocity = new Velocity(INITIAL_DX, INITIAL_DY);
+    initialPlayerState = new StateComponent(State.IDLE, Direction.LEFT);
 
     player =
         world
             .createEntity()
             .addComponent(playerInput)
             .addComponent(initialVelocity)
-            .addComponent(new Position(0, 0))
-            .addComponent(initialPlayerState);
+            .addComponent(initialPlayerState)
+            .addComponent(new Gravity(GRAVITY)); // System requires Gravity
   }
 
   private Velocity getVelocityComponent(Entity entity) {
     return entity
         .getComponent(Velocity.class)
         .orElseThrow(() -> new AssertionError("Velocity component missing"));
+  }
+
+  private StateComponent getStateComponent(Entity entity) {
+    return entity
+        .getComponent(StateComponent.class)
+        .orElseThrow(() -> new AssertionError("StateComponent missing"));
   }
 
   private void simulateGrounded() {
@@ -67,9 +70,17 @@ public class InputProcessorSystemTest {
     playerInput.setCurrentHInput(Input.HorizontalInput.MOVE_RIGHT);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
+    StateComponent newState = getStateComponent(player);
+
     assertEquals(PLAYER_VELOCITY, newVelocity.dx());
-    assertEquals(GROUNDED_DY, newVelocity.dy(), "Player grounded should be affected by gravity");
+    assertEquals(
+        INITIAL_DY,
+        newVelocity.dy(),
+        "Player grounded dy should be old dy (gravity is not applied by this system)");
+    assertEquals(State.MOVING, newState.state());
+    assertEquals(Direction.RIGHT, newState.direction());
     assertNotSame(initialVelocity, newVelocity);
+    assertNotSame(initialPlayerState, newState);
   }
 
   @Test
@@ -78,8 +89,25 @@ public class InputProcessorSystemTest {
     playerInput.setCurrentHInput(Input.HorizontalInput.MOVE_LEFT);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
+    StateComponent newState = getStateComponent(player);
+
     assertEquals(-PLAYER_VELOCITY, newVelocity.dx());
-    assertEquals(GROUNDED_DY, newVelocity.dy());
+    assertEquals(INITIAL_DY, newVelocity.dy());
+    assertEquals(State.MOVING, newState.state());
+    assertEquals(Direction.LEFT, newState.direction());
+  }
+
+  @Test
+  void testIdleGrounded() {
+    simulateGrounded();
+    playerInput.setCurrentHInput(Input.HorizontalInput.NONE);
+    world.update(DELTA_TIME_IGNORED);
+    Velocity newVelocity = getVelocityComponent(player);
+    StateComponent newState = getStateComponent(player);
+
+    assertEquals(0, newVelocity.dx());
+    assertEquals(INITIAL_DY, newVelocity.dy());
+    assertEquals(State.IDLE, newState.state());
   }
 
   @Test
@@ -88,21 +116,25 @@ public class InputProcessorSystemTest {
     playerInput.setJumpPressed(true);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
+    StateComponent newState = getStateComponent(player);
+
     assertEquals(0, newVelocity.dx());
-    assertEquals(JUMP_SPEED, newVelocity.dy(), "Player should jump with new speed");
+    assertEquals(JUMP_FACTOR, newVelocity.dy(), "Player should jump with JUMP_FACTOR speed");
+    assertEquals(State.JUMP, newState.state());
     assertFalse(playerInput.isJumpPressed(), "Jump press should be consumed");
   }
 
   @Test
   void testJumpAirborne() {
-    initialVelocity = new Velocity(0, INITIAL_DY);
-    player.updateComponent(new Velocity(0, 0), initialVelocity);
     playerInput.setJumpPressed(true);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
-    assertEquals(0, newVelocity.dx());
+    StateComponent newState = getStateComponent(player);
+
+    assertEquals(INITIAL_DX, newVelocity.dx());
     assertEquals(
         INITIAL_DY, newVelocity.dy(), "Player should not jump if airborne (dy remains old dy)");
+    assertEquals(initialPlayerState.state(), newState.state(), "State should be unchanged");
     assertFalse(playerInput.isJumpPressed(), "Jump press should be consumed");
   }
 
@@ -112,8 +144,11 @@ public class InputProcessorSystemTest {
     playerInput.setCurrentVInput(Input.VerticalInput.MOVE_UP);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
+    StateComponent newState = getStateComponent(player);
+
     assertEquals(0, newVelocity.dx());
-    assertEquals(CLIMB_UP_SPEED, newVelocity.dy(), "Player should move up");
+    assertEquals(-(GRAVITY + PLAYER_VELOCITY), newVelocity.dy(), "Player should move up");
+    assertEquals(State.UP, newState.state());
   }
 
   @Test
@@ -122,8 +157,11 @@ public class InputProcessorSystemTest {
     playerInput.setCurrentVInput(Input.VerticalInput.MOVE_DOWN);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
+    StateComponent newState = getStateComponent(player);
+
     assertEquals(0, newVelocity.dx());
-    assertEquals(CLIMB_DOWN_SPEED, newVelocity.dy(), "Player should move down");
+    assertEquals(-GRAVITY + PLAYER_VELOCITY, newVelocity.dy(), "Player should move down");
+    assertEquals(State.DOWN, newState.state());
   }
 
   @Test
@@ -132,36 +170,41 @@ public class InputProcessorSystemTest {
     playerInput.setCurrentVInput(Input.VerticalInput.NONE);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
+    StateComponent newState = getStateComponent(player);
+
     assertEquals(0, newVelocity.dx());
     assertEquals(
-        STOP_CLIMB_SPEED,
-        newVelocity.dy(),
-        "Player should stop vertical movement but be affected by gravity");
+        -GRAVITY, newVelocity.dy(), "Player should stop vertical movement but negate gravity");
+    assertEquals(State.STOP_CLIMB, newState.state());
   }
 
   @Test
   void testJumpWhileClimbing() {
     simulateClimbing();
     playerInput.setJumpPressed(true);
-    playerInput.setCurrentHInput(Input.HorizontalInput.MOVE_RIGHT); // Input orizzontale
-    playerInput.setCurrentVInput(Input.VerticalInput.MOVE_UP); // Input verticale
+    playerInput.setCurrentHInput(Input.HorizontalInput.MOVE_RIGHT);
+    playerInput.setCurrentVInput(Input.VerticalInput.MOVE_UP);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
+    StateComponent newState = getStateComponent(player);
+
     assertEquals(PLAYER_VELOCITY, newVelocity.dx(), "Horizontal input should be processed");
-    assertEquals(JUMP_SPEED, newVelocity.dy(), "Player should jump off the ladder");
+    assertEquals(JUMP_FACTOR, newVelocity.dy(), "Player should jump off the ladder");
+    assertEquals(State.JUMP, newState.state());
+    assertEquals(Direction.RIGHT, newState.direction());
     assertFalse(playerInput.isJumpPressed(), "Jump press should be consumed");
   }
 
   @Test
   void testFastFallAirborne() {
-    initialVelocity = new Velocity(0, INITIAL_DY);
-    player.updateComponent(new Velocity(0, 0), initialVelocity);
     playerInput.setCurrentVInput(Input.VerticalInput.MOVE_DOWN);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
-    double expectedFallSpeed = INITIAL_DY + FALL_FACTOR; // 10.0 + 3.0
+    StateComponent newState = getStateComponent(player);
+
     assertEquals(0, newVelocity.dx());
-    assertEquals(expectedFallSpeed, newVelocity.dy(), "Player should fast fall when in air");
+    assertEquals(FALL_FACTOR, newVelocity.dy(), "Player should fast fall when in air");
+    assertEquals(State.FALL, newState.state());
   }
 
   @Test
@@ -170,23 +213,27 @@ public class InputProcessorSystemTest {
     playerInput.setCurrentVInput(Input.VerticalInput.MOVE_DOWN);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
+    StateComponent newState = getStateComponent(player);
+
     assertEquals(0, newVelocity.dx());
     assertEquals(
-        GROUNDED_DY,
+        INITIAL_DY,
         newVelocity.dy(),
-        "Player should not fast fall when grounded (dy should be gravity)");
+        "Player should not fast fall when grounded (dy should be old dy)");
+    assertEquals(State.IDLE, newState.state(), "State should be IDLE (or MOVING if dx != 0)");
   }
 
   @Test
   void testAirborneNoInput() {
-    initialVelocity = new Velocity(0, INITIAL_DY);
-    player.updateComponent(new Velocity(0, 0), initialVelocity);
     playerInput.setCurrentHInput(Input.HorizontalInput.NONE);
     playerInput.setCurrentVInput(Input.VerticalInput.NONE);
     playerInput.setJumpPressed(false);
     world.update(DELTA_TIME_IGNORED);
     Velocity newVelocity = getVelocityComponent(player);
-    assertEquals(0, newVelocity.dx());
-    assertEquals(INITIAL_DY, newVelocity.dy(), "Vertical velocity should be preserved if airborne");
+    StateComponent newState = getStateComponent(player);
+
+    assertEquals(INITIAL_DX, newVelocity.dx());
+    assertEquals(INITIAL_DY, newVelocity.dy(), "Velocity should be preserved if airborne");
+    assertEquals(initialPlayerState.state(), newState.state(), "State should be unchanged");
   }
 }

@@ -12,7 +12,7 @@ public interface GameSystem {
    * Updates the system, processing all relevant entities.
    *
    * @param world the game world containing entities and components
-   * @param deltaTime the time elapsed since the last update, in milliseconds
+   * @param deltaTime the time elapsed since the last update, in seconds
    */
-  void update(World world, long deltaTime);
+  void update(World world, float deltaTime);
 }

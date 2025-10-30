@@ -11,7 +11,7 @@ import java.util.Set;
 public class HealthSystem implements GameSystem {
 
   @Override
-  public void update(World world, long deltaTime) {
+  public void update(World world, float deltaTime) {
     Set<Entity> targetEntities =
         world.getEntitiesWithComponents(List.of(Health.class, CollisionEvent.class));
     for (Entity entity : targetEntities) {

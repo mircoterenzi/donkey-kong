@@ -68,7 +68,7 @@ public interface World {
   /**
    * Updates the world state, including all entities and their components.
    *
-   * @param deltaTime the time elapsed since the last update, in milliseconds
+   * @param deltaTime the time elapsed since the last update, in seconds
    */
-  void update(long deltaTime);
+  void update(float deltaTime);
 }

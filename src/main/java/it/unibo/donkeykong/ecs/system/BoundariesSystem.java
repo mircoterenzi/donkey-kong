@@ -9,7 +9,7 @@ import java.util.List;
 public class BoundariesSystem implements GameSystem {
 
   @Override
-  public void update(World world, long deltaTime) {
+  public void update(World world, float deltaTime) {
     for (Entity entity : world.getEntitiesWithComponents(List.of(Position.class, Collider.class))) {
       Position position = entity.getComponent(Position.class).orElseThrow();
       Collider collider = entity.getComponent(Collider.class).orElseThrow();

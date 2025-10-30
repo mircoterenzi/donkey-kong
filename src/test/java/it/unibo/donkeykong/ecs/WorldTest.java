@@ -23,18 +23,18 @@ public class WorldTest {
 
   /** A simple test system that records the last delta time and world it was updated with. */
   private static class TestSystem implements GameSystem {
-    private long deltaTime = -1;
+    private float deltaTime = -1;
     private World world = null;
     private int updateCount = 0;
 
     @Override
-    public void update(World world, long deltaTime) {
+    public void update(World world, float deltaTime) {
       this.world = world;
       this.deltaTime = deltaTime;
       this.updateCount++;
     }
 
-    public long getDeltaTime() {
+    public float getDeltaTime() {
       return deltaTime;
     }
 
@@ -109,6 +109,31 @@ public class WorldTest {
     assertFalse(componentsAfter.contains(componentToRemove));
     assertFalse(componentsAfter.contains(anotherComponentToRemove));
     assertEquals(Set.of(componentToKeep), componentsAfter);
+  }
+
+  @Test
+  void testUpdateComponent() {
+    Component oldComponent = new TestComponent();
+    Component newComponent = new TestComponent();
+    Entity entity = world.createEntity().addComponent(oldComponent);
+
+    assertTrue(
+        entity.getComponent(TestComponent.class).isPresent(), "Old component should be present.");
+    assertSame(
+        oldComponent,
+        entity.getComponent(TestComponent.class).get(),
+        "Instance should be the old one.");
+
+    entity.updateComponent(oldComponent, newComponent);
+
+    Set<Component> components = world.getComponentsOfEntity(entity);
+    assertFalse(components.contains(oldComponent), "Old component should be removed.");
+    assertTrue(components.contains(newComponent), "New component should be added.");
+    assertSame(
+        newComponent,
+        entity.getComponent(TestComponent.class).get(),
+        "Instance should be the new one.");
+    assertEquals(1, components.size(), "Should only be one component.");
   }
 
   @Test

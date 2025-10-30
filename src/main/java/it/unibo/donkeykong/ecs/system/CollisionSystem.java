@@ -81,7 +81,7 @@ public class CollisionSystem implements GameSystem {
   }
 
   @Override
-  public void update(World world, long deltaTime) {
+  public void update(World world, float deltaTime) {
     Set<Entity> movingSolidEntities =
         world.getEntitiesWithComponents(List.of(Position.class, Collider.class, Velocity.class));
     Set<Entity> solidEntities =

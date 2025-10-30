@@ -5,15 +5,19 @@ package it.unibo.donkeykong.ecs.component;
  *
  * @param state the current state of the player
  */
-public record PlayerState(State state) implements Component {
+public record StateComponent(State state, Direction direction) implements Component {
   public enum State {
-    STOP_GROUND,
-    RUN_LEFT,
-    RUN_RIGHT,
+    IDLE,
+    MOVING,
     JUMP,
     FALL,
-    CLIMB_UP,
-    CLIMB_DOWN,
+    UP,
+    DOWN,
     STOP_CLIMB
+  }
+
+  public enum Direction {
+    LEFT,
+    RIGHT
   }
 }

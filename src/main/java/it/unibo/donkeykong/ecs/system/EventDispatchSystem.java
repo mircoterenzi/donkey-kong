@@ -10,7 +10,7 @@ import java.util.List;
 public class EventDispatchSystem implements GameSystem {
 
   @Override
-  public void update(World world, long deltaTime) {
+  public void update(World world, float deltaTime) {
     world
         .getEntitiesWithComponents(List.of(EventComponent.class))
         .forEach(
