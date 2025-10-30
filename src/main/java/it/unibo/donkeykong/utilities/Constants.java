@@ -12,14 +12,28 @@ public class Constants {
   public static final int BLOCKS_COLLISION = 2;
 
   public static final double PLAYER_VELOCITY = 7.0;
+  public static final int PLAYER_WIDTH = 64;
+  public static final int PLAYER_HEIGHT = 64;
+  public static final int PLAYER_FRAME_DURATION = 100;
   public static final int PLAYER_COLLISION_RADIUS = 2;
   public static final int PLAYER_LIVES = 3;
   public static final Position FIRST_PLAYER_SPAWN = new Position(242, 260);
   public static final Position SECOND_PLAYER_SPAWN = new Position(300, 260);
 
   public static final double BARREL_VELOCITY = 4.0;
+  public static final int BARREL_WIDTH = 48;
+  public static final int BARREL_HEIGHT = 48;
+  public static final int BARREL_FRAME_DURATION = 150;
   public static final int BARREL_COLLISION_RADIUS = 2;
 
   public static final Position DK_POSITION = new Position(100, 900);
+  public static final int DK_WIDTH = 96;
+  public static final int DK_HEIGHT = 96;
+  public static final int DK_FRAME_DURATION = 150;
+  public static final int DK_COLLISION_RADIUS = 3;
   public static final Position PAULINE_POSITION = new Position(800, 100);
+  public static final int PAULINE_WIDTH = 64;
+  public static final int PAULINE_HEIGHT = 64;
+  public static final int PAULINE_FRAME_DURATION = 100;
+  public static final int PAULINE_COLLISION_RADIUS = 2;
 }

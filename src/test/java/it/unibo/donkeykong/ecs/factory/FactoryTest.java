@@ -10,6 +10,7 @@ import it.unibo.donkeykong.ecs.component.StateComponent.Direction;
 import it.unibo.donkeykong.ecs.component.StateComponent.State;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,21 +27,21 @@ public class FactoryTest {
   }
 
   private <C extends Component> void assertComponentPresence(
-    Entity entity, Class<C> componentClass, C expectedComponent) {
+      Entity entity, Class<C> componentClass, C expectedComponent) {
     assertTrue(
-      entity.getComponent(componentClass).isPresent(),
-      "Component " + componentClass.getSimpleName() + " should be present.");
+        entity.getComponent(componentClass).isPresent(),
+        "Component " + componentClass.getSimpleName() + " should be present.");
     assertEquals(
-      expectedComponent,
-      entity.getComponent(componentClass).get(),
-      "Component " + componentClass.getSimpleName() + " has wrong values.");
+        expectedComponent,
+        entity.getComponent(componentClass).get(),
+        "Component " + componentClass.getSimpleName() + " has wrong values.");
   }
 
   private <C extends Component> void assertComponentPresence(
-    Entity entity, Class<C> componentClass) {
+      Entity entity, Class<C> componentClass) {
     assertTrue(
-      entity.getComponent(componentClass).isPresent(),
-      "Component " + componentClass.getSimpleName() + " should be present.");
+        entity.getComponent(componentClass).isPresent(),
+        "Component " + componentClass.getSimpleName() + " should be present.");
   }
 
   @Test
@@ -53,10 +54,19 @@ public class FactoryTest {
     assertComponentPresence(player, Health.class, new Health(PLAYER_LIVES));
     assertComponentPresence(player, Input.class);
     assertComponentPresence(
-      player, StateComponent.class, new StateComponent(State.IDLE, Direction.LEFT));
+        player, StateComponent.class, new StateComponent(State.IDLE, Direction.LEFT));
     assertComponentPresence(
-      player, CircleCollider.class, new CircleCollider(PLAYER_COLLISION_RADIUS));
-    assertComponentPresence(player, Graphic.class); // Aggiunto controllo per Graphic
+        player, CircleCollider.class, new CircleCollider(PLAYER_COLLISION_RADIUS));
+    assertComponentPresence(
+        player,
+        Graphic.class,
+        new Graphic(
+            PLAYER_WIDTH,
+            PLAYER_HEIGHT,
+            PLAYER_FRAME_DURATION,
+            new StateComponent(State.IDLE, Direction.LEFT),
+            0,
+            Map.of(State.IDLE, List.of("player"))));
   }
 
   @Test
@@ -64,6 +74,16 @@ public class FactoryTest {
     Entity player = entityFactory.createSecondPlayer();
     assertNotNull(player);
     assertComponentPresence(player, Position.class, SECOND_PLAYER_SPAWN);
+    assertComponentPresence(
+        player,
+        Graphic.class,
+        new Graphic(
+            PLAYER_WIDTH,
+            PLAYER_HEIGHT,
+            PLAYER_FRAME_DURATION,
+            new StateComponent(State.IDLE, Direction.LEFT),
+            0,
+            Map.of(State.IDLE, List.of("player"))));
   }
 
   @Test
@@ -71,6 +91,18 @@ public class FactoryTest {
     Entity pauline = entityFactory.createPauline();
     assertNotNull(pauline);
     assertComponentPresence(pauline, Position.class, PAULINE_POSITION);
+    assertComponentPresence(
+        pauline, CircleCollider.class, new CircleCollider(PAULINE_COLLISION_RADIUS));
+    assertComponentPresence(
+        pauline,
+        Graphic.class,
+        new Graphic(
+            PAULINE_WIDTH,
+            PAULINE_HEIGHT,
+            PAULINE_FRAME_DURATION,
+            new StateComponent(State.IDLE, Direction.LEFT),
+            0,
+            Map.of(State.IDLE, List.of("pauline"))));
   }
 
   @Test
@@ -78,6 +110,17 @@ public class FactoryTest {
     Entity dk = entityFactory.createDonkeyKong();
     assertNotNull(dk);
     assertComponentPresence(dk, Position.class, DK_POSITION);
+    assertComponentPresence(dk, CircleCollider.class, new CircleCollider(DK_COLLISION_RADIUS));
+    assertComponentPresence(
+        dk,
+        Graphic.class,
+        new Graphic(
+            DK_WIDTH,
+            DK_HEIGHT,
+            DK_FRAME_DURATION,
+            new StateComponent(State.IDLE, Direction.LEFT),
+            0,
+            Map.of(State.IDLE, List.of("dk"))));
   }
 
   @Test
@@ -92,9 +135,19 @@ public class FactoryTest {
     assertComponentPresence(barrel, Bounciness.class);
     assertComponentPresence(barrel, Gravity.class, new Gravity(GRAVITY));
     assertComponentPresence(
-      barrel, StateComponent.class, new StateComponent(State.MOVING, testDir));
+        barrel, StateComponent.class, new StateComponent(State.MOVING, testDir));
     assertComponentPresence(
-      barrel, CircleCollider.class, new CircleCollider(BARREL_COLLISION_RADIUS));
+        barrel, CircleCollider.class, new CircleCollider(BARREL_COLLISION_RADIUS));
+    assertComponentPresence(
+        barrel,
+        Graphic.class,
+        new Graphic(
+            BARREL_WIDTH,
+            BARREL_HEIGHT,
+            BARREL_FRAME_DURATION,
+            new StateComponent(State.MOVING, testDir),
+            0,
+            Map.of(State.MOVING, List.of("barrel"))));
   }
 
   @Test
@@ -135,25 +188,25 @@ public class FactoryTest {
     RectangleCollider expectedLadderCollider = new RectangleCollider(30, 128);
 
     assertTrue(
-      platforms.stream()
-        .anyMatch(
-          e -> e.getComponent(Position.class).orElseThrow().equals(expectedPlatformPos)),
-      "Nessuna piattaforma trovata alla posizione " + expectedPlatformPos);
+        platforms.stream()
+            .anyMatch(
+                e -> e.getComponent(Position.class).orElseThrow().equals(expectedPlatformPos)),
+        "Nessuna piattaforma trovata alla posizione " + expectedPlatformPos);
     assertTrue(
-      ladders.stream()
-        .anyMatch(e -> e.getComponent(Position.class).orElseThrow().equals(expectedLadderPos)),
-      "Nessuna scala trovata alla posizione " + expectedLadderPos);
+        ladders.stream()
+            .anyMatch(e -> e.getComponent(Position.class).orElseThrow().equals(expectedLadderPos)),
+        "Nessuna scala trovata alla posizione " + expectedLadderPos);
 
     Entity platform =
-      platforms.stream()
-        .filter(e -> e.getComponent(Position.class).orElseThrow().equals(expectedPlatformPos))
-        .findFirst()
-        .orElseThrow();
+        platforms.stream()
+            .filter(e -> e.getComponent(Position.class).orElseThrow().equals(expectedPlatformPos))
+            .findFirst()
+            .orElseThrow();
     Entity ladder =
-      ladders.stream()
-        .filter(e -> e.getComponent(Position.class).orElseThrow().equals(expectedLadderPos))
-        .findFirst()
-        .orElseThrow();
+        ladders.stream()
+            .filter(e -> e.getComponent(Position.class).orElseThrow().equals(expectedLadderPos))
+            .findFirst()
+            .orElseThrow();
 
     assertComponentPresence(platform, RectangleCollider.class, expectedPlatformCollider);
     assertComponentPresence(ladder, RectangleCollider.class, expectedLadderCollider);

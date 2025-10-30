@@ -1,7 +1,5 @@
 package it.unibo.donkeykong.ecs.factory;
 
-import static it.unibo.donkeykong.ecs.component.StateComponent.Direction.LEFT;
-import static it.unibo.donkeykong.ecs.component.StateComponent.State.IDLE;
 import static it.unibo.donkeykong.utilities.Constants.*;
 
 import it.unibo.donkeykong.ecs.World;
@@ -27,25 +25,59 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(new CircleCollider(PLAYER_COLLISION_RADIUS))
         .addComponent(
             new Graphic(
-                64, 64, 100, new StateComponent(IDLE, LEFT), 0, Map.of(IDLE, List.of("player"))));
+                PLAYER_WIDTH,
+                PLAYER_HEIGHT,
+                PLAYER_FRAME_DURATION,
+                new StateComponent(State.IDLE, Direction.LEFT),
+                0,
+                Map.of(State.IDLE, List.of("player"))));
   }
 
   @Override
   public Entity createSecondPlayer() {
-    return world.createEntity().addComponent(SECOND_PLAYER_SPAWN);
-    // .addComponent(new Graphic()) quando sarà aggiornato
+    return world
+        .createEntity()
+        .addComponent(SECOND_PLAYER_SPAWN)
+        .addComponent(
+            new Graphic(
+                PLAYER_WIDTH,
+                PLAYER_HEIGHT,
+                PLAYER_FRAME_DURATION,
+                new StateComponent(State.IDLE, Direction.LEFT),
+                0,
+                Map.of(State.IDLE, List.of("player"))));
   }
 
   @Override
   public Entity createPauline() {
-    return world.createEntity().addComponent(PAULINE_POSITION);
-    // .addComponent(new Graphic()) quando sarà aggiornato
+    return world
+        .createEntity()
+        .addComponent(PAULINE_POSITION)
+        .addComponent(new CircleCollider(PAULINE_COLLISION_RADIUS))
+        .addComponent(
+            new Graphic(
+                PAULINE_WIDTH,
+                PAULINE_HEIGHT,
+                PAULINE_FRAME_DURATION,
+                new StateComponent(State.IDLE, Direction.LEFT),
+                0,
+                Map.of(State.IDLE, List.of("pauline"))));
   }
 
   @Override
   public Entity createDonkeyKong() {
-    return world.createEntity().addComponent(DK_POSITION);
-    // .addComponent(new Graphic()) quando sarà aggiornato
+    return world
+        .createEntity()
+        .addComponent(DK_POSITION)
+        .addComponent(new CircleCollider(DK_COLLISION_RADIUS))
+        .addComponent(
+            new Graphic(
+                DK_WIDTH,
+                DK_HEIGHT,
+                DK_FRAME_DURATION,
+                new StateComponent(State.IDLE, Direction.LEFT),
+                0,
+                Map.of(State.IDLE, List.of("dk"))));
   }
 
   @Override
@@ -57,8 +89,15 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(new Bounciness())
         .addComponent(new Gravity(GRAVITY))
         .addComponent(new StateComponent(State.MOVING, direction))
-        .addComponent(new CircleCollider(BARREL_COLLISION_RADIUS));
-    // .addComponent(new Graphic()) quando sarà aggiornato
+        .addComponent(new CircleCollider(BARREL_COLLISION_RADIUS))
+        .addComponent(
+            new Graphic(
+                BARREL_WIDTH,
+                BARREL_HEIGHT,
+                BARREL_FRAME_DURATION,
+                new StateComponent(State.MOVING, direction),
+                0,
+                Map.of(State.MOVING, List.of("barrel"))));
   }
 
   @Override

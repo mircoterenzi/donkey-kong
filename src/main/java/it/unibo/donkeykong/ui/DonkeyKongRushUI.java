@@ -28,7 +28,7 @@ public class DonkeyKongRushUI extends Application {
   public void start(Stage primaryStage) {
     final World world = new WorldImpl();
 
-    //TODO: entity generation here? Not so sure, in dedicated controller class for mvc
+    // TODO: entity generation here? Not so sure, in dedicated controller class for mvc
     final EntityFactory entityFactory = new EntityFactoryImpl(world);
     final MapFactory mapFactory = new MapFactory(entityFactory);
     entityFactory.createFirstPlayer();
