@@ -25,19 +25,26 @@ public class DonkeyKongRushUI extends Application {
   @Override
   public void start(Stage primaryStage) {
     final World world = new WorldImpl();
-    world.addSystem(new MovementSystem());
-    world.addSystem(new BoundariesSystem());
-    world.addSystem(new CollisionSystem());
-    world.addSystem(new PhysicsSystem());
-    world.addSystem(new InputProcessorSystem());
-    world.addSystem(new GravitySystem());
-    world.addSystem(new EventDispatchSystem());
 
     // TODO: entity generation here? Not so sure, in dedicated controller class for mvc
     final EntityFactory entityFactory = new EntityFactoryImpl(world);
     final MapFactory mapFactory = new MapFactory(entityFactory);
     entityFactory.createFirstPlayer();
+    entityFactory.createSecondPlayer();
+    entityFactory.createDonkeyKong();
+    entityFactory.createPauline();
     mapFactory.generateMap();
+
+    world.addSystem(new MovementSystem());
+    world.addSystem(new BoundariesSystem());
+    world.addSystem(new CollisionSystem());
+    world.addSystem(new PhysicsSystem());
+    world.addSystem(new SpawnSystem(entityFactory));
+    world.addSystem(new InputProcessorSystem());
+    world.addSystem(new GravitySystem());
+    world.addSystem(new EventDispatchSystem());
+
+
     // TODO: entity creation should be handled by a dedicated class (using entity factory)
     world
         .createEntity()
@@ -53,28 +60,6 @@ public class DonkeyKongRushUI extends Application {
                 0,
                 (state) -> new Graphic.AnimationSettings(0, 0, 1)))
         .addComponent(new RectangleCollider(500, 32));
-    world
-        .createEntity()
-        .addComponent(new Position(242, 200))
-        .addComponent(new Input())
-        .addComponent(new Gravity(Constants.GRAVITY))
-        .addComponent(new Velocity(0, 0))
-        .addComponent(new StateComponent(IDLE, RIGHT))
-        .addComponent(
-            new Graphic(
-                "/sprites/mario.png",
-                16,
-                16,
-                0.25,
-                2,
-                0.15f,
-                (state) -> {
-                  if (state == MOVING) {
-                    return new Graphic.AnimationSettings(1, 0, 2);
-                  }
-                  return new Graphic.AnimationSettings(0, 0, 1);
-                }))
-        .addComponent(new CircleCollider(16));
 
     final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
     final Rectangle2D screen = Screen.getPrimary().getVisualBounds();

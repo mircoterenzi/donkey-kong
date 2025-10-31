@@ -6,6 +6,8 @@ import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.entity.Entity;
+import it.unibo.donkeykong.utilities.Constants;
+
 import java.util.List;
 import java.util.Map;
 
@@ -17,20 +19,26 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
     return world
         .createEntity()
         .addComponent(FIRST_PLAYER_SPAWN)
-        .addComponent(new Velocity(PLAYER_VELOCITY, 0))
-        .addComponent(new Gravity(GRAVITY))
-        .addComponent(new Health(PLAYER_LIVES))
         .addComponent(new Input())
-        .addComponent(new StateComponent(State.IDLE, Direction.LEFT))
+        .addComponent(new Gravity(GRAVITY))
+        .addComponent(new Velocity(0, 0))
+        .addComponent(new Health(PLAYER_LIVES))
+        .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
         .addComponent(new CircleCollider(PLAYER_COLLISION_RADIUS))
         .addComponent(
-            new Graphic(
-                PLAYER_WIDTH,
-                PLAYER_HEIGHT,
-                PLAYER_FRAME_DURATION,
-                new StateComponent(State.IDLE, Direction.LEFT),
-                0,
-                Map.of(State.IDLE, List.of("player1"))));
+          new Graphic(
+            "/sprites/mario.png",
+            PLAYER_WIDTH,
+            PLAYER_HEIGHT,
+            PLAYER_BORDER,
+            PLAYER_SCALE,
+            PLAYER_FRAME_DURATION,
+            (state) -> {
+              if (state == State.MOVING) {
+                return new Graphic.AnimationSettings(1, 0, 2);
+              }
+              return new Graphic.AnimationSettings(0, 0, 1);
+            }));
   }
 
   @Override
@@ -38,14 +46,21 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
     return world
         .createEntity()
         .addComponent(SECOND_PLAYER_SPAWN)
+        .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
         .addComponent(
-            new Graphic(
-                PLAYER_WIDTH,
-                PLAYER_HEIGHT,
-                PLAYER_FRAME_DURATION,
-                new StateComponent(State.IDLE, Direction.LEFT),
-                0,
-                Map.of(State.IDLE, List.of("player2"))));
+          new Graphic(
+            "/sprites/luigi.png",
+            PLAYER_WIDTH,
+            PLAYER_HEIGHT,
+            PLAYER_BORDER,
+            PLAYER_SCALE,
+            PLAYER_FRAME_DURATION,
+            (state) -> {
+              if (state == State.MOVING) {
+                return new Graphic.AnimationSettings(1, 0, 2);
+              }
+              return new Graphic.AnimationSettings(0, 0, 1);
+            }));
   }
 
   @Override
@@ -55,13 +70,19 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(PAULINE_POSITION)
         .addComponent(new CircleCollider(PAULINE_COLLISION_RADIUS))
         .addComponent(
-            new Graphic(
-                PAULINE_WIDTH,
-                PAULINE_HEIGHT,
-                PAULINE_FRAME_DURATION,
-                new StateComponent(State.IDLE, Direction.LEFT),
-                0,
-                Map.of(State.IDLE, List.of("pauline"))));
+          new Graphic(
+            "/sprites/luigi.png",
+            PAULINE_WIDTH,
+            PAULINE_HEIGHT,
+            PAULINE_BORDER,
+            PAULINE_SCALE,
+            PAULINE_FRAME_DURATION,
+            (state) -> {
+              if (state == State.MOVING) {
+                return new Graphic.AnimationSettings(1, 0, 2);
+              }
+              return new Graphic.AnimationSettings(0, 0, 1);
+            }));
   }
 
   @Override
@@ -71,13 +92,19 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(DK_POSITION)
         .addComponent(new CircleCollider(DK_COLLISION_RADIUS))
         .addComponent(
-            new Graphic(
-                DK_WIDTH,
-                DK_HEIGHT,
-                DK_FRAME_DURATION,
-                new StateComponent(State.IDLE, Direction.LEFT),
-                0,
-                Map.of(State.IDLE, List.of("dk"))));
+          new Graphic(
+            "/sprites/luigi.png",
+            DK_WIDTH,
+            DK_HEIGHT,
+            DK_BORDER,
+            DK_SCALE,
+            DK_FRAME_DURATION,
+            (state) -> {
+              if (state == State.MOVING) {
+                return new Graphic.AnimationSettings(1, 0, 2);
+              }
+              return new Graphic.AnimationSettings(0, 0, 1);
+            }));
   }
 
   @Override
@@ -91,13 +118,19 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(new StateComponent(State.MOVING, direction))
         .addComponent(new CircleCollider(BARREL_COLLISION_RADIUS))
         .addComponent(
-            new Graphic(
-                BARREL_WIDTH,
-                BARREL_HEIGHT,
-                BARREL_FRAME_DURATION,
-                new StateComponent(State.MOVING, direction),
-                0,
-                Map.of(State.MOVING, List.of("barrel"))));
+          new Graphic(
+            "/sprites/luigi.png",
+            BARREL_WIDTH,
+            BARREL_HEIGHT,
+            BARREL_BORDER,
+            BARREL_SCALE,
+            BARREL_FRAME_DURATION,
+            (state) -> {
+              if (state == State.MOVING) {
+                return new Graphic.AnimationSettings(1, 0, 2);
+              }
+              return new Graphic.AnimationSettings(0, 0, 1);
+            }));
   }
 
   @Override
