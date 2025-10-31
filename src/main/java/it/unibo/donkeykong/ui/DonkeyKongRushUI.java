@@ -1,13 +1,10 @@
 package it.unibo.donkeykong.ui;
 
-import static it.unibo.donkeykong.ecs.component.StateComponent.Direction.*;
-import static it.unibo.donkeykong.ecs.component.StateComponent.State.*;
-
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.WorldImpl;
 import it.unibo.donkeykong.ecs.component.*;
-import it.unibo.donkeykong.ecs.component.Position;
-import it.unibo.donkeykong.ecs.component.StateComponent;
+import it.unibo.donkeykong.ecs.system.*;
+import it.unibo.donkeykong.ecs.factory.*;
 import it.unibo.donkeykong.ecs.system.*;
 import it.unibo.donkeykong.utilities.Constants;
 import it.unibo.donkeykong.utilities.InputHandler;
@@ -36,6 +33,11 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(new GravitySystem());
     world.addSystem(new EventDispatchSystem());
 
+    // TODO: entity generation here? Not so sure, in dedicated controller class for mvc
+    final EntityFactory entityFactory = new EntityFactoryImpl(world);
+    final MapFactory mapFactory = new MapFactory(entityFactory);
+    entityFactory.createFirstPlayer();
+    mapFactory.generateMap();
     // TODO: entity creation should be handled by a dedicated class (using entity factory)
     world
         .createEntity()
