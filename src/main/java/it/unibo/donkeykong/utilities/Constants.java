@@ -24,7 +24,7 @@ public class Constants {
 
   public static final Position RIGHT_BARREL_SPAWN = new Position(525, 334);
   public static final Position LEFT_BARREL_SPAWN = new Position(328, 334);
-  public static final double BARREL_VELOCITY = 4.0;
+  public static final double BARREL_VELOCITY = 50;
   public static final double BARREL_WIDTH = 48;
   public static final double BARREL_HEIGHT = 48;
   public static final double BARREL_BORDER = 1.0;

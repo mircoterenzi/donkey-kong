@@ -6,12 +6,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.WorldImpl;
 import it.unibo.donkeykong.ecs.component.*;
-import it.unibo.donkeykong.ecs.component.StateComponent.Direction;
-import it.unibo.donkeykong.ecs.component.StateComponent.State;
+import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -49,24 +48,26 @@ public class FactoryTest {
     Entity player = entityFactory.createFirstPlayer();
     assertNotNull(player);
     assertComponentPresence(player, Position.class, FIRST_PLAYER_SPAWN);
-    assertComponentPresence(player, Velocity.class, new Velocity(PLAYER_VELOCITY, 0));
+    assertComponentPresence(player, Velocity.class, new Velocity(0, 0));
     assertComponentPresence(player, Gravity.class, new Gravity(GRAVITY));
     assertComponentPresence(player, Health.class, new Health(PLAYER_LIVES));
     assertComponentPresence(player, Input.class);
     assertComponentPresence(
-        player, StateComponent.class, new StateComponent(State.IDLE, Direction.LEFT));
+        player, StateComponent.class, new StateComponent(State.IDLE, Direction.RIGHT));
     assertComponentPresence(
         player, CircleCollider.class, new CircleCollider(PLAYER_COLLISION_RADIUS));
-    assertComponentPresence(
-        player,
-        Graphic.class,
-        new Graphic(
-            PLAYER_WIDTH,
-            PLAYER_HEIGHT,
-            PLAYER_FRAME_DURATION,
-            new StateComponent(State.IDLE, Direction.LEFT),
-            0,
-            Map.of(State.IDLE, List.of("player1"))));
+    assertTrue(
+        player.getComponent(Graphic.class).isPresent(), "Player1 must have a Graphic component");
+    Graphic actualGraphic = player.getComponent(Graphic.class).get();
+    assertEquals("/sprites/mario.png", actualGraphic.path());
+    assertEquals(PLAYER_WIDTH, actualGraphic.width());
+    assertEquals(PLAYER_HEIGHT, actualGraphic.height());
+    assertEquals(PLAYER_BORDER, actualGraphic.border());
+    assertEquals(PLAYER_SCALE, actualGraphic.scale());
+    assertEquals(PLAYER_FRAME_DURATION, actualGraphic.frameDuration());
+    Function<State, Graphic.AnimationSettings> animationLogic =
+        actualGraphic.stateToAnimationSettings();
+    assertNotNull(animationLogic, "Animation logic cannot be null");
   }
 
   @Test
@@ -75,15 +76,19 @@ public class FactoryTest {
     assertNotNull(player);
     assertComponentPresence(player, Position.class, SECOND_PLAYER_SPAWN);
     assertComponentPresence(
-        player,
-        Graphic.class,
-        new Graphic(
-            PLAYER_WIDTH,
-            PLAYER_HEIGHT,
-            PLAYER_FRAME_DURATION,
-            new StateComponent(State.IDLE, Direction.LEFT),
-            0,
-            Map.of(State.IDLE, List.of("player2"))));
+        player, StateComponent.class, new StateComponent(State.IDLE, Direction.RIGHT));
+    assertTrue(
+        player.getComponent(Graphic.class).isPresent(), "Player2 must have a Graphic component");
+    Graphic actualGraphic = player.getComponent(Graphic.class).get();
+    assertEquals("/sprites/luigi.png", actualGraphic.path());
+    assertEquals(PLAYER_WIDTH, actualGraphic.width());
+    assertEquals(PLAYER_HEIGHT, actualGraphic.height());
+    assertEquals(PLAYER_BORDER, actualGraphic.border());
+    assertEquals(PLAYER_SCALE, actualGraphic.scale());
+    assertEquals(PLAYER_FRAME_DURATION, actualGraphic.frameDuration());
+    Function<State, Graphic.AnimationSettings> animationLogic =
+        actualGraphic.stateToAnimationSettings();
+    assertNotNull(animationLogic, "Animation logic cannot be null");
   }
 
   @Test
@@ -93,16 +98,18 @@ public class FactoryTest {
     assertComponentPresence(pauline, Position.class, PAULINE_POSITION);
     assertComponentPresence(
         pauline, CircleCollider.class, new CircleCollider(PAULINE_COLLISION_RADIUS));
-    assertComponentPresence(
-        pauline,
-        Graphic.class,
-        new Graphic(
-            PAULINE_WIDTH,
-            PAULINE_HEIGHT,
-            PAULINE_FRAME_DURATION,
-            new StateComponent(State.IDLE, Direction.LEFT),
-            0,
-            Map.of(State.IDLE, List.of("pauline"))));
+    assertTrue(
+        pauline.getComponent(Graphic.class).isPresent(), "Pauline deve avere un Graphic component");
+    Graphic actualGraphic = pauline.getComponent(Graphic.class).get();
+    assertEquals("/sprites/pauline.png", actualGraphic.path());
+    assertEquals(PAULINE_WIDTH, actualGraphic.width());
+    assertEquals(PAULINE_HEIGHT, actualGraphic.height());
+    assertEquals(PAULINE_BORDER, actualGraphic.border());
+    assertEquals(PAULINE_SCALE, actualGraphic.scale());
+    assertEquals(PAULINE_FRAME_DURATION, actualGraphic.frameDuration());
+    Function<State, Graphic.AnimationSettings> animationLogic =
+        actualGraphic.stateToAnimationSettings();
+    assertNotNull(animationLogic, "La logica di animazione non può essere null");
   }
 
   @Test
@@ -111,16 +118,18 @@ public class FactoryTest {
     assertNotNull(dk);
     assertComponentPresence(dk, Position.class, DK_POSITION);
     assertComponentPresence(dk, CircleCollider.class, new CircleCollider(DK_COLLISION_RADIUS));
-    assertComponentPresence(
-        dk,
-        Graphic.class,
-        new Graphic(
-            DK_WIDTH,
-            DK_HEIGHT,
-            DK_FRAME_DURATION,
-            new StateComponent(State.IDLE, Direction.LEFT),
-            0,
-            Map.of(State.IDLE, List.of("dk"))));
+    assertTrue(
+        dk.getComponent(Graphic.class).isPresent(), "DonkeyKong must have a Graphic component");
+    Graphic actualGraphic = dk.getComponent(Graphic.class).get();
+    assertEquals("/sprites/donkey.png", actualGraphic.path());
+    assertEquals(DK_WIDTH, actualGraphic.width());
+    assertEquals(DK_HEIGHT, actualGraphic.height());
+    assertEquals(DK_BORDER, actualGraphic.border());
+    assertEquals(DK_SCALE, actualGraphic.scale());
+    assertEquals(DK_FRAME_DURATION, actualGraphic.frameDuration());
+    Function<State, Graphic.AnimationSettings> animationLogic =
+        actualGraphic.stateToAnimationSettings();
+    assertNotNull(animationLogic, "Animation logic cannot be null");
   }
 
   @Test
@@ -138,16 +147,18 @@ public class FactoryTest {
         barrel, StateComponent.class, new StateComponent(State.MOVING, testDir));
     assertComponentPresence(
         barrel, CircleCollider.class, new CircleCollider(BARREL_COLLISION_RADIUS));
-    assertComponentPresence(
-        barrel,
-        Graphic.class,
-        new Graphic(
-            BARREL_WIDTH,
-            BARREL_HEIGHT,
-            BARREL_FRAME_DURATION,
-            new StateComponent(State.MOVING, testDir),
-            0,
-            Map.of(State.MOVING, List.of("barrel"))));
+    assertTrue(
+        barrel.getComponent(Graphic.class).isPresent(), "Barrel must have a Graphic component");
+    Graphic actualGraphic = barrel.getComponent(Graphic.class).get();
+    assertEquals("/sprites/barrel.png", actualGraphic.path());
+    assertEquals(BARREL_WIDTH, actualGraphic.width());
+    assertEquals(BARREL_HEIGHT, actualGraphic.height());
+    assertEquals(BARREL_BORDER, actualGraphic.border());
+    assertEquals(BARREL_SCALE, actualGraphic.scale());
+    assertEquals(BARREL_FRAME_DURATION, actualGraphic.frameDuration());
+    Function<State, Graphic.AnimationSettings> animationLogic =
+        actualGraphic.stateToAnimationSettings();
+    assertNotNull(animationLogic, "Animation logic cannot be null");
   }
 
   @Test

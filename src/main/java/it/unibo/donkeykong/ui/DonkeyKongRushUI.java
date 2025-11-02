@@ -3,7 +3,6 @@ package it.unibo.donkeykong.ui;
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.WorldImpl;
 import it.unibo.donkeykong.ecs.component.*;
-import it.unibo.donkeykong.ecs.system.*;
 import it.unibo.donkeykong.ecs.factory.*;
 import it.unibo.donkeykong.ecs.system.*;
 import it.unibo.donkeykong.utilities.Constants;
@@ -43,23 +42,6 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(new InputProcessorSystem());
     world.addSystem(new GravitySystem());
     world.addSystem(new EventDispatchSystem());
-
-
-    // TODO: entity creation should be handled by a dedicated class (using entity factory)
-    world
-        .createEntity()
-        .addComponent(new Position(242, 500))
-        .addComponent(new GroundComponent())
-        .addComponent(
-            new Graphic(
-                "/sprites/player.png",
-                250,
-                16,
-                1,
-                2,
-                0,
-                (state) -> new Graphic.AnimationSettings(0, 0, 1)))
-        .addComponent(new RectangleCollider(500, 32));
 
     final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
     final Rectangle2D screen = Screen.getPrimary().getVisualBounds();
