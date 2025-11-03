@@ -21,6 +21,7 @@ public class RenderingSystem implements GameSystem {
   private final Map<String, Map<StateComponent.State, List<Image>>> assetCache;
   private final double scaleX;
   private final double scaleY;
+  private final Image backgroundImage;
 
   public RenderingSystem(final Canvas canvas) {
     this.context = canvas.getGraphicsContext2D();
@@ -28,6 +29,8 @@ public class RenderingSystem implements GameSystem {
     this.assetCache = new HashMap<>();
     this.scaleX = canvas.getWidth() / Constants.WORLD_WIDTH;
     this.scaleY = canvas.getHeight() / Constants.WORLD_HEIGHT;
+    this.backgroundImage =
+        new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/level1.png")));
   }
 
   private void sliceSpriteSheetFrames(
@@ -84,6 +87,8 @@ public class RenderingSystem implements GameSystem {
     context.save();
     context.scale(scaleX, scaleY);
     context.clearRect(0, 0, Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
+    context.drawImage(
+        this.backgroundImage, 0, 0, ConfigurationUI.WINDOW_WIDTH, ConfigurationUI.WINDOW_HEIGHT);
     for (final Entity entity :
         world.getEntitiesWithComponents(List.of(Position.class, Graphic.class))) {
       final Position position = entity.getComponent(Position.class).orElseThrow();
