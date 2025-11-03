@@ -122,10 +122,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 BARREL_SCALE,
                 BARREL_FRAME_DURATION,
                 (state) -> {
-                  if (state == State.MOVING) {
-                    return new Graphic.AnimationSettings(1, 0, 2);
-                  }
-                  return new Graphic.AnimationSettings(0, 0, 1);
+                  return new Graphic.AnimationSettings(0, 0, 4);
                 }));
   }
 

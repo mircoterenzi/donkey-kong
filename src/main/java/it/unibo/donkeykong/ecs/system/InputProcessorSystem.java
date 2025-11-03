@@ -55,7 +55,7 @@ public class InputProcessorSystem implements GameSystem {
 
               if (input.isJumpPressed()) {
                 if (isGrounded || isClimbing) {
-                  newDy = JUMP_FACTOR * gravity.gravity();
+                  newDy = JUMP_FACTOR * -gravity.gravity();
                   newState = JUMP;
                 } else {
                   newDy = oldVelocity.dy();

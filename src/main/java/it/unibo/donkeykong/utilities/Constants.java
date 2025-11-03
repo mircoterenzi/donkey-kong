@@ -7,7 +7,7 @@ public class Constants {
   public static final int WORLD_HEIGHT = 1024;
 
   public static final double GRAVITY = 9.81;
-  public static final double JUMP_FACTOR = 10;
+  public static final double JUMP_FACTOR = 30;
   public static final double FALL_FACTOR = 3.0;
   public static final float SPAWN_INTERVAL = 3000f;
 
@@ -16,21 +16,21 @@ public class Constants {
   public static final double PLAYER_HEIGHT = 16;
   public static final float PLAYER_FRAME_DURATION = 0.15f;
   public static final double PLAYER_SCALE = 2;
-  public static final double PLAYER_BORDER = 0.25;
+  public static final double PLAYER_BORDER = 1;
   public static final int PLAYER_COLLISION_RADIUS = 16;
   public static final int PLAYER_LIVES = 3;
   public static final Position FIRST_PLAYER_SPAWN = new Position(242, 260);
   public static final Position SECOND_PLAYER_SPAWN = new Position(300, 260);
 
-  public static final Position RIGHT_BARREL_SPAWN = new Position(525, 334);
+  public static final Position RIGHT_BARREL_SPAWN = new Position(525, 324);
   public static final Position LEFT_BARREL_SPAWN = new Position(328, 334);
   public static final double BARREL_VELOCITY = 50;
-  public static final double BARREL_WIDTH = 48;
-  public static final double BARREL_HEIGHT = 48;
-  public static final double BARREL_BORDER = 1.0;
-  public static final double BARREL_SCALE = 1.0;
-  public static final float BARREL_FRAME_DURATION = 150;
-  public static final int BARREL_COLLISION_RADIUS = 2;
+  public static final double BARREL_WIDTH = 15;
+  public static final double BARREL_HEIGHT = 12;
+  public static final double BARREL_BORDER = 3;
+  public static final double BARREL_SCALE = 2;
+  public static final float BARREL_FRAME_DURATION = 0.15f;
+  public static final int BARREL_COLLISION_RADIUS = 12;
 
   public static final Position DK_POSITION = new Position(100, 900);
   public static final double DK_WIDTH = 96;

@@ -11,6 +11,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
+import javafx.scene.paint.Color;
 
 public class RenderingSystem implements GameSystem {
 
@@ -27,7 +28,8 @@ public class RenderingSystem implements GameSystem {
     this.scaleX = canvas.getWidth() / Constants.WORLD_WIDTH;
     this.scaleY = canvas.getHeight() / Constants.WORLD_HEIGHT;
     this.backgroundImage =
-        new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/level1.png")));
+        new Image(
+            Objects.requireNonNull(getClass().getResourceAsStream("/images/world-background.png")));
   }
 
   private void sliceSpriteSheetFrames(
@@ -71,12 +73,14 @@ public class RenderingSystem implements GameSystem {
     stateMap.put(state, frames);
   }
 
-  private void drawFallbackRectangle(double x, double y, double width, double height) {
-    context.setStroke(javafx.scene.paint.Color.BLACK);
-    context.setLineWidth(2);
-    context.strokeRect(x, y, width, height);
-    context.setFill(javafx.scene.paint.Color.GREEN);
-    context.fillRect(x, y, width, height);
+  private void drawFallbackShapeBasedOnCollision(double x, double y, Collider collider) {
+    if (collider instanceof CircleCollider circle) {
+      context.setFill(Color.GREEN);
+      context.fillOval(x, y, circle.radius() * 2, circle.radius() * 2);
+    } else if (collider instanceof RectangleCollider rectangle) {
+      context.setFill(Color.GREEN);
+      context.fillRect(x, y, rectangle.width(), rectangle.height());
+    }
   }
 
   @Override
@@ -84,8 +88,7 @@ public class RenderingSystem implements GameSystem {
     context.save();
     context.scale(scaleX, scaleY);
     context.clearRect(0, 0, Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
-    context.drawImage(
-        this.backgroundImage, 0, 0, ConfigurationUI.WINDOW_WIDTH, ConfigurationUI.WINDOW_HEIGHT);
+    context.drawImage(this.backgroundImage, 0, 0, Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
     for (final Entity entity :
         world.getEntitiesWithComponents(List.of(Position.class, Graphic.class))) {
       final Position position = entity.getComponent(Position.class).orElseThrow();
@@ -118,12 +121,19 @@ public class RenderingSystem implements GameSystem {
               graphic.scaledHeight());
           // TODO: manage reflection
         } else {
-          drawFallbackRectangle(
-              renderPositionX, renderPositionY, graphic.scaledWidth(), graphic.scaledHeight());
+          entity
+              .getComponent(Collider.class)
+              .ifPresent(
+                  collider ->
+                      drawFallbackShapeBasedOnCollision(
+                          renderPositionX, renderPositionY, collider));
         }
       } else {
-        drawFallbackRectangle(
-            renderPositionX, renderPositionY, graphic.scaledWidth(), graphic.scaledHeight());
+        entity
+            .getComponent(Collider.class)
+            .ifPresent(
+                collider ->
+                    drawFallbackShapeBasedOnCollision(renderPositionX, renderPositionY, collider));
       }
     }
 
@@ -131,8 +141,8 @@ public class RenderingSystem implements GameSystem {
 
     context.setStroke(javafx.scene.paint.Color.RED);
     for (final Entity entity :
-      world.getEntitiesWithComponents(
-        List.of(Position.class, RectangleCollider.class, GroundComponent.class))) {
+        world.getEntitiesWithComponents(
+            List.of(Position.class, RectangleCollider.class, GroundComponent.class))) {
 
       final Position pos = entity.getComponent(Position.class).orElseThrow();
       final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();
@@ -146,8 +156,8 @@ public class RenderingSystem implements GameSystem {
 
     context.setStroke(javafx.scene.paint.Color.BLUE);
     for (final Entity entity :
-      world.getEntitiesWithComponents(
-        List.of(Position.class, RectangleCollider.class, Climbable.class))) {
+        world.getEntitiesWithComponents(
+            List.of(Position.class, RectangleCollider.class, Climbable.class))) {
 
       final Position pos = entity.getComponent(Position.class).orElseThrow();
       final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();
