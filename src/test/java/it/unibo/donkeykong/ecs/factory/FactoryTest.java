@@ -169,7 +169,7 @@ public class FactoryTest {
 
     assertNotNull(platform);
     assertComponentPresence(platform, Position.class, testPos);
-    assertComponentPresence(platform, GroundComponent.class);
+    assertComponentPresence(platform, SolidComponent.class);
     assertComponentPresence(platform, RectangleCollider.class, testCollider);
   }
 
@@ -190,7 +190,7 @@ public class FactoryTest {
     MapFactory mapFactory = new MapFactory(entityFactory);
     mapFactory.generateMap();
 
-    Set<Entity> platforms = world.getEntitiesWithComponents(List.of(GroundComponent.class));
+    Set<Entity> platforms = world.getEntitiesWithComponents(List.of(SolidComponent.class));
     Set<Entity> ladders = world.getEntitiesWithComponents(List.of(Climbable.class));
 
     Position expectedPlatformPos = new Position(448, 1008);

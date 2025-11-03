@@ -142,7 +142,7 @@ public class RenderingSystem implements GameSystem {
     context.setStroke(javafx.scene.paint.Color.RED);
     for (final Entity entity :
         world.getEntitiesWithComponents(
-            List.of(Position.class, RectangleCollider.class, GroundComponent.class))) {
+            List.of(Position.class, RectangleCollider.class, SolidComponent.class))) {
 
       final Position pos = entity.getComponent(Position.class).orElseThrow();
       final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();

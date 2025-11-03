@@ -55,7 +55,7 @@ public class InputProcessorSystemTest {
   }
 
   private void simulateGrounded() {
-    Entity ground = world.createEntity().addComponent(new GroundComponent());
+    Entity ground = world.createEntity().addComponent(new SolidComponent());
     player.addComponent(new CollisionEvent(ground));
   }
 
