@@ -27,7 +27,8 @@ public class RenderingSystem implements GameSystem {
     this.scaleX = canvas.getWidth() / Constants.WORLD_WIDTH;
     this.scaleY = canvas.getHeight() / Constants.WORLD_HEIGHT;
     this.backgroundImage =
-        new Image(Objects.requireNonNull(getClass().getResourceAsStream("/images/level1.png")));
+        new Image(
+            Objects.requireNonNull(getClass().getResourceAsStream("/images/world-background.png")));
   }
 
   private void sliceSpriteSheetFrames(
