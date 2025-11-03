@@ -27,15 +27,23 @@ public class MapFactory {
   }
 
   private void populatePositions() {
-    platforms.put(new Position(448, 1008), new RectangleCollider(894, 29));
-    platforms.put(new Position(448, 848), new RectangleCollider(765, 29));
-    platforms.put(new Position(432, 688), new RectangleCollider(350, 29));
-    platforms.put(new Position(752, 688), new RectangleCollider(157, 29));
-    platforms.put(new Position(126, 688), new RectangleCollider(129, 29));
-    platforms.put(new Position(192, 528), new RectangleCollider(381, 29));
-    platforms.put(new Position(703, 528), new RectangleCollider(380, 29));
-    platforms.put(new Position(448, 368), new RectangleCollider(765, 29));
-    platforms.put(new Position(448, 240), new RectangleCollider(189, 29));
+    platforms.put(new Position(448, 1008), new RectangleCollider(894, 30));
+    platforms.put(new Position(448, 848), new RectangleCollider(194, 30));
+    platforms.put(new Position(224, 848), new RectangleCollider(194, 30));
+    platforms.put(new Position(672, 848), new RectangleCollider(194, 30));
+    platforms.put(new Position(80, 848), new RectangleCollider(30, 30));
+    platforms.put(new Position(816, 848), new RectangleCollider(30, 30));
+    platforms.put(new Position(432, 688), new RectangleCollider(290, 30));
+    platforms.put(new Position(752, 688), new RectangleCollider(158, 30));
+    platforms.put(new Position(126, 688), new RectangleCollider(128, 30));
+    platforms.put(new Position(224, 528), new RectangleCollider(194, 30));
+    platforms.put(new Position(672, 528), new RectangleCollider(194, 30));
+    platforms.put(new Position(48, 528), new RectangleCollider(96, 30));
+    platforms.put(new Position(846, 528), new RectangleCollider(96, 30));
+    platforms.put(new Position(366, 528), new RectangleCollider(30, 30));
+    platforms.put(new Position(528, 528), new RectangleCollider(30, 30));
+    platforms.put(new Position(448, 368), new RectangleCollider(704, 30));
+    platforms.put(new Position(432, 240), new RectangleCollider(158, 30));
     ladders.put(new Position(112, 912), new RectangleCollider(30, 158));
     ladders.put(new Position(336, 912), new RectangleCollider(30, 158));
     ladders.put(new Position(560, 912), new RectangleCollider(30, 158));
