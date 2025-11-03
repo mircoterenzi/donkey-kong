@@ -11,6 +11,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
+import javafx.scene.paint.Color;
 
 public class RenderingSystem implements GameSystem {
 
@@ -140,8 +141,8 @@ public class RenderingSystem implements GameSystem {
 
     context.setStroke(javafx.scene.paint.Color.RED);
     for (final Entity entity :
-      world.getEntitiesWithComponents(
-        List.of(Position.class, RectangleCollider.class, GroundComponent.class))) {
+        world.getEntitiesWithComponents(
+            List.of(Position.class, RectangleCollider.class, GroundComponent.class))) {
 
       final Position pos = entity.getComponent(Position.class).orElseThrow();
       final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();
@@ -155,8 +156,8 @@ public class RenderingSystem implements GameSystem {
 
     context.setStroke(javafx.scene.paint.Color.BLUE);
     for (final Entity entity :
-      world.getEntitiesWithComponents(
-        List.of(Position.class, RectangleCollider.class, Climbable.class))) {
+        world.getEntitiesWithComponents(
+            List.of(Position.class, RectangleCollider.class, Climbable.class))) {
 
       final Position pos = entity.getComponent(Position.class).orElseThrow();
       final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();
