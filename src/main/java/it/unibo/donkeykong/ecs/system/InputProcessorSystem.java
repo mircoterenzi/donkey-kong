@@ -88,7 +88,7 @@ public class InputProcessorSystem implements GameSystem {
                 newState = FALL;
               } else {
                 newDy = oldVelocity.dy();
-                if(oldState.state() == FALL) {
+                if (oldState.state() == FALL) {
                   newDy = gravity.gravity();
                 }
                 newState = IDLE;
