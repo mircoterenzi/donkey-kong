@@ -41,8 +41,10 @@ public class PhysicsSystem implements GameSystem {
                 .getComponent(CollisionEvent.class)
                 .ifPresent(
                     collisionEvent ->
-                        collisionEvent
-                            .getCollisionsWith(Position.class)
+                        collisionEvent.getCollisionsWith(Position.class).stream()
+                            .filter(
+                                otherEntity ->
+                                    otherEntity.getComponent(SolidComponent.class).isPresent())
                             .forEach(
                                 otherEntity -> handleCollision(deltaTime, entity, otherEntity))));
   }
