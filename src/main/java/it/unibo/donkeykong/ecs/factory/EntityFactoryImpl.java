@@ -131,7 +131,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
     return world
         .createEntity()
         .addComponent(pos)
-        .addComponent(new GroundComponent())
+        .addComponent(new SolidComponent())
         .addComponent(collider);
   }
 

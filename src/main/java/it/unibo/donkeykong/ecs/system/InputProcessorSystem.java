@@ -35,7 +35,7 @@ public class InputProcessorSystem implements GameSystem {
               final boolean isClimbing = calculateDelta(ladder, entity);
               final boolean isGrounded =
                   collisionEvent
-                      .map(event -> event.hasCollisionsWith(GroundComponent.class))
+                      .map(event -> event.hasCollisionsWith(SolidComponent.class))
                       .orElse(false);
 
               switch (input.getCurrentHInput()) {

@@ -1,5 +1,7 @@
 package it.unibo.donkeykong.ecs.system;
 
+import static it.unibo.donkeykong.ecs.system.common.CollisionUtils.clampOnRectangle;
+
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.entity.Entity;
@@ -9,22 +11,6 @@ import java.util.Set;
 
 /** CollisionSystem handles collision detection between entities in the game world. */
 public class CollisionSystem implements GameSystem {
-
-  private static double clampOnRange(double value, double min, double max) {
-    return Math.max(min, Math.min(value, max));
-  }
-
-  /* Credits to "2D Game Collision Detection" by Thomas Schwarzl */
-  private static Position clampOnRectangle(
-      Position position, Position rectanglePosition, RectangleCollider rectangleCollider) {
-    double halfWidth = rectangleCollider.width() / 2.0;
-    double halfHeight = rectangleCollider.height() / 2.0;
-    return new Position(
-        clampOnRange(
-            position.x(), rectanglePosition.x() - halfWidth, rectanglePosition.x() + halfWidth),
-        clampOnRange(
-            position.y(), rectanglePosition.y() - halfHeight, rectanglePosition.y() + halfHeight));
-  }
 
   private static boolean checkCollisionRectangleCircle(
       Position rectanglePosition,

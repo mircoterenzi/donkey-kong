@@ -11,6 +11,8 @@ import java.util.Set;
 /** MovementSystem updates the position of entities based on their velocity over time. */
 public class MovementSystem implements GameSystem {
 
+  private static final double MAX_VELOCITY = 7.9;
+
   @Override
   public void update(World world, float deltaTime) {
     Set<Entity> entitiesToMove =
@@ -21,6 +23,12 @@ public class MovementSystem implements GameSystem {
       Optional<Velocity> velocity = entity.getComponent(Velocity.class);
 
       if (startingPosition.isPresent() && velocity.isPresent()) {
+        // TODO: this should limit the max y-speed to impede tunneling (suboptimal).
+        if (velocity.get().dy() >= MAX_VELOCITY) {
+          Velocity updatedVelocity = new Velocity(velocity.get().dx(), MAX_VELOCITY);
+          entity.updateComponent(velocity.get(), updatedVelocity);
+          velocity = Optional.of(updatedVelocity);
+        }
         double updatedX = startingPosition.get().x() + (velocity.get().dx() * deltaTime);
         double updatedY = startingPosition.get().y() + (velocity.get().dy() * deltaTime);
 
