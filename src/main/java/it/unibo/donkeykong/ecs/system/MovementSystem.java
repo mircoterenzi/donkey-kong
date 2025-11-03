@@ -11,7 +11,7 @@ import java.util.Set;
 /** MovementSystem updates the position of entities based on their velocity over time. */
 public class MovementSystem implements GameSystem {
 
-  private static final double MAX_VELOCITY = 7.9;
+  private static final double MAX_VELOCITY = 200;
 
   @Override
   public void update(World world, float deltaTime) {

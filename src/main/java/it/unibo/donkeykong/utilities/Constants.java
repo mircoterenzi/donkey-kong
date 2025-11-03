@@ -8,7 +8,7 @@ public class Constants {
 
   public static final double GRAVITY = 9.81;
   public static final double JUMP_FACTOR = 30;
-  public static final double FALL_FACTOR = 3.0;
+  public static final double FALL_FACTOR = 35;
   public static final float SPAWN_INTERVAL = 3000f;
 
   public static final double PLAYER_VELOCITY = 100;
