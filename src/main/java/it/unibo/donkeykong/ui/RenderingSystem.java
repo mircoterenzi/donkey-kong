@@ -72,12 +72,14 @@ public class RenderingSystem implements GameSystem {
     stateMap.put(state, frames);
   }
 
-  private void drawFallbackRectangle(double x, double y, double width, double height) {
-    context.setStroke(javafx.scene.paint.Color.BLACK);
-    context.setLineWidth(2);
-    context.strokeRect(x, y, width, height);
-    context.setFill(javafx.scene.paint.Color.GREEN);
-    context.fillRect(x, y, width, height);
+  private void drawFallbackShapeBasedOnCollision(double x, double y, Collider collider) {
+    if (collider instanceof CircleCollider circle) {
+      context.setFill(Color.GREEN);
+      context.fillOval(x, y, circle.radius() * 2, circle.radius() * 2);
+    } else if (collider instanceof RectangleCollider rectangle) {
+      context.setFill(Color.GREEN);
+      context.fillRect(x, y, rectangle.width(), rectangle.height());
+    }
   }
 
   @Override
@@ -85,8 +87,7 @@ public class RenderingSystem implements GameSystem {
     context.save();
     context.scale(scaleX, scaleY);
     context.clearRect(0, 0, Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
-    context.drawImage(
-        this.backgroundImage, 0, 0, ConfigurationUI.WINDOW_WIDTH, ConfigurationUI.WINDOW_HEIGHT);
+    context.drawImage(this.backgroundImage, 0, 0, Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
     for (final Entity entity :
         world.getEntitiesWithComponents(List.of(Position.class, Graphic.class))) {
       final Position position = entity.getComponent(Position.class).orElseThrow();
@@ -119,12 +120,19 @@ public class RenderingSystem implements GameSystem {
               graphic.scaledHeight());
           // TODO: manage reflection
         } else {
-          drawFallbackRectangle(
-              renderPositionX, renderPositionY, graphic.scaledWidth(), graphic.scaledHeight());
+          entity
+              .getComponent(Collider.class)
+              .ifPresent(
+                  collider ->
+                      drawFallbackShapeBasedOnCollision(
+                          renderPositionX, renderPositionY, collider));
         }
       } else {
-        drawFallbackRectangle(
-            renderPositionX, renderPositionY, graphic.scaledWidth(), graphic.scaledHeight());
+        entity
+            .getComponent(Collider.class)
+            .ifPresent(
+                collider ->
+                    drawFallbackShapeBasedOnCollision(renderPositionX, renderPositionY, collider));
       }
     }
 
