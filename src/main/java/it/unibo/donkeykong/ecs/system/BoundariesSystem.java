@@ -11,23 +11,29 @@ public class BoundariesSystem implements GameSystem {
   @Override
   public void update(World world, float deltaTime) {
     for (Entity entity : world.getEntitiesWithComponents(List.of(Position.class, Collider.class))) {
-      Position position = entity.getComponent(Position.class).orElseThrow();
-      Collider collider = entity.getComponent(Collider.class).orElseThrow();
-      double halfWidth, halfHeight;
+      final Position position = entity.getComponent(Position.class).orElseThrow();
+      final Collider collider = entity.getComponent(Collider.class).orElseThrow();
+      final double halfWidth = collider.width() / 2.0;
+      final double halfHeight = collider.height() / 2.0;
+      final double newX =
+          Math.min(Math.max(position.x(), halfWidth), Constants.WORLD_WIDTH - halfWidth);
+      final double newY =
+          Math.min(Math.max(position.y(), halfHeight), Constants.WORLD_HEIGHT - halfHeight);
 
-      if (collider instanceof RectangleCollider rectangleCollider) {
-        halfWidth = rectangleCollider.width() / 2.0;
-        halfHeight = rectangleCollider.height() / 2.0;
-      } else if (collider instanceof CircleCollider circleCollider) {
-        halfWidth = halfHeight = circleCollider.radius();
-      } else {
-        throw new IllegalArgumentException("Unknown collider type");
+      if (newX != position.x() || newY != position.y()) {
+        entity.updateComponent(position, new Position(newX, newY));
+        if (entity.getComponent(Bounciness.class).isPresent()) {
+          entity
+              .getComponent(Velocity.class)
+              .ifPresent(
+                  velocity ->
+                      entity.updateComponent(
+                          velocity,
+                          new Velocity(
+                              (newX != position.x() ? -1 : 1) * velocity.dx(),
+                              (newY != position.y() ? -1 : 1) * velocity.dy())));
+        }
       }
-      entity.updateComponent(
-          position,
-          new Position(
-              Math.min(Math.max(position.x(), halfWidth), Constants.WORLD_WIDTH - halfWidth),
-              Math.min(Math.max(position.y(), halfHeight), Constants.WORLD_HEIGHT - halfHeight)));
     }
   }
 }
