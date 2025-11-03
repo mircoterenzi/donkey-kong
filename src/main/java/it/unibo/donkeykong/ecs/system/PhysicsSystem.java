@@ -12,6 +12,12 @@ import java.util.Set;
  */
 public class PhysicsSystem implements GameSystem {
 
+  private static void resetVerticalVelocity(Entity entity) {
+    entity
+        .getComponent(Velocity.class)
+        .ifPresent(velocity -> entity.updateComponent(velocity, new Velocity(velocity.dx(), 0)));
+  }
+
   private static void handleCollision(Entity entity, Entity otherEntity) {
     Position position = entity.getComponent(Position.class).orElseThrow();
     Collider collider = entity.getComponent(Collider.class).orElseThrow();
@@ -35,6 +41,9 @@ public class PhysicsSystem implements GameSystem {
     }
     if (newX != position.x() || newY != position.y()) {
       entity.updateComponent(position, new Position(newX, newY));
+      if (newY <= position.y()) {
+        resetVerticalVelocity(entity);
+      }
     }
   }
 
