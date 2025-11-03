@@ -12,21 +12,29 @@ import java.util.Set;
  */
 public class PhysicsSystem implements GameSystem {
 
-  private static void handleCollision(float deltaTime, Entity entity, Entity otherEntity) {
-    Velocity velocity = entity.getComponent(Velocity.class).orElseThrow();
+  private static void handleCollision(Entity entity, Entity otherEntity) {
     Position position = entity.getComponent(Position.class).orElseThrow();
+    Collider collider = entity.getComponent(Collider.class).orElseThrow();
     Position otherPosition = otherEntity.getComponent(Position.class).orElseThrow();
-    boolean isBouncy = entity.getComponent(Bounciness.class).isPresent();
-    double overlapX = position.x() - otherPosition.x();
-    double overlapY = position.y() - otherPosition.y();
-    if (Math.abs(overlapY) < Math.abs(overlapX)) {
-      entity.updateComponent(
-          position, new Position(position.x() + (-velocity.dx() * deltaTime), position.y()));
-      entity.updateComponent(velocity, new Velocity(isBouncy ? -velocity.dx() : 0, velocity.dy()));
-    } else {
-      entity.updateComponent(
-          position, new Position(position.x(), position.y() + (-velocity.dy() * deltaTime)));
-      entity.updateComponent(velocity, new Velocity(velocity.dx(), isBouncy ? -velocity.dy() : 0));
+    Collider otherCollider = otherEntity.getComponent(Collider.class).orElseThrow();
+    double newX = position.x();
+    double newY = position.y();
+    double minDistanceX = (collider.width() + otherCollider.width()) / 2.0;
+    double minDistanceY = (collider.height() + otherCollider.height()) / 2.0;
+    double actualDistanceX = position.x() - otherPosition.x();
+    double actualDistanceY = position.y() - otherPosition.y();
+    double overlapX = minDistanceX - Math.abs(actualDistanceX);
+    double overlapY = minDistanceY - Math.abs(actualDistanceY);
+
+    if (overlapX > 0 && overlapY > 0) {
+      if (overlapX < overlapY) {
+        newX = position.x() + (actualDistanceX > 0 ? overlapX : -overlapX);
+      } else {
+        newY = position.y() + (actualDistanceY > 0 ? overlapY : -overlapY);
+      }
+    }
+    if (newX != position.x() || newY != position.y()) {
+      entity.updateComponent(position, new Position(newX, newY));
     }
   }
 
@@ -45,7 +53,6 @@ public class PhysicsSystem implements GameSystem {
                             .filter(
                                 otherEntity ->
                                     otherEntity.getComponent(SolidComponent.class).isPresent())
-                            .forEach(
-                                otherEntity -> handleCollision(deltaTime, entity, otherEntity))));
+                            .forEach(otherEntity -> handleCollision(entity, otherEntity))));
   }
 }
