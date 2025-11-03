@@ -1,10 +1,7 @@
 package it.unibo.donkeykong.ui;
 
 import it.unibo.donkeykong.ecs.World;
-import it.unibo.donkeykong.ecs.component.AnimationComponent;
-import it.unibo.donkeykong.ecs.component.Graphic;
-import it.unibo.donkeykong.ecs.component.Position;
-import it.unibo.donkeykong.ecs.component.StateComponent;
+import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.State;
 import it.unibo.donkeykong.ecs.entity.Entity;
 import it.unibo.donkeykong.ecs.system.GameSystem;
@@ -129,6 +126,39 @@ public class RenderingSystem implements GameSystem {
             renderPositionX, renderPositionY, graphic.scaledWidth(), graphic.scaledHeight());
       }
     }
+
+    context.setLineWidth(1);
+
+    context.setStroke(javafx.scene.paint.Color.RED);
+    for (final Entity entity :
+      world.getEntitiesWithComponents(
+        List.of(Position.class, RectangleCollider.class, GroundComponent.class))) {
+
+      final Position pos = entity.getComponent(Position.class).orElseThrow();
+      final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();
+
+      // Assumendo che Position sia il centro, come per le entità con Graphic
+      final double x = pos.x() - (double) coll.width() / 2;
+      final double y = pos.y() - (double) coll.height() / 2;
+
+      context.strokeRect(x, y, coll.width(), coll.height());
+    }
+
+    context.setStroke(javafx.scene.paint.Color.BLUE);
+    for (final Entity entity :
+      world.getEntitiesWithComponents(
+        List.of(Position.class, RectangleCollider.class, Climbable.class))) {
+
+      final Position pos = entity.getComponent(Position.class).orElseThrow();
+      final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();
+
+      // Assumendo che Position sia il centro
+      final double x = pos.x() - (double) coll.width() / 2;
+      final double y = pos.y() - (double) coll.height() / 2;
+
+      context.strokeRect(x, y, coll.width(), coll.height());
+    }
+
     context.restore();
   }
 }
