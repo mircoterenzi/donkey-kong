@@ -72,6 +72,10 @@ public class InputProcessorSystem implements GameSystem {
                     newDy = -gravity.gravity() + PLAYER_VELOCITY;
                     newState = DOWN;
                   }
+                  case NONE -> {
+                    newDy = -gravity.gravity();
+                    newState = oldState.state();
+                  }
                   default -> {
                     newDy = -gravity.gravity();
                     newState = STOP_CLIMB;
@@ -87,8 +91,11 @@ public class InputProcessorSystem implements GameSystem {
                 newDy = FALL_FACTOR;
                 newState = FALL;
               } else {
-                newDy = oldVelocity.dy();
-                newState = oldState.state();
+                  newDy = oldVelocity.dy();
+                  newState = oldState.state();
+                  if (newDy > gravity.gravity()) {
+                    newDy = gravity.gravity();
+                  }
               }
 
               var state = new StateComponent(newState, newDir);
