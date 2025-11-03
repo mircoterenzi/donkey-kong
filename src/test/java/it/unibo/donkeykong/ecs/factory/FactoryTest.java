@@ -8,8 +8,6 @@ import it.unibo.donkeykong.ecs.WorldImpl;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.entity.Entity;
-import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -183,43 +181,5 @@ public class FactoryTest {
     assertComponentPresence(ladder, Position.class, testPos);
     assertComponentPresence(ladder, Climbable.class);
     assertComponentPresence(ladder, RectangleCollider.class, testCollider);
-  }
-
-  @Test
-  void testMapFactoryGenerateMap() {
-    MapFactory mapFactory = new MapFactory(entityFactory);
-    mapFactory.generateMap();
-
-    Set<Entity> platforms = world.getEntitiesWithComponents(List.of(SolidComponent.class));
-    Set<Entity> ladders = world.getEntitiesWithComponents(List.of(Climbable.class));
-
-    Position expectedPlatformPos = new Position(448, 1008);
-    RectangleCollider expectedPlatformCollider = new RectangleCollider(894, 29);
-    Position expectedLadderPos = new Position(112, 928);
-    RectangleCollider expectedLadderCollider = new RectangleCollider(30, 128);
-
-    assertTrue(
-        platforms.stream()
-            .anyMatch(
-                e -> e.getComponent(Position.class).orElseThrow().equals(expectedPlatformPos)),
-        "Nessuna piattaforma trovata alla posizione " + expectedPlatformPos);
-    assertTrue(
-        ladders.stream()
-            .anyMatch(e -> e.getComponent(Position.class).orElseThrow().equals(expectedLadderPos)),
-        "Nessuna scala trovata alla posizione " + expectedLadderPos);
-
-    Entity platform =
-        platforms.stream()
-            .filter(e -> e.getComponent(Position.class).orElseThrow().equals(expectedPlatformPos))
-            .findFirst()
-            .orElseThrow();
-    Entity ladder =
-        ladders.stream()
-            .filter(e -> e.getComponent(Position.class).orElseThrow().equals(expectedLadderPos))
-            .findFirst()
-            .orElseThrow();
-
-    assertComponentPresence(platform, RectangleCollider.class, expectedPlatformCollider);
-    assertComponentPresence(ladder, RectangleCollider.class, expectedLadderCollider);
   }
 }

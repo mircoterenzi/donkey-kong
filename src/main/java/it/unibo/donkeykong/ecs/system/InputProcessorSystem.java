@@ -8,10 +8,8 @@ import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.entity.Entity;
-
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 /** System that processes player input and updates entity velocities accordingly. */
 public class InputProcessorSystem implements GameSystem {
@@ -30,8 +28,9 @@ public class InputProcessorSystem implements GameSystem {
               double newDx, newDy;
               State newState;
               Direction newDir;
-              Optional<Entity> ladder = collisionEvent
-                      .flatMap(event -> event.getCollisionsWith(Climbable.class).stream().findFirst());
+              Optional<Entity> ladder =
+                  collisionEvent.flatMap(
+                      event -> event.getCollisionsWith(Climbable.class).stream().findFirst());
               final boolean isClimbing = calculateDelta(ladder, entity);
               final boolean isGrounded =
                   collisionEvent
@@ -72,10 +71,6 @@ public class InputProcessorSystem implements GameSystem {
                     newDy = -gravity.gravity() + PLAYER_VELOCITY;
                     newState = DOWN;
                   }
-                  case NONE -> {
-                    newDy = -gravity.gravity();
-                    newState = oldState.state();
-                  }
                   default -> {
                     newDy = -gravity.gravity();
                     newState = STOP_CLIMB;
@@ -83,19 +78,20 @@ public class InputProcessorSystem implements GameSystem {
                 }
               } else if (isGrounded) {
                 newDy = oldVelocity.dy();
-                newState = MOVING;
                 if (newDx == 0) {
                   newState = IDLE;
+                } else {
+                  newState = MOVING;
                 }
               } else if (input.getCurrentVInput() == Input.VerticalInput.MOVE_DOWN) {
-                newDy = FALL_FACTOR;
+                newDy = FALL_FACTOR * gravity.gravity();
                 newState = FALL;
               } else {
-                  newDy = oldVelocity.dy();
-                  newState = oldState.state();
-                  if (newDy > gravity.gravity()) {
-                    newDy = gravity.gravity();
-                  }
+                newDy = oldVelocity.dy();
+                newState = oldState.state();
+                if (newDy > gravity.gravity()) {
+                  newDy = gravity.gravity();
+                }
               }
 
               var state = new StateComponent(newState, newDir);
@@ -112,7 +108,8 @@ public class InputProcessorSystem implements GameSystem {
     Position ladderPos = ladder.get().getComponent(Position.class).orElseThrow();
     Position entityPos = entity.getComponent(Position.class).orElseThrow();
     Optional<Collider> optLadderCollider = ladder.get().getComponent(Collider.class);
-    if (optLadderCollider.isEmpty() || !(optLadderCollider.get() instanceof RectangleCollider ladderCollider)) {
+    if (optLadderCollider.isEmpty()
+        || !(optLadderCollider.get() instanceof RectangleCollider ladderCollider)) {
       return false;
     }
 
