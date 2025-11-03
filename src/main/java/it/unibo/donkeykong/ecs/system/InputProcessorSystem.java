@@ -7,8 +7,11 @@ import static it.unibo.donkeykong.utilities.Constants.*;
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
+import it.unibo.donkeykong.ecs.entity.Entity;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 /** System that processes player input and updates entity velocities accordingly. */
 public class InputProcessorSystem implements GameSystem {
@@ -27,10 +30,9 @@ public class InputProcessorSystem implements GameSystem {
               double newDx, newDy;
               State newState;
               Direction newDir;
-              final boolean isClimbing =
-                  collisionEvent
-                      .map(event -> event.hasCollisionsWith(Climbable.class))
-                      .orElse(false);
+              Optional<Entity> ladder = collisionEvent
+                      .flatMap(event -> event.getCollisionsWith(Climbable.class).stream().findFirst());
+              final boolean isClimbing = calculateDelta(ladder, entity);
               final boolean isGrounded =
                   collisionEvent
                       .map(event -> event.hasCollisionsWith(GroundComponent.class))
@@ -53,7 +55,7 @@ public class InputProcessorSystem implements GameSystem {
 
               if (input.isJumpPressed()) {
                 if (isGrounded || isClimbing) {
-                  newDy = JUMP_FACTOR;
+                  newDy = JUMP_FACTOR * gravity.gravity();
                   newState = JUMP;
                 } else {
                   newDy = oldVelocity.dy();
@@ -93,5 +95,22 @@ public class InputProcessorSystem implements GameSystem {
               entity.updateComponent(oldState, state);
               entity.updateComponent(oldVelocity, new Velocity(newDx, newDy));
             });
+  }
+
+  private boolean calculateDelta(Optional<Entity> ladder, Entity entity) {
+    if (ladder.isEmpty()) {
+      return false;
+    }
+
+    Position ladderPos = ladder.get().getComponent(Position.class).orElseThrow();
+    Position entityPos = entity.getComponent(Position.class).orElseThrow();
+    Optional<Collider> optLadderCollider = ladder.get().getComponent(Collider.class);
+    if (optLadderCollider.isEmpty() || !(optLadderCollider.get() instanceof RectangleCollider ladderCollider)) {
+      return false;
+    }
+
+    double ladderHalfWidth = ladderCollider.width() / 2.0;
+    double horizontalDistance = Math.abs(ladderPos.x() - entityPos.x());
+    return horizontalDistance < ladderHalfWidth;
   }
 }
