@@ -10,7 +10,7 @@ public class Constants {
   public static final double GRAVITY = 9.81;
   public static final double JUMP_FACTOR = 26;
   public static final double FALL_FACTOR = 35;
-  public static final float SPAWN_INTERVAL = 3000f;
+  public static final float SPAWN_INTERVAL = 3f;
 
   public static final double PLAYER_VELOCITY = 100;
   public static final double PLAYER_WIDTH = 16;
@@ -24,8 +24,8 @@ public class Constants {
   public static final PositionComponent FIRST_PLAYER_SPAWN = new PositionComponent(200, 969);
   public static final PositionComponent SECOND_PLAYER_SPAWN = new PositionComponent(700, 969);
 
-  public static final PositionComponent RIGHT_BARREL_SPAWN = new PositionComponent(525, 324);
-  public static final PositionComponent LEFT_BARREL_SPAWN = new PositionComponent(328, 334);
+  public static final PositionComponent RIGHT_BARREL_SPAWN = new PositionComponent(510, 332);
+  public static final PositionComponent LEFT_BARREL_SPAWN = new PositionComponent(350, 332);
   public static final double BARREL_VELOCITY = 50;
   public static final double BARREL_WIDTH = 16;
   public static final double BARREL_HEIGHT = 16;
@@ -40,7 +40,7 @@ public class Constants {
   public static final double DK_HEIGHT = 32;
   public static final double DK_BORDER = 1;
   public static final double DK_SCALE = 3;
-  public static final float DK_FRAME_DURATION = 150;
+  public static final float DK_FRAME_DURATION = 1.5f;
   public static final int DK_COLLISION_WIDTH = 144;
   public static final int DK_COLLISION_HEIGHT = 96;
 

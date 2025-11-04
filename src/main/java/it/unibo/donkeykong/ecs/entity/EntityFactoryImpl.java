@@ -97,12 +97,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 DK_BORDER,
                 DK_SCALE,
                 DK_FRAME_DURATION,
-                (state) -> {
-                  if (state == State.MOVING) {
-                    return new GraphicComponent.AnimationSettings(0, 0, 1);
-                  }
-                  return new GraphicComponent.AnimationSettings(0, 0, 1);
-                }));
+                (state) -> new AnimationSettings(0, 1, 4)));
   }
 
   @Override

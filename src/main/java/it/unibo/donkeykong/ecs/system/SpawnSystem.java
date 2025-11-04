@@ -20,7 +20,7 @@ public class SpawnSystem implements GameSystem {
 
   @Override
   public void update(World world, float deltaTime) {
-    this.elapsedTime += deltaTime * 1000;
+    this.elapsedTime += deltaTime;
     if (this.elapsedTime >= SPAWN_INTERVAL) {
       entityFactory.createBarrel(velocity);
       velocity = -velocity;
