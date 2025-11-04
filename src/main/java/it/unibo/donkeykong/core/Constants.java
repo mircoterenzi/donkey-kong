@@ -23,6 +23,7 @@ public class Constants {
   public static final int PLAYER_LIVES = 3;
   public static final PositionComponent FIRST_PLAYER_SPAWN = new PositionComponent(200, 969);
   public static final PositionComponent SECOND_PLAYER_SPAWN = new PositionComponent(700, 969);
+  public static final PositionComponent RESPAWN_POSITION = new PositionComponent(450, 969);
 
   public static final PositionComponent RIGHT_BARREL_SPAWN = new PositionComponent(510, 332);
   public static final PositionComponent LEFT_BARREL_SPAWN = new PositionComponent(350, 332);
