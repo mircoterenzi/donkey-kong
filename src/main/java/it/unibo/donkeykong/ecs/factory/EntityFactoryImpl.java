@@ -78,12 +78,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 PAULINE_BORDER,
                 PAULINE_SCALE,
                 PAULINE_FRAME_DURATION,
-                (state) -> {
-                  if (state == State.MOVING) {
-                    return new Graphic.AnimationSettings(0, 0, 1);
-                  }
-                  return new Graphic.AnimationSettings(0, 0, 1);
-                }));
+                (state) -> new AnimationSettings(2, 0, 2)));
   }
 
   @Override

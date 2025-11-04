@@ -48,7 +48,7 @@ public class Constants {
   public static final double PAULINE_HEIGHT = 30;
   public static final double PAULINE_BORDER = 1;
   public static final double PAULINE_SCALE = 3;
-  public static final float PAULINE_FRAME_DURATION = 100;
+  public static final float PAULINE_FRAME_DURATION = 1f;
   public static final int PAULINE_COLLISION_WIDTH = 48;
   public static final int PAULINE_COLLISION_HEIGHT = 90;
 }
