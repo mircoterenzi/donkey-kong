@@ -21,7 +21,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(new Velocity(0, 0))
         .addComponent(new Health(PLAYER_LIVES))
         .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
-        .addComponent(new CircleCollider(PLAYER_COLLISION_RADIUS))
+        .addComponent(new RectangleCollider(PLAYER_COLLISION_WIDTH, PLAYER_COLLISION_HEIGHT))
         .addComponent(
             new Graphic(
                 "/sprites/mario.png",
@@ -68,7 +68,8 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
     return world
         .createEntity()
         .addComponent(PAULINE_POSITION)
-        .addComponent(new CircleCollider(PAULINE_COLLISION_RADIUS))
+        .addComponent(new RectangleCollider(PAULINE_COLLISION_WIDTH, PAULINE_COLLISION_HEIGHT))
+        .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
         .addComponent(
             new Graphic(
                 "/sprites/pauline.png",
@@ -79,7 +80,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 PAULINE_FRAME_DURATION,
                 (state) -> {
                   if (state == State.MOVING) {
-                    return new Graphic.AnimationSettings(1, 0, 2);
+                    return new Graphic.AnimationSettings(0, 0, 1);
                   }
                   return new Graphic.AnimationSettings(0, 0, 1);
                 }));
@@ -90,7 +91,8 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
     return world
         .createEntity()
         .addComponent(DK_POSITION)
-        .addComponent(new CircleCollider(DK_COLLISION_RADIUS))
+        .addComponent(new RectangleCollider(DK_COLLISION_WIDTH, DK_COLLISION_HEIGHT))
+        .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
         .addComponent(
             new Graphic(
                 "/sprites/donkey.png",
@@ -101,7 +103,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 DK_FRAME_DURATION,
                 (state) -> {
                   if (state == State.MOVING) {
-                    return new Graphic.AnimationSettings(1, 0, 2);
+                    return new Graphic.AnimationSettings(0, 0, 1);
                   }
                   return new Graphic.AnimationSettings(0, 0, 1);
                 }));

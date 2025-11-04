@@ -53,7 +53,9 @@ public class FactoryTest {
     assertComponentPresence(
         player, StateComponent.class, new StateComponent(State.IDLE, Direction.RIGHT));
     assertComponentPresence(
-        player, CircleCollider.class, new CircleCollider(PLAYER_COLLISION_RADIUS));
+        player,
+        RectangleCollider.class,
+        new RectangleCollider(PLAYER_COLLISION_WIDTH, PLAYER_COLLISION_HEIGHT));
     assertTrue(
         player.getComponent(Graphic.class).isPresent(), "Player1 must have a Graphic component");
     Graphic actualGraphic = player.getComponent(Graphic.class).get();
@@ -95,7 +97,9 @@ public class FactoryTest {
     assertNotNull(pauline);
     assertComponentPresence(pauline, Position.class, PAULINE_POSITION);
     assertComponentPresence(
-        pauline, CircleCollider.class, new CircleCollider(PAULINE_COLLISION_RADIUS));
+        pauline,
+        RectangleCollider.class,
+        new RectangleCollider(PAULINE_COLLISION_WIDTH, PAULINE_COLLISION_HEIGHT));
     assertTrue(
         pauline.getComponent(Graphic.class).isPresent(), "Pauline deve avere un Graphic component");
     Graphic actualGraphic = pauline.getComponent(Graphic.class).get();
@@ -115,7 +119,10 @@ public class FactoryTest {
     Entity dk = entityFactory.createDonkeyKong();
     assertNotNull(dk);
     assertComponentPresence(dk, Position.class, DK_POSITION);
-    assertComponentPresence(dk, CircleCollider.class, new CircleCollider(DK_COLLISION_RADIUS));
+    assertComponentPresence(
+        dk,
+        RectangleCollider.class,
+        new RectangleCollider(DK_COLLISION_WIDTH, DK_COLLISION_HEIGHT));
     assertTrue(
         dk.getComponent(Graphic.class).isPresent(), "DonkeyKong must have a Graphic component");
     Graphic actualGraphic = dk.getComponent(Graphic.class).get();
