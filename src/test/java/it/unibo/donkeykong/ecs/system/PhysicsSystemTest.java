@@ -36,9 +36,8 @@ public class PhysicsSystemTest {
             .addComponent(new SolidComponent());
   }
 
-  private <C extends Component> void assertEntityComponentEquals(
-      Class<C> componentClass, C expected, Entity actual) {
-    Optional<C> actualComponent = actual.getComponent(componentClass);
+  private void assertEntitiesPositionEquals(Position expected, Entity actual) {
+    Optional<Position> actualComponent = actual.getComponent(Position.class);
     assertTrue(actualComponent.isPresent());
     assertEquals(expected, actualComponent.get());
   }
@@ -48,8 +47,8 @@ public class PhysicsSystemTest {
     Position position = new Position(POSITION.x(), POSITION.y() + UNCOLLIDING_OFFSET);
     this.entity.addComponent(position);
     this.world.update(DELTA_TIME);
-    assertEntityComponentEquals(Position.class, position, this.entity);
-    assertEntityComponentEquals(Position.class, POSITION, this.obstacle);
+    assertEntitiesPositionEquals(position, this.entity);
+    assertEntitiesPositionEquals(POSITION, this.obstacle);
   }
 
   @Test
@@ -58,8 +57,8 @@ public class PhysicsSystemTest {
         .addComponent(new Position(POSITION.x(), POSITION.y() - COLLIDING_OFFSET))
         .addComponent(new CollisionEvent(this.obstacle));
     this.world.update(DELTA_TIME);
-    assertEntityComponentEquals(
-        Position.class, new Position(POSITION.x(), POSITION.y() - COLLIDER.height()), this.entity);
+    assertEntitiesPositionEquals(
+        new Position(POSITION.x(), POSITION.y() - COLLIDER.height()), this.entity);
   }
 
   @Test
@@ -68,8 +67,8 @@ public class PhysicsSystemTest {
         .addComponent(new Position(POSITION.x() - COLLIDING_OFFSET, POSITION.y()))
         .addComponent(new CollisionEvent(this.obstacle));
     this.world.update(DELTA_TIME);
-    assertEntityComponentEquals(
-        Position.class, new Position(POSITION.x() - COLLIDER.width(), POSITION.x()), this.entity);
+    assertEntitiesPositionEquals(
+        new Position(POSITION.x() - COLLIDER.width(), POSITION.x()), this.entity);
   }
 
   @Test
@@ -81,7 +80,7 @@ public class PhysicsSystemTest {
         .addComponent(new CollisionEvent(this.obstacle));
     this.world.update(DELTA_TIME);
     Position position = this.entity.getComponent(Position.class).orElseThrow();
-    assertEntityComponentEquals(
-        Position.class, new Position(POSITION.x() - COLLIDER.width(), position.y()), this.entity);
+    assertEntitiesPositionEquals(
+        new Position(POSITION.x() - COLLIDER.width(), position.y()), this.entity);
   }
 }
