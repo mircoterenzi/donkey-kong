@@ -121,18 +121,6 @@ public class WorldImpl implements World {
 
   @Override
   public void update(float deltaTime) {
-    System.out.println("World state dump:");
-    this.componentsByEntity.forEach(
-        (entity, comps) -> {
-          final var id = entity.getId();
-          System.out.println(" - Entity " + id + ":");
-          if (comps == null || comps.isEmpty()) {
-            System.out.println("     (no components)");
-          } else {
-            comps.forEach(
-                c -> System.out.println("     - " + c.getClass().getSimpleName() + " => " + c));
-          }
-        });
     for (final var system : this.systems) {
       system.update(this, deltaTime);
     }

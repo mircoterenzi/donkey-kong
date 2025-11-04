@@ -106,11 +106,13 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
   }
 
   @Override
-  public Entity createBarrel(PositionComponent pos, Direction direction) {
+  public Entity createBarrel(double velocity) {
+    Direction direction = velocity < 0 ? Direction.LEFT : Direction.RIGHT;
+    PositionComponent pos = velocity < 0 ? LEFT_BARREL_SPAWN : RIGHT_BARREL_SPAWN;
     return world
         .createEntity()
         .addComponent(pos)
-        .addComponent(new VelocityComponent(BARREL_VELOCITY, 0))
+        .addComponent(new VelocityComponent(velocity, 0))
         .addComponent(new BouncinessComponent())
         .addComponent(new GravityComponent(GRAVITY))
         .addComponent(new StateComponent(State.MOVING, direction))

@@ -146,18 +146,16 @@ public class FactoryTest {
 
   @Test
   void testCreateBarrel() {
-    PositionComponent testPos = new PositionComponent(100, 100);
-    Direction testDir = Direction.RIGHT;
-    Entity barrel = entityFactory.createBarrel(testPos, testDir);
+    Entity barrel = entityFactory.createBarrel(BARREL_VELOCITY);
 
     assertNotNull(barrel);
-    assertComponentPresence(barrel, PositionComponent.class, testPos);
+    assertComponentPresence(barrel, PositionComponent.class, RIGHT_BARREL_SPAWN);
     assertComponentPresence(
         barrel, VelocityComponent.class, new VelocityComponent(BARREL_VELOCITY, 0));
     assertComponentPresence(barrel, BouncinessComponent.class);
     assertComponentPresence(barrel, GravityComponent.class, new GravityComponent(GRAVITY));
     assertComponentPresence(
-        barrel, StateComponent.class, new StateComponent(State.MOVING, testDir));
+        barrel, StateComponent.class, new StateComponent(State.MOVING, Direction.RIGHT));
     assertComponentPresence(
         barrel, CircleCollider.class, new CircleCollider(BARREL_COLLISION_RADIUS));
     assertTrue(

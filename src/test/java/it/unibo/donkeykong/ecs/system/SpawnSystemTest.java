@@ -1,8 +1,6 @@
 package it.unibo.donkeykong.ecs.system;
 
-import static it.unibo.donkeykong.core.Constants.LEFT_BARREL_SPAWN;
-import static it.unibo.donkeykong.core.Constants.RIGHT_BARREL_SPAWN;
-import static it.unibo.donkeykong.core.Constants.SPAWN_INTERVAL;
+import static it.unibo.donkeykong.core.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import it.unibo.donkeykong.core.WorldImpl;
@@ -53,11 +51,15 @@ public class SpawnSystemTest {
     assertEquals(
         Direction.LEFT, firstBarrel.getComponent(StateComponent.class).orElseThrow().direction());
     assertEquals(
+        -BARREL_VELOCITY, firstBarrel.getComponent(VelocityComponent.class).orElseThrow().dx());
+    assertEquals(
         LEFT_BARREL_SPAWN, firstBarrel.getComponent(PositionComponent.class).orElseThrow());
     world.removeEntity(firstBarrel);
     Entity secondBarrel = spawnBarrel();
     assertEquals(
         Direction.RIGHT, secondBarrel.getComponent(StateComponent.class).orElseThrow().direction());
+    assertEquals(
+        BARREL_VELOCITY, secondBarrel.getComponent(VelocityComponent.class).orElseThrow().dx());
     assertEquals(
         RIGHT_BARREL_SPAWN, secondBarrel.getComponent(PositionComponent.class).orElseThrow());
     world.removeEntity(secondBarrel);

@@ -5,7 +5,7 @@ import it.unibo.donkeykong.ecs.component.PositionComponent;
 public class Constants {
   public static final int WORLD_WIDTH = 896;
   public static final int WORLD_HEIGHT = 1024;
-  public static final int BOTTOM_THRESHOLD = 980;
+  public static final int BOTTOM_THRESHOLD = 950;
 
   public static final double GRAVITY = 9.81;
   public static final double JUMP_FACTOR = 26;
