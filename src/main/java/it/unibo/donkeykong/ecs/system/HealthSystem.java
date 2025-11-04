@@ -36,6 +36,7 @@ public class HealthSystem implements GameSystem {
       } else {
         world.removeEntity(entity);
       }
+      damagingEntities.forEach(world::removeEntity);
     }
   }
 }

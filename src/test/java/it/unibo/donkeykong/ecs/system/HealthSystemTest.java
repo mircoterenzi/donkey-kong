@@ -8,6 +8,7 @@ import it.unibo.donkeykong.ecs.component.CollisionEventComponent;
 import it.unibo.donkeykong.ecs.component.DamageComponent;
 import it.unibo.donkeykong.ecs.component.HealthComponent;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -57,5 +58,16 @@ public class HealthSystemTest {
         INITIAL_LIVES,
         getHealthComponent(target).livesCount(),
         "HealthComponent should remain unchanged when colliding with a non-damaging entity.");
+  }
+
+  @Test
+  void testDamagingEntitiesRemovedOnCollision() {
+    Entity target =
+        world.createEntity().addComponent(new HealthComponent(HealthSystemTest.INITIAL_LIVES));
+    Entity damageSource =
+        world.createEntity().addComponent(new DamageComponent(HealthSystemTest.DAMAGE_AMOUNT));
+    target.addComponent(new CollisionEventComponent(damageSource));
+    world.update(DELTA_TIME_IGNORED);
+    assertEquals(0, world.getEntitiesWithComponents(List.of(DamageComponent.class)).size());
   }
 }
