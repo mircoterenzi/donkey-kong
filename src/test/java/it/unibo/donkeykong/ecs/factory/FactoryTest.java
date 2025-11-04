@@ -1,13 +1,16 @@
 package it.unibo.donkeykong.ecs.factory;
 
-import static it.unibo.donkeykong.utilities.Constants.*;
+import static it.unibo.donkeykong.core.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import it.unibo.donkeykong.ecs.World;
-import it.unibo.donkeykong.ecs.WorldImpl;
+import it.unibo.donkeykong.core.WorldImpl;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
-import it.unibo.donkeykong.ecs.entity.Entity;
+import it.unibo.donkeykong.ecs.component.api.Component;
+import it.unibo.donkeykong.ecs.entity.EntityFactoryImpl;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

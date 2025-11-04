@@ -2,9 +2,11 @@ package it.unibo.donkeykong.ecs;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import it.unibo.donkeykong.ecs.component.Component;
-import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.ecs.system.GameSystem;
+import it.unibo.donkeykong.core.WorldImpl;
+import it.unibo.donkeykong.core.api.World;
+import it.unibo.donkeykong.ecs.component.api.Component;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;

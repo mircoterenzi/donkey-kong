@@ -1,5 +1,7 @@
 package it.unibo.donkeykong.ecs.component;
 
+import it.unibo.donkeykong.ecs.component.api.Component;
+
 /**
  * Velocity component, which represents the speed and direction of an entity.
  *

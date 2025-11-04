@@ -1,9 +1,9 @@
-package it.unibo.donkeykong.utilities;
+package it.unibo.donkeykong.ui;
 
 import static it.unibo.donkeykong.ecs.component.Input.HorizontalInput.*;
 import static it.unibo.donkeykong.ecs.component.Input.VerticalInput.*;
 
-import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.Input;
 import java.util.List;
 import java.util.function.Consumer;

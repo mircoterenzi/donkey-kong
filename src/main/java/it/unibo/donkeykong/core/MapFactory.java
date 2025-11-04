@@ -1,7 +1,8 @@
-package it.unibo.donkeykong.ecs.factory;
+package it.unibo.donkeykong.core;
 
 import it.unibo.donkeykong.ecs.component.Position;
 import it.unibo.donkeykong.ecs.component.RectangleCollider;
+import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import java.util.HashMap;
 import java.util.Map;
 

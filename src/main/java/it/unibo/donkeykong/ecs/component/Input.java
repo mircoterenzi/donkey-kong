@@ -1,5 +1,7 @@
 package it.unibo.donkeykong.ecs.component;
 
+import it.unibo.donkeykong.ecs.component.api.Component;
+
 /** Input component, which represents the user input for an entity. */
 public class Input implements Component {
   /** Possible horizontal inputs. */

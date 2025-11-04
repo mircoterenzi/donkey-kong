@@ -1,11 +1,13 @@
 package it.unibo.donkeykong.ecs.system;
 
-import static it.unibo.donkeykong.utilities.Constants.BOTTOM_THRESHOLD;
+import static it.unibo.donkeykong.core.Constants.BOTTOM_THRESHOLD;
 
-import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.core.Constants;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
-import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.utilities.Constants;
+import it.unibo.donkeykong.ecs.component.api.Collider;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.ArrayList;
 import java.util.List;
 

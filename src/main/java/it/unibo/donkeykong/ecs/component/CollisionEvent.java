@@ -1,6 +1,8 @@
 package it.unibo.donkeykong.ecs.component;
 
-import it.unibo.donkeykong.ecs.entity.Entity;
+import it.unibo.donkeykong.ecs.component.api.Component;
+import it.unibo.donkeykong.ecs.component.api.EventComponent;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

@@ -1,17 +1,17 @@
 package it.unibo.donkeykong.ecs.system;
 
-import static it.unibo.donkeykong.utilities.Constants.LEFT_BARREL_SPAWN;
-import static it.unibo.donkeykong.utilities.Constants.RIGHT_BARREL_SPAWN;
-import static it.unibo.donkeykong.utilities.Constants.SPAWN_INTERVAL;
+import static it.unibo.donkeykong.core.Constants.LEFT_BARREL_SPAWN;
+import static it.unibo.donkeykong.core.Constants.RIGHT_BARREL_SPAWN;
+import static it.unibo.donkeykong.core.Constants.SPAWN_INTERVAL;
 import static org.junit.jupiter.api.Assertions.*;
 
-import it.unibo.donkeykong.ecs.World;
-import it.unibo.donkeykong.ecs.WorldImpl;
+import it.unibo.donkeykong.core.WorldImpl;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.Bounciness;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
-import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.ecs.factory.EntityFactoryImpl;
+import it.unibo.donkeykong.ecs.entity.EntityFactoryImpl;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

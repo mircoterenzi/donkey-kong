@@ -1,16 +1,16 @@
 package it.unibo.donkeykong.ecs.system;
 
-import static it.unibo.donkeykong.utilities.Constants.GRAVITY;
+import static it.unibo.donkeykong.core.Constants.GRAVITY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import it.unibo.donkeykong.ecs.World;
-import it.unibo.donkeykong.ecs.WorldImpl;
+import it.unibo.donkeykong.core.WorldImpl;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.Gravity;
 import it.unibo.donkeykong.ecs.component.Velocity;
-import it.unibo.donkeykong.ecs.entity.Entity;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

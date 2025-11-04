@@ -1,8 +1,9 @@
-package it.unibo.donkeykong.ecs;
+package it.unibo.donkeykong.core;
 
-import it.unibo.donkeykong.ecs.component.Component;
-import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.ecs.system.GameSystem;
+import it.unibo.donkeykong.core.api.World;
+import it.unibo.donkeykong.ecs.component.api.Component;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -120,6 +121,18 @@ public class WorldImpl implements World {
 
   @Override
   public void update(float deltaTime) {
+    System.out.println("World state dump:");
+    this.componentsByEntity.forEach(
+        (entity, comps) -> {
+          final var id = entity.getId();
+          System.out.println(" - Entity " + id + ":");
+          if (comps == null || comps.isEmpty()) {
+            System.out.println("     (no components)");
+          } else {
+            comps.forEach(
+                c -> System.out.println("     - " + c.getClass().getSimpleName() + " => " + c));
+          }
+        });
     for (final var system : this.systems) {
       system.update(this, deltaTime);
     }

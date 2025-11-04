@@ -1,13 +1,15 @@
 package it.unibo.donkeykong.ecs.system;
 
+import static it.unibo.donkeykong.core.Constants.*;
 import static it.unibo.donkeykong.ecs.component.StateComponent.Direction.*;
 import static it.unibo.donkeykong.ecs.component.StateComponent.State.*;
-import static it.unibo.donkeykong.utilities.Constants.*;
 
-import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
-import it.unibo.donkeykong.ecs.entity.Entity;
+import it.unibo.donkeykong.ecs.component.api.Collider;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
 import java.util.Optional;
 

@@ -1,8 +1,9 @@
 package it.unibo.donkeykong.ecs.system;
 
-import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
-import it.unibo.donkeykong.ecs.entity.Entity;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;

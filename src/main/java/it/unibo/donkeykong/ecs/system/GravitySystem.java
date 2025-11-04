@@ -1,7 +1,8 @@
 package it.unibo.donkeykong.ecs.system;
 
-import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
 
 /** GravitySystem applies gravitational force to entities with Gravity and Velocity components. */

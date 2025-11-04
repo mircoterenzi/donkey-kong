@@ -2,12 +2,12 @@ package it.unibo.donkeykong.ecs.system;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import it.unibo.donkeykong.ecs.World;
-import it.unibo.donkeykong.ecs.WorldImpl;
+import it.unibo.donkeykong.core.WorldImpl;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.CollisionEvent;
 import it.unibo.donkeykong.ecs.component.Damage;
 import it.unibo.donkeykong.ecs.component.Health;
-import it.unibo.donkeykong.ecs.entity.Entity;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

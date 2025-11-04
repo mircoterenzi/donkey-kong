@@ -1,12 +1,13 @@
-package it.unibo.donkeykong.ecs.factory;
+package it.unibo.donkeykong.ecs.entity;
 
-import static it.unibo.donkeykong.utilities.Constants.*;
+import static it.unibo.donkeykong.core.Constants.*;
 
-import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.Graphic.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
-import it.unibo.donkeykong.ecs.entity.Entity;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 
 /** Implementation of the EntityFactory interface responsible for creating various game entities. */
 public record EntityFactoryImpl(World world) implements EntityFactory {

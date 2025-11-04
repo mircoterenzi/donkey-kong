@@ -1,4 +1,4 @@
-package it.unibo.donkeykong.utilities;
+package it.unibo.donkeykong.core;
 
 import it.unibo.donkeykong.ecs.component.Position;
 

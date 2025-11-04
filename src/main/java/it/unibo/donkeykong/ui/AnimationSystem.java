@@ -1,12 +1,12 @@
 package it.unibo.donkeykong.ui;
 
-import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.AnimationComponent;
 import it.unibo.donkeykong.ecs.component.Graphic;
 import it.unibo.donkeykong.ecs.component.StateComponent;
 import it.unibo.donkeykong.ecs.component.StateComponent.State;
-import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.ecs.system.GameSystem;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
 import java.util.Set;
 

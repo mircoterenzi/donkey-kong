@@ -1,9 +1,8 @@
-package it.unibo.donkeykong.ecs.factory;
+package it.unibo.donkeykong.ecs.entity.api;
 
 import it.unibo.donkeykong.ecs.component.Position;
 import it.unibo.donkeykong.ecs.component.RectangleCollider;
 import it.unibo.donkeykong.ecs.component.StateComponent.Direction;
-import it.unibo.donkeykong.ecs.entity.Entity;
 
 /** Factory interface for creating the main entities of the Donkey Kong game. */
 public interface EntityFactory {

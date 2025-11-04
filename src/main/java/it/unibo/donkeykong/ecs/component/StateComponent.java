@@ -1,5 +1,7 @@
 package it.unibo.donkeykong.ecs.component;
 
+import it.unibo.donkeykong.ecs.component.api.Component;
+
 /**
  * Represents the state of the player in the game.
  *

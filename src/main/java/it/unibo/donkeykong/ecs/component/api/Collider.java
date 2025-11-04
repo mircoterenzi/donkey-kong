@@ -1,4 +1,4 @@
-package it.unibo.donkeykong.ecs.component;
+package it.unibo.donkeykong.ecs.component.api;
 
 public interface Collider extends Component {
 

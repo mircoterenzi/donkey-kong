@@ -1,6 +1,7 @@
 package it.unibo.donkeykong.ecs.component;
 
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
+import it.unibo.donkeykong.ecs.component.api.Component;
 import java.util.function.Function;
 
 public record Graphic(

@@ -1,7 +1,8 @@
 package it.unibo.donkeykong.ecs.system;
 
-import it.unibo.donkeykong.ecs.World;
-import it.unibo.donkeykong.ecs.component.EventComponent;
+import it.unibo.donkeykong.core.api.World;
+import it.unibo.donkeykong.ecs.component.api.EventComponent;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
 
 /**
