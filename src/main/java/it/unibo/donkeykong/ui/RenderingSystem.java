@@ -115,13 +115,21 @@ public class RenderingSystem implements GameSystem {
             && frames.size() > animation.frameIndex()
             && frames.get(animation.frameIndex()) != null) {
           final Image image = frames.get(animation.frameIndex());
-          context.drawImage(
-              image,
-              renderPositionX,
-              renderPositionY,
-              graphic.scaledWidth(),
-              graphic.scaledHeight());
-          // TODO: manage reflection
+          if (optState.get().direction().equals(StateComponent.Direction.LEFT)) {
+            context.save();
+            context.translate(renderPositionX + graphic.scaledWidth(), 0);
+            context.scale(-1, 1);
+            context.drawImage(
+                image, 0, renderPositionY, graphic.scaledWidth(), graphic.scaledHeight());
+            context.restore();
+          } else {
+            context.drawImage(
+                image,
+                renderPositionX,
+                renderPositionY,
+                graphic.scaledWidth(),
+                graphic.scaledHeight());
+          }
         } else {
           entity
               .getComponent(Collider.class)
