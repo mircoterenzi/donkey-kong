@@ -4,6 +4,7 @@ import static it.unibo.donkeykong.utilities.Constants.*;
 
 import it.unibo.donkeykong.ecs.World;
 import it.unibo.donkeykong.ecs.component.*;
+import it.unibo.donkeykong.ecs.component.Graphic.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.entity.Entity;
 
@@ -29,12 +30,15 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 PLAYER_BORDER,
                 PLAYER_SCALE,
                 PLAYER_FRAME_DURATION,
-                (state) -> {
-                  if (state == State.MOVING) {
-                    return new Graphic.AnimationSettings(1, 0, 2);
-                  }
-                  return new Graphic.AnimationSettings(0, 0, 1);
-                }));
+                (state) ->
+                    switch (state) {
+                      case MOVING -> new AnimationSettings(1, 0, 2);
+                      case JUMP -> new AnimationSettings(3, 0, 1);
+                      case FALL -> new AnimationSettings(4, 0, 1);
+                      case UP, DOWN -> new AnimationSettings(5, 0, 2);
+                      case STOP_CLIMB -> new AnimationSettings(5, 0, 1);
+                      default -> new AnimationSettings(0, 0, 1);
+                    }));
   }
 
   @Override
@@ -121,9 +125,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 BARREL_BORDER,
                 BARREL_SCALE,
                 BARREL_FRAME_DURATION,
-                (state) -> {
-                  return new Graphic.AnimationSettings(0, 0, 4);
-                }));
+                (state) -> new AnimationSettings(0, 0, 4)));
   }
 
   @Override
