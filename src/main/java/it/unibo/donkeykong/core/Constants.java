@@ -8,7 +8,7 @@ public class Constants {
   public static final int BOTTOM_THRESHOLD = 980;
 
   public static final double GRAVITY = 9.81;
-  public static final double JUMP_FACTOR = 22;
+  public static final double JUMP_FACTOR = 26;
   public static final double FALL_FACTOR = 35;
   public static final float SPAWN_INTERVAL = 3000f;
 
