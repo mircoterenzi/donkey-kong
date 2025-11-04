@@ -1,12 +1,15 @@
 package it.unibo.donkeykong.ecs.system;
 
+import static it.unibo.donkeykong.core.Constants.*;
 import static it.unibo.donkeykong.ecs.component.StateComponent.Direction.*;
 import static it.unibo.donkeykong.ecs.component.StateComponent.State.*;
-import static it.unibo.donkeykong.utilities.Constants.*;
 
-import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
+import it.unibo.donkeykong.ecs.component.api.Collider;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,25 +18,29 @@ public class InputProcessorSystem implements GameSystem {
   @Override
   public void update(World world, float deltaTime) {
     world
-        .getEntitiesWithComponents(List.of(Input.class))
+        .getEntitiesWithComponents(List.of(InputComponent.class))
         .forEach(
             entity -> {
-              Input input = entity.getComponent(Input.class).orElseThrow();
-              Velocity oldVelocity = entity.getComponent(Velocity.class).orElseThrow();
+              InputComponent input = entity.getComponent(InputComponent.class).orElseThrow();
+              VelocityComponent oldVelocity =
+                  entity.getComponent(VelocityComponent.class).orElseThrow();
               StateComponent oldState = entity.getComponent(StateComponent.class).orElseThrow();
-              Optional<CollisionEvent> collisionEvent = entity.getComponent(CollisionEvent.class);
-              Gravity gravity = entity.getComponent(Gravity.class).orElse(new Gravity(0));
+              Optional<CollisionEventComponent> collisionEvent =
+                  entity.getComponent(CollisionEventComponent.class);
+              GravityComponent gravity =
+                  entity.getComponent(GravityComponent.class).orElse(new GravityComponent(0));
 
               double newDx, newDy;
               State newState;
               Direction newDir;
-              final boolean isClimbing =
-                  collisionEvent
-                      .map(event -> event.hasCollisionsWith(Climbable.class))
-                      .orElse(false);
+              Optional<Entity> ladder =
+                  collisionEvent.flatMap(
+                      event ->
+                          event.getCollisionsWith(ClimbableComponent.class).stream().findFirst());
+              final boolean isClimbing = calculateDelta(ladder, entity);
               final boolean isGrounded =
                   collisionEvent
-                      .map(event -> event.hasCollisionsWith(GroundComponent.class))
+                      .map(event -> event.hasCollisionsWith(SolidComponent.class))
                       .orElse(false);
 
               switch (input.getCurrentHInput()) {
@@ -53,7 +60,7 @@ public class InputProcessorSystem implements GameSystem {
 
               if (input.isJumpPressed()) {
                 if (isGrounded || isClimbing) {
-                  newDy = JUMP_FACTOR;
+                  newDy = JUMP_FACTOR * -gravity.gravity();
                   newState = JUMP;
                 } else {
                   newDy = oldVelocity.dy();
@@ -77,21 +84,43 @@ public class InputProcessorSystem implements GameSystem {
                 }
               } else if (isGrounded) {
                 newDy = oldVelocity.dy();
-                newState = MOVING;
                 if (newDx == 0) {
                   newState = IDLE;
+                } else {
+                  newState = MOVING;
                 }
-              } else if (input.getCurrentVInput() == Input.VerticalInput.MOVE_DOWN) {
-                newDy = FALL_FACTOR;
+              } else if (input.getCurrentVInput() == InputComponent.VerticalInput.MOVE_DOWN) {
+                newDy = FALL_FACTOR * gravity.gravity();
                 newState = FALL;
               } else {
                 newDy = oldVelocity.dy();
-                newState = oldState.state();
+                if (oldState.state() == FALL) {
+                  newDy = gravity.gravity();
+                }
+                newState = IDLE;
               }
 
               var state = new StateComponent(newState, newDir);
               entity.updateComponent(oldState, state);
-              entity.updateComponent(oldVelocity, new Velocity(newDx, newDy));
+              entity.updateComponent(oldVelocity, new VelocityComponent(newDx, newDy));
             });
+  }
+
+  private boolean calculateDelta(Optional<Entity> ladder, Entity entity) {
+    if (ladder.isEmpty()) {
+      return false;
+    }
+
+    PositionComponent ladderPos = ladder.get().getComponent(PositionComponent.class).orElseThrow();
+    PositionComponent entityPos = entity.getComponent(PositionComponent.class).orElseThrow();
+    Optional<Collider> optLadderCollider = ladder.get().getComponent(Collider.class);
+    if (optLadderCollider.isEmpty()
+        || !(optLadderCollider.get() instanceof RectangleCollider ladderCollider)) {
+      return false;
+    }
+
+    double ladderHalfWidth = ladderCollider.width() / 2.0;
+    double horizontalDistance = Math.abs(ladderPos.x() - entityPos.x());
+    return horizontalDistance < ladderHalfWidth;
   }
 }

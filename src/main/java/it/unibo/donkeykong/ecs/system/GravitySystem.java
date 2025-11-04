@@ -1,21 +1,26 @@
 package it.unibo.donkeykong.ecs.system;
 
-import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
 
-/** GravitySystem applies gravitational force to entities with Gravity and Velocity components. */
+/**
+ * GravitySystem applies gravitational force to entities with GravityComponent and VelocityComponent
+ * components.
+ */
 public class GravitySystem implements GameSystem {
   @Override
   public void update(World world, float deltaTime) {
     world
-        .getEntitiesWithComponents(List.of(Gravity.class, Velocity.class))
+        .getEntitiesWithComponents(List.of(GravityComponent.class, VelocityComponent.class))
         .forEach(
             entity -> {
-              var gravity = entity.getComponent(Gravity.class).orElse(new Gravity(0));
-              var velocity = entity.getComponent(Velocity.class).orElseThrow();
+              var gravity =
+                  entity.getComponent(GravityComponent.class).orElse(new GravityComponent(0));
+              var velocity = entity.getComponent(VelocityComponent.class).orElseThrow();
               double newDy = velocity.dy() + gravity.gravity();
-              Velocity newVelocity = new Velocity(velocity.dx(), newDy);
+              VelocityComponent newVelocity = new VelocityComponent(velocity.dx(), newDy);
               entity.updateComponent(velocity, newVelocity);
             });
   }

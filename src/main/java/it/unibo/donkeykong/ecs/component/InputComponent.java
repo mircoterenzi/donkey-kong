@@ -1,7 +1,9 @@
 package it.unibo.donkeykong.ecs.component;
 
-/** Input component, which represents the user input for an entity. */
-public class Input implements Component {
+import it.unibo.donkeykong.ecs.component.api.Component;
+
+/** InputComponent component, which represents the user input for an entity. */
+public class InputComponent implements Component {
   /** Possible horizontal inputs. */
   public enum HorizontalInput {
     MOVE_LEFT,
@@ -21,7 +23,7 @@ public class Input implements Component {
 
   private boolean jumpPressed;
 
-  public Input() {
+  public InputComponent() {
     this.currentHInput = HorizontalInput.NONE;
     this.currentVInput = VerticalInput.NONE;
     this.jumpPressed = false;

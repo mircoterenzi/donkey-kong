@@ -1,17 +1,17 @@
-package it.unibo.donkeykong.utilities;
+package it.unibo.donkeykong.ui;
 
-import static it.unibo.donkeykong.ecs.component.Input.HorizontalInput.*;
-import static it.unibo.donkeykong.ecs.component.Input.VerticalInput.*;
+import static it.unibo.donkeykong.ecs.component.InputComponent.HorizontalInput.*;
+import static it.unibo.donkeykong.ecs.component.InputComponent.VerticalInput.*;
 
-import it.unibo.donkeykong.ecs.World;
-import it.unibo.donkeykong.ecs.component.Input;
+import it.unibo.donkeykong.core.api.World;
+import it.unibo.donkeykong.ecs.component.InputComponent;
 import java.util.List;
 import java.util.function.Consumer;
 import javafx.scene.input.KeyCode;
 
 /**
- * InputHandler is responsible for handling keyboard input events and updating the Input components
- * of entities in the game world accordingly.
+ * InputHandler is responsible for handling keyboard input events and updating the InputComponent
+ * components of entities in the game world accordingly.
  */
 public class InputHandler {
   private final World world;
@@ -60,22 +60,22 @@ public class InputHandler {
   }
 
   private void updateInputState() {
-    final Input.HorizontalInput hInput;
+    final InputComponent.HorizontalInput hInput;
     if (leftPressed) {
       hInput = MOVE_LEFT;
     } else if (rightPressed) {
       hInput = MOVE_RIGHT;
     } else {
-      hInput = Input.HorizontalInput.NONE;
+      hInput = InputComponent.HorizontalInput.NONE;
     }
 
-    final Input.VerticalInput vInput;
+    final InputComponent.VerticalInput vInput;
     if (upPressed) {
       vInput = MOVE_UP;
     } else if (downPressed) {
       vInput = MOVE_DOWN;
     } else {
-      vInput = Input.VerticalInput.NONE;
+      vInput = InputComponent.VerticalInput.NONE;
     }
 
     applyToInput(
@@ -85,9 +85,9 @@ public class InputHandler {
         });
   }
 
-  private void applyToInput(final Consumer<Input> inputLogic) {
+  private void applyToInput(final Consumer<InputComponent> inputLogic) {
     world
-        .getEntitiesWithComponents(List.of(Input.class))
-        .forEach(e -> e.getComponent(Input.class).ifPresent(inputLogic));
+        .getEntitiesWithComponents(List.of(InputComponent.class))
+        .forEach(e -> e.getComponent(InputComponent.class).ifPresent(inputLogic));
   }
 }

@@ -1,6 +1,6 @@
-package it.unibo.donkeykong.ecs.system;
+package it.unibo.donkeykong.ecs.system.api;
 
-import it.unibo.donkeykong.ecs.World;
+import it.unibo.donkeykong.core.api.World;
 
 /**
  * This interface represents a system in the ECS (Entity-Component-System) architecture. A System is

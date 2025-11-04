@@ -1,8 +1,9 @@
-package it.unibo.donkeykong.ecs;
+package it.unibo.donkeykong.core;
 
-import it.unibo.donkeykong.ecs.component.Component;
-import it.unibo.donkeykong.ecs.entity.Entity;
-import it.unibo.donkeykong.ecs.system.GameSystem;
+import it.unibo.donkeykong.core.api.World;
+import it.unibo.donkeykong.ecs.component.api.Component;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.*;
 import java.util.stream.Collectors;
 

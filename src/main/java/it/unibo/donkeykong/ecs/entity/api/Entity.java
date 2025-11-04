@@ -1,6 +1,6 @@
-package it.unibo.donkeykong.ecs.entity;
+package it.unibo.donkeykong.ecs.entity.api;
 
-import it.unibo.donkeykong.ecs.component.Component;
+import it.unibo.donkeykong.ecs.component.api.Component;
 import java.util.Optional;
 import java.util.Set;
 

@@ -1,13 +1,12 @@
 package it.unibo.donkeykong.ui;
 
-import it.unibo.donkeykong.ecs.World;
-import it.unibo.donkeykong.ecs.WorldImpl;
-import it.unibo.donkeykong.ecs.factory.EntityFactory;
-import it.unibo.donkeykong.ecs.factory.EntityFactoryImpl;
-import it.unibo.donkeykong.ecs.factory.MapFactory;
+import it.unibo.donkeykong.core.Constants;
+import it.unibo.donkeykong.core.MapFactory;
+import it.unibo.donkeykong.core.WorldImpl;
+import it.unibo.donkeykong.core.api.World;
+import it.unibo.donkeykong.ecs.entity.EntityFactoryImpl;
+import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.*;
-import it.unibo.donkeykong.utilities.Constants;
-import it.unibo.donkeykong.utilities.InputHandler;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
@@ -30,7 +29,21 @@ public class DonkeyKongRushUI extends Application {
     final EntityFactory entityFactory = new EntityFactoryImpl(world);
     final MapFactory mapFactory = new MapFactory(entityFactory);
     entityFactory.createFirstPlayer();
+    entityFactory.createSecondPlayer();
+    entityFactory.createDonkeyKong();
+    entityFactory.createPauline();
     mapFactory.generateMap();
+
+    world.addSystem(new MovementSystem());
+    world.addSystem(new BoundariesSystem());
+    world.addSystem(new CollisionSystem());
+    world.addSystem(new PhysicsSystem());
+    world.addSystem(new HealthSystem());
+    world.addSystem(new SpawnSystem(entityFactory));
+    world.addSystem(new InputProcessorSystem());
+    world.addSystem(new GravitySystem());
+    world.addSystem(new EventDispatchSystem());
+
     final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
     final Rectangle2D screen = Screen.getPrimary().getVisualBounds();
     final double windowHeight = screen.getHeight() * 0.9;
@@ -44,8 +57,8 @@ public class DonkeyKongRushUI extends Application {
     scene.setOnKeyPressed(e -> inputHandler.handleKeyEvent(e.getCode(), true));
     scene.setOnKeyReleased(e -> inputHandler.handleKeyEvent(e.getCode(), false));
 
-    final RenderingSystem renderingSystem = new RenderingSystem(canvas);
-    world.addSystem(renderingSystem);
+    world.addSystem(new AnimationSystem());
+    world.addSystem(new RenderingSystem(canvas));
 
     new AnimationTimer() {
       private long lastUpdate = 0;
@@ -64,5 +77,6 @@ public class DonkeyKongRushUI extends Application {
     primaryStage.setScene(scene);
     primaryStage.show();
     primaryStage.setResizable(false);
+    primaryStage.toFront();
   }
 }
