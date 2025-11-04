@@ -30,7 +30,7 @@ public class SpawnSystemTest {
         world
             .getEntitiesWithComponents(List.of(VelocityComponent.class, BouncinessComponent.class))
             .isEmpty());
-    world.update((SPAWN_INTERVAL - 1000f) / 1000f);
+    world.update(SPAWN_INTERVAL - 1f);
     assertTrue(
         world
             .getEntitiesWithComponents(List.of(VelocityComponent.class, BouncinessComponent.class))
@@ -71,7 +71,7 @@ public class SpawnSystemTest {
   }
 
   private Entity spawnBarrel() {
-    world.update(SPAWN_INTERVAL / 1000f);
+    world.update(SPAWN_INTERVAL);
     return world.getEntitiesWithComponents(List.of(BouncinessComponent.class)).stream()
         .findFirst()
         .orElseThrow();
