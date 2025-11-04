@@ -33,6 +33,7 @@ public class Constants {
   public static final double BARREL_SCALE = 3;
   public static final float BARREL_FRAME_DURATION = 0.15f;
   public static final int BARREL_COLLISION_RADIUS = 20;
+  public static final int BARREL_DAMAGE = 1;
 
   public static final PositionComponent DK_POSITION = new PositionComponent(432, 305);
   public static final double DK_WIDTH = 48;

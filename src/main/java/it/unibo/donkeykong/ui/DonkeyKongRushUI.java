@@ -38,6 +38,7 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(new BoundariesSystem());
     world.addSystem(new CollisionSystem());
     world.addSystem(new PhysicsSystem());
+    world.addSystem(new HealthSystem());
     world.addSystem(new SpawnSystem(entityFactory));
     world.addSystem(new InputProcessorSystem());
     world.addSystem(new GravitySystem());

@@ -114,6 +114,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(new BouncinessComponent())
         .addComponent(new GravityComponent(GRAVITY))
         .addComponent(new StateComponent(State.MOVING, direction))
+        .addComponent(new DamageComponent(BARREL_DAMAGE))
         .addComponent(new CircleCollider(BARREL_COLLISION_RADIUS))
         .addComponent(
             new GraphicComponent(
