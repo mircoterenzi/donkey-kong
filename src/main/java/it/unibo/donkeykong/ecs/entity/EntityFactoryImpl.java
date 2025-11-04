@@ -4,7 +4,7 @@ import static it.unibo.donkeykong.core.Constants.*;
 
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
-import it.unibo.donkeykong.ecs.component.Graphic.*;
+import it.unibo.donkeykong.ecs.component.GraphicComponent.*;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
@@ -17,14 +17,14 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
     return world
         .createEntity()
         .addComponent(FIRST_PLAYER_SPAWN)
-        .addComponent(new Input())
-        .addComponent(new Gravity(GRAVITY))
-        .addComponent(new Velocity(0, 0))
-        .addComponent(new Health(PLAYER_LIVES))
+        .addComponent(new InputComponent())
+        .addComponent(new GravityComponent(GRAVITY))
+        .addComponent(new VelocityComponent(0, 0))
+        .addComponent(new HealthComponent(PLAYER_LIVES))
         .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
         .addComponent(new RectangleCollider(PLAYER_COLLISION_WIDTH, PLAYER_COLLISION_HEIGHT))
         .addComponent(
-            new Graphic(
+            new GraphicComponent(
                 "/sprites/mario.png",
                 PLAYER_WIDTH,
                 PLAYER_HEIGHT,
@@ -49,7 +49,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(SECOND_PLAYER_SPAWN)
         .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
         .addComponent(
-            new Graphic(
+            new GraphicComponent(
                 "/sprites/luigi.png",
                 PLAYER_WIDTH,
                 PLAYER_HEIGHT,
@@ -58,9 +58,9 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 PLAYER_FRAME_DURATION,
                 (state) -> {
                   if (state == State.MOVING) {
-                    return new Graphic.AnimationSettings(1, 0, 2);
+                    return new GraphicComponent.AnimationSettings(1, 0, 2);
                   }
-                  return new Graphic.AnimationSettings(0, 0, 1);
+                  return new GraphicComponent.AnimationSettings(0, 0, 1);
                 }));
   }
 
@@ -72,7 +72,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(new RectangleCollider(PAULINE_COLLISION_WIDTH, PAULINE_COLLISION_HEIGHT))
         .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
         .addComponent(
-            new Graphic(
+            new GraphicComponent(
                 "/sprites/pauline.png",
                 PAULINE_WIDTH,
                 PAULINE_HEIGHT,
@@ -90,7 +90,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(new RectangleCollider(DK_COLLISION_WIDTH, DK_COLLISION_HEIGHT))
         .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
         .addComponent(
-            new Graphic(
+            new GraphicComponent(
                 "/sprites/donkey.png",
                 DK_WIDTH,
                 DK_HEIGHT,
@@ -99,24 +99,24 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 DK_FRAME_DURATION,
                 (state) -> {
                   if (state == State.MOVING) {
-                    return new Graphic.AnimationSettings(0, 0, 1);
+                    return new GraphicComponent.AnimationSettings(0, 0, 1);
                   }
-                  return new Graphic.AnimationSettings(0, 0, 1);
+                  return new GraphicComponent.AnimationSettings(0, 0, 1);
                 }));
   }
 
   @Override
-  public Entity createBarrel(Position pos, Direction direction) {
+  public Entity createBarrel(PositionComponent pos, Direction direction) {
     return world
         .createEntity()
         .addComponent(pos)
-        .addComponent(new Velocity(BARREL_VELOCITY, 0))
-        .addComponent(new Bounciness())
-        .addComponent(new Gravity(GRAVITY))
+        .addComponent(new VelocityComponent(BARREL_VELOCITY, 0))
+        .addComponent(new BouncinessComponent())
+        .addComponent(new GravityComponent(GRAVITY))
         .addComponent(new StateComponent(State.MOVING, direction))
         .addComponent(new CircleCollider(BARREL_COLLISION_RADIUS))
         .addComponent(
-            new Graphic(
+            new GraphicComponent(
                 "/sprites/barrel.png",
                 BARREL_WIDTH,
                 BARREL_HEIGHT,
@@ -127,7 +127,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
   }
 
   @Override
-  public Entity createPlatform(Position pos, RectangleCollider collider) {
+  public Entity createPlatform(PositionComponent pos, RectangleCollider collider) {
     return world
         .createEntity()
         .addComponent(pos)
@@ -136,11 +136,11 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
   }
 
   @Override
-  public Entity createLadder(Position pos, RectangleCollider collider) {
+  public Entity createLadder(PositionComponent pos, RectangleCollider collider) {
     return world
         .createEntity()
         .addComponent(pos)
-        .addComponent(new Climbable())
+        .addComponent(new ClimbableComponent())
         .addComponent(collider);
   }
 }

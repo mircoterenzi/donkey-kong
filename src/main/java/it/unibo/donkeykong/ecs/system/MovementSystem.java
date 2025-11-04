@@ -1,8 +1,8 @@
 package it.unibo.donkeykong.ecs.system;
 
 import it.unibo.donkeykong.core.api.World;
-import it.unibo.donkeykong.ecs.component.Position;
-import it.unibo.donkeykong.ecs.component.Velocity;
+import it.unibo.donkeykong.ecs.component.PositionComponent;
+import it.unibo.donkeykong.ecs.component.VelocityComponent;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
 import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
@@ -17,16 +17,17 @@ public class MovementSystem implements GameSystem {
   @Override
   public void update(World world, float deltaTime) {
     Set<Entity> entitiesToMove =
-        world.getEntitiesWithComponents(List.of(Position.class, Velocity.class));
+        world.getEntitiesWithComponents(List.of(PositionComponent.class, VelocityComponent.class));
 
     for (Entity entity : entitiesToMove) {
-      Optional<Position> startingPosition = entity.getComponent(Position.class);
-      Optional<Velocity> velocity = entity.getComponent(Velocity.class);
+      Optional<PositionComponent> startingPosition = entity.getComponent(PositionComponent.class);
+      Optional<VelocityComponent> velocity = entity.getComponent(VelocityComponent.class);
 
       if (startingPosition.isPresent() && velocity.isPresent()) {
         // TODO: this should limit the max y-speed to impede tunneling (suboptimal).
         if (velocity.get().dy() >= MAX_VELOCITY) {
-          Velocity updatedVelocity = new Velocity(velocity.get().dx(), MAX_VELOCITY);
+          VelocityComponent updatedVelocity =
+              new VelocityComponent(velocity.get().dx(), MAX_VELOCITY);
           entity.updateComponent(velocity.get(), updatedVelocity);
           velocity = Optional.of(updatedVelocity);
         }
@@ -34,7 +35,7 @@ public class MovementSystem implements GameSystem {
         double updatedY = startingPosition.get().y() + (velocity.get().dy() * deltaTime);
 
         world.removeComponentFromEntity(entity, startingPosition.get());
-        world.addComponentToEntity(entity, new Position(updatedX, updatedY));
+        world.addComponentToEntity(entity, new PositionComponent(updatedX, updatedY));
       }
     }
   }

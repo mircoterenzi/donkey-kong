@@ -15,9 +15,9 @@ import java.util.Set;
 public class CollisionSystem implements GameSystem {
 
   private static boolean checkCollisionRectangleCircle(
-      Position rectanglePosition,
+      PositionComponent rectanglePosition,
       RectangleCollider rectangleCollider,
-      Position circlePosition,
+      PositionComponent circlePosition,
       CircleCollider circleCollider) {
     return checkCollisionCircleCircle(
         circlePosition,
@@ -27,17 +27,17 @@ public class CollisionSystem implements GameSystem {
   }
 
   private static boolean checkCollisionCircleCircle(
-      Position position,
+      PositionComponent position,
       CircleCollider collider,
-      Position otherPosition,
+      PositionComponent otherPosition,
       CircleCollider otherCollider) {
     return position.distanceFrom(otherPosition) <= (collider.radius() + otherCollider.radius());
   }
 
   private static boolean checkCollisionRectangleRectangle(
-      Position position,
+      PositionComponent position,
       RectangleCollider collider,
-      Position otherPosition,
+      PositionComponent otherPosition,
       RectangleCollider otherCollider) {
     return Math.abs(position.x() - otherPosition.x())
             <= (collider.width() + otherCollider.width()) / 2.0
@@ -46,7 +46,10 @@ public class CollisionSystem implements GameSystem {
   }
 
   private boolean isColliding(
-      Position position, Collider collider, Position otherPosition, Collider otherCollider) {
+      PositionComponent position,
+      Collider collider,
+      PositionComponent otherPosition,
+      Collider otherCollider) {
     if (collider instanceof RectangleCollider rectangleCollider
         && otherCollider instanceof RectangleCollider otherRectangleCollider) {
       return checkCollisionRectangleRectangle(
@@ -71,28 +74,31 @@ public class CollisionSystem implements GameSystem {
   @Override
   public void update(World world, float deltaTime) {
     Set<Entity> movingSolidEntities =
-        world.getEntitiesWithComponents(List.of(Position.class, Collider.class, Velocity.class));
+        world.getEntitiesWithComponents(
+            List.of(PositionComponent.class, Collider.class, VelocityComponent.class));
     Set<Entity> solidEntities =
-        world.getEntitiesWithComponents(List.of(Position.class, Collider.class));
+        world.getEntitiesWithComponents(List.of(PositionComponent.class, Collider.class));
 
     for (Entity entity : movingSolidEntities) {
-      Position position = entity.getComponent(Position.class).orElseThrow();
+      PositionComponent position = entity.getComponent(PositionComponent.class).orElseThrow();
       Collider collider = entity.getComponent(Collider.class).orElseThrow();
       solidEntities.stream()
           .filter(otherEntity -> !otherEntity.equals(entity))
           .filter(
               otherEntity -> {
-                Position otherPosition = otherEntity.getComponent(Position.class).orElseThrow();
+                PositionComponent otherPosition =
+                    otherEntity.getComponent(PositionComponent.class).orElseThrow();
                 Collider otherCollider = otherEntity.getComponent(Collider.class).orElseThrow();
                 return isColliding(position, collider, otherPosition, otherCollider);
               })
           .forEach(
               otherEntity -> {
-                Optional<CollisionEvent> event = entity.getComponent(CollisionEvent.class);
+                Optional<CollisionEventComponent> event =
+                    entity.getComponent(CollisionEventComponent.class);
                 if (event.isPresent()) {
                   event.get().addCollision(otherEntity);
                 } else {
-                  entity.addComponent(new CollisionEvent(otherEntity));
+                  entity.addComponent(new CollisionEventComponent(otherEntity));
                 }
               });
     }

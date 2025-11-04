@@ -14,21 +14,25 @@ public class HealthSystem implements GameSystem {
   @Override
   public void update(World world, float deltaTime) {
     Set<Entity> targetEntities =
-        world.getEntitiesWithComponents(List.of(Health.class, CollisionEvent.class));
+        world.getEntitiesWithComponents(
+            List.of(HealthComponent.class, CollisionEventComponent.class));
     for (Entity entity : targetEntities) {
-      Health health = entity.getComponent(Health.class).orElseThrow();
+      HealthComponent health = entity.getComponent(HealthComponent.class).orElseThrow();
       int currentLives = health.livesCount();
       List<Entity> damagingEntities =
-          entity.getComponent(CollisionEvent.class).orElseThrow().getCollisionsWith(Damage.class);
+          entity
+              .getComponent(CollisionEventComponent.class)
+              .orElseThrow()
+              .getCollisionsWith(DamageComponent.class);
       int totalDamage =
           damagingEntities.stream()
-              .map(otherEntity -> otherEntity.getComponent(Damage.class))
+              .map(otherEntity -> otherEntity.getComponent(DamageComponent.class))
               .map(Optional::orElseThrow)
-              .map(Damage::damageAmount)
+              .map(DamageComponent::damageAmount)
               .reduce(0, Integer::sum);
       int newLives = currentLives - totalDamage;
       if (newLives > 0) {
-        entity.updateComponent(health, new Health(newLives));
+        entity.updateComponent(health, new HealthComponent(newLives));
       } else {
         world.removeEntity(entity);
       }

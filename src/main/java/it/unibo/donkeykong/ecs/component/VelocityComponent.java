@@ -3,9 +3,9 @@ package it.unibo.donkeykong.ecs.component;
 import it.unibo.donkeykong.ecs.component.api.Component;
 
 /**
- * Velocity component, which represents the speed and direction of an entity.
+ * VelocityComponent component, which represents the speed and direction of an entity.
  *
  * @param dx the change in x-coordinate
  * @param dy the change in y-coordinate
  */
-public record Velocity(double dx, double dy) implements Component {}
+public record VelocityComponent(double dx, double dy) implements Component {}

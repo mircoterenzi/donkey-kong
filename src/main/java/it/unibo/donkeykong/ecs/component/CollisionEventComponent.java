@@ -7,15 +7,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class CollisionEvent implements EventComponent {
+public class CollisionEventComponent implements EventComponent {
 
   private final Set<Entity> entities;
 
-  public CollisionEvent() {
+  public CollisionEventComponent() {
     this.entities = new HashSet<>();
   }
 
-  public CollisionEvent(Entity collision) {
+  public CollisionEventComponent(Entity collision) {
     this();
     this.entities.add(collision);
   }

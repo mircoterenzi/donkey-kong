@@ -4,7 +4,7 @@ import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.component.api.Component;
 import java.util.function.Function;
 
-public record Graphic(
+public record GraphicComponent(
     String path,
     double width,
     double height,

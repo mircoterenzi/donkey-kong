@@ -17,20 +17,20 @@ public class InputProcessorSystemTest {
 
   private World world;
   private Entity player;
-  private Input playerInput;
-  private Velocity initialVelocity;
+  private InputComponent playerInput;
+  private VelocityComponent initialVelocity;
   private StateComponent initialPlayerState;
-  private Position initialPosition;
+  private PositionComponent initialPosition;
 
   @BeforeEach
   void setUp() {
     world = new WorldImpl();
     world.addSystem(new InputProcessorSystem());
 
-    playerInput = new Input();
-    initialVelocity = new Velocity(0.0, 0.0);
+    playerInput = new InputComponent();
+    initialVelocity = new VelocityComponent(0.0, 0.0);
     initialPlayerState = new StateComponent(State.IDLE, Direction.LEFT);
-    initialPosition = new Position(10, 10);
+    initialPosition = new PositionComponent(10, 10);
 
     player =
         world
@@ -39,13 +39,13 @@ public class InputProcessorSystemTest {
             .addComponent(initialVelocity)
             .addComponent(initialPlayerState)
             .addComponent(initialPosition)
-            .addComponent(new Gravity(GRAVITY));
+            .addComponent(new GravityComponent(GRAVITY));
   }
 
-  private Velocity getVelocityComponent(Entity entity) {
+  private VelocityComponent getVelocityComponent(Entity entity) {
     return entity
-        .getComponent(Velocity.class)
-        .orElseThrow(() -> new AssertionError("Velocity component missing"));
+        .getComponent(VelocityComponent.class)
+        .orElseThrow(() -> new AssertionError("VelocityComponent component missing"));
   }
 
   private StateComponent getStateComponent(Entity entity) {
@@ -54,30 +54,30 @@ public class InputProcessorSystemTest {
         .orElseThrow(() -> new AssertionError("StateComponent missing"));
   }
 
-  private Position getPositionComponent(Entity entity) {
+  private PositionComponent getPositionComponent(Entity entity) {
     return entity
-        .getComponent(Position.class)
-        .orElseThrow(() -> new AssertionError("Position component missing"));
+        .getComponent(PositionComponent.class)
+        .orElseThrow(() -> new AssertionError("PositionComponent component missing"));
   }
 
   private void simulateGrounded() {
     Entity ground = world.createEntity().addComponent(new SolidComponent());
-    player.addComponent(new CollisionEvent(ground));
+    player.addComponent(new CollisionEventComponent(ground));
   }
 
   private void simulateClimbing() {
     Entity ladder =
         world
             .createEntity()
-            .addComponent(new Climbable())
-            .addComponent(new Position(10, 10))
+            .addComponent(new ClimbableComponent())
+            .addComponent(new PositionComponent(10, 10))
             .addComponent(new RectangleCollider(30, 50));
-    player.addComponent(new CollisionEvent(ladder));
+    player.addComponent(new CollisionEventComponent(ladder));
   }
 
   @Test
   void testIdleAtSpawn() {
-    Velocity velocity = getVelocityComponent(player);
+    VelocityComponent velocity = getVelocityComponent(player);
     StateComponent state = getStateComponent(player);
 
     assertEquals(initialVelocity, velocity, "Initial horizontal velocity should be zero");
@@ -86,10 +86,10 @@ public class InputProcessorSystemTest {
 
   @Test
   void testHorizontalMovement() {
-    playerInput.setCurrentHInput(Input.HorizontalInput.MOVE_RIGHT);
+    playerInput.setCurrentHInput(InputComponent.HorizontalInput.MOVE_RIGHT);
     world.update(DELTA_TIME_IGNORED);
 
-    Velocity updatedVelocity = getVelocityComponent(player);
+    VelocityComponent updatedVelocity = getVelocityComponent(player);
     StateComponent updatedState = getStateComponent(player);
 
     assertEquals(
@@ -97,7 +97,7 @@ public class InputProcessorSystemTest {
     assertEquals(0, updatedVelocity.dy(), "Vertical velocity should remain zero");
     assertEquals(Direction.RIGHT, updatedState.direction(), "Direction should be RIGHT");
 
-    playerInput.setCurrentHInput(Input.HorizontalInput.MOVE_LEFT);
+    playerInput.setCurrentHInput(InputComponent.HorizontalInput.MOVE_LEFT);
     world.update(DELTA_TIME_IGNORED);
 
     updatedVelocity = getVelocityComponent(player);
@@ -110,7 +110,7 @@ public class InputProcessorSystemTest {
     assertEquals(0, updatedVelocity.dy(), "Vertical velocity should remain zero");
     assertEquals(Direction.LEFT, updatedState.direction(), "Direction should be LEFT");
 
-    playerInput.setCurrentHInput(Input.HorizontalInput.NONE);
+    playerInput.setCurrentHInput(InputComponent.HorizontalInput.NONE);
     world.update(DELTA_TIME_IGNORED);
 
     updatedVelocity = getVelocityComponent(player);
@@ -125,9 +125,9 @@ public class InputProcessorSystemTest {
     playerInput.setJumpPressed(true);
     world.update(DELTA_TIME_IGNORED);
 
-    Velocity updatedVelocity = getVelocityComponent(player);
+    VelocityComponent updatedVelocity = getVelocityComponent(player);
     StateComponent updatedState = getStateComponent(player);
-    Gravity gravity = player.getComponent(Gravity.class).orElseThrow();
+    GravityComponent gravity = player.getComponent(GravityComponent.class).orElseThrow();
 
     assertEquals(0, updatedVelocity.dx(), "Horizontal velocity should remain zero");
     assertEquals(
@@ -143,7 +143,7 @@ public class InputProcessorSystemTest {
     playerInput.setJumpPressed(true);
     world.update(DELTA_TIME_IGNORED);
 
-    Velocity updatedVelocity = getVelocityComponent(player);
+    VelocityComponent updatedVelocity = getVelocityComponent(player);
     StateComponent updatedState = getStateComponent(player);
 
     assertEquals(0, updatedVelocity.dx(), "Horizontal velocity should remain zero");
@@ -155,12 +155,12 @@ public class InputProcessorSystemTest {
   @Test
   void testClimbing() {
     simulateClimbing();
-    playerInput.setCurrentVInput(Input.VerticalInput.MOVE_UP);
+    playerInput.setCurrentVInput(InputComponent.VerticalInput.MOVE_UP);
     world.update(DELTA_TIME_IGNORED);
 
-    Velocity updatedVelocity = getVelocityComponent(player);
+    VelocityComponent updatedVelocity = getVelocityComponent(player);
     StateComponent updatedState = getStateComponent(player);
-    Gravity gravity = player.getComponent(Gravity.class).orElseThrow();
+    GravityComponent gravity = player.getComponent(GravityComponent.class).orElseThrow();
 
     assertEquals(0, updatedVelocity.dx(), "Horizontal velocity should remain zero");
     assertEquals(
@@ -169,7 +169,7 @@ public class InputProcessorSystemTest {
         "Vertical velocity should match climbing up calculation");
     assertEquals(State.UP, updatedState.state(), "State should be UP");
 
-    playerInput.setCurrentVInput(Input.VerticalInput.MOVE_DOWN);
+    playerInput.setCurrentVInput(InputComponent.VerticalInput.MOVE_DOWN);
     world.update(DELTA_TIME_IGNORED);
 
     updatedVelocity = getVelocityComponent(player);
@@ -182,7 +182,7 @@ public class InputProcessorSystemTest {
         "Vertical velocity should match climbing down calculation");
     assertEquals(State.DOWN, updatedState.state(), "State should be DOWN");
 
-    playerInput.setCurrentVInput(Input.VerticalInput.NONE);
+    playerInput.setCurrentVInput(InputComponent.VerticalInput.NONE);
     world.update(DELTA_TIME_IGNORED);
 
     updatedVelocity = getVelocityComponent(player);
@@ -200,10 +200,10 @@ public class InputProcessorSystemTest {
   @Test
   void testGrounded() {
     simulateGrounded();
-    playerInput.setCurrentVInput(Input.VerticalInput.MOVE_UP);
+    playerInput.setCurrentVInput(InputComponent.VerticalInput.MOVE_UP);
     world.update(DELTA_TIME_IGNORED);
 
-    Velocity updatedVelocity = getVelocityComponent(player);
+    VelocityComponent updatedVelocity = getVelocityComponent(player);
     StateComponent updatedState = getStateComponent(player);
 
     assertEquals(0, updatedVelocity.dx(), "Horizontal velocity should remain zero");
@@ -211,7 +211,7 @@ public class InputProcessorSystemTest {
     assertEquals(
         State.IDLE, updatedState.state(), "State should remain IDLE when grounded and not moving");
 
-    playerInput.setCurrentHInput(Input.HorizontalInput.MOVE_RIGHT);
+    playerInput.setCurrentHInput(InputComponent.HorizontalInput.MOVE_RIGHT);
     world.update(DELTA_TIME_IGNORED);
 
     updatedVelocity = getVelocityComponent(player);
@@ -222,7 +222,7 @@ public class InputProcessorSystemTest {
     assertEquals(
         State.MOVING, updatedState.state(), "State should be MOVING when moving horizontally");
 
-    playerInput.setCurrentVInput(Input.VerticalInput.MOVE_DOWN);
+    playerInput.setCurrentVInput(InputComponent.VerticalInput.MOVE_DOWN);
     world.update(DELTA_TIME_IGNORED);
 
     updatedVelocity = getVelocityComponent(player);
@@ -231,12 +231,12 @@ public class InputProcessorSystemTest {
 
   @Test
   void testFastFall() {
-    playerInput.setCurrentVInput(Input.VerticalInput.MOVE_DOWN);
+    playerInput.setCurrentVInput(InputComponent.VerticalInput.MOVE_DOWN);
     world.update(DELTA_TIME_IGNORED);
 
-    Velocity updatedVelocity = getVelocityComponent(player);
+    VelocityComponent updatedVelocity = getVelocityComponent(player);
     StateComponent updatedState = getStateComponent(player);
-    Gravity gravity = player.getComponent(Gravity.class).orElseThrow();
+    GravityComponent gravity = player.getComponent(GravityComponent.class).orElseThrow();
 
     assertEquals(0, updatedVelocity.dx(), "Horizontal velocity should remain zero");
     assertEquals(
@@ -248,11 +248,11 @@ public class InputProcessorSystemTest {
 
   @Test
   void testAirborneNoInput() {
-    Gravity gravity = player.getComponent(Gravity.class).orElseThrow();
-    player.updateComponent(initialVelocity, new Velocity(0.0, -gravity.gravity()));
+    GravityComponent gravity = player.getComponent(GravityComponent.class).orElseThrow();
+    player.updateComponent(initialVelocity, new VelocityComponent(0.0, -gravity.gravity()));
     world.update(DELTA_TIME_IGNORED);
 
-    Velocity updatedVelocity = getVelocityComponent(player);
+    VelocityComponent updatedVelocity = getVelocityComponent(player);
     StateComponent updatedState = getStateComponent(player);
 
     assertEquals(0, updatedVelocity.dx(), "Horizontal velocity should remain zero");
@@ -268,11 +268,11 @@ public class InputProcessorSystemTest {
 
   @Test
   void testFastFallThenNormalFall() {
-    Gravity gravity = player.getComponent(Gravity.class).orElseThrow();
-    playerInput.setCurrentVInput(Input.VerticalInput.MOVE_DOWN);
+    GravityComponent gravity = player.getComponent(GravityComponent.class).orElseThrow();
+    playerInput.setCurrentVInput(InputComponent.VerticalInput.MOVE_DOWN);
     world.update(DELTA_TIME_IGNORED);
 
-    Velocity updatedVelocity = getVelocityComponent(player);
+    VelocityComponent updatedVelocity = getVelocityComponent(player);
     StateComponent updatedState = getStateComponent(player);
 
     assertEquals(0, updatedVelocity.dx(), "Horizontal velocity should remain zero");
@@ -282,7 +282,7 @@ public class InputProcessorSystemTest {
         "Vertical velocity should match FALL_FACTOR calculation");
     assertEquals(State.FALL, updatedState.state(), "State should be FALL");
 
-    playerInput.setCurrentVInput(Input.VerticalInput.NONE);
+    playerInput.setCurrentVInput(InputComponent.VerticalInput.NONE);
     world.update(DELTA_TIME_IGNORED);
 
     updatedVelocity = getVelocityComponent(player);

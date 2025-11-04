@@ -2,4 +2,4 @@ package it.unibo.donkeykong.ecs.component;
 
 import it.unibo.donkeykong.ecs.component.api.Component;
 
-public class Climbable implements Component {}
+public record DamageComponent(int damageAmount) implements Component {}

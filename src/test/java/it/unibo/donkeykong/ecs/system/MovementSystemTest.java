@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import it.unibo.donkeykong.core.WorldImpl;
 import it.unibo.donkeykong.core.api.World;
-import it.unibo.donkeykong.ecs.component.Position;
-import it.unibo.donkeykong.ecs.component.Velocity;
+import it.unibo.donkeykong.ecs.component.PositionComponent;
+import it.unibo.donkeykong.ecs.component.VelocityComponent;
 import it.unibo.donkeykong.ecs.component.api.Component;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,27 +38,29 @@ public class MovementSystemTest {
     world.addSystem(new MovementSystem());
   }
 
-  private static Position getPositionComponent(Entity entity) {
+  private static PositionComponent getPositionComponent(Entity entity) {
     return entity
-        .getComponent(Position.class)
-        .orElseThrow(() -> new AssertionError("Position component not present in the entity"));
+        .getComponent(PositionComponent.class)
+        .orElseThrow(
+            () -> new AssertionError("PositionComponent component not present in the entity"));
   }
 
   @Test
   void testEntityWithPositionAndVelocityMovesCorrectly() {
-    Velocity velocity = new Velocity(POSITIVE_VELOCITY_X, POSITIVE_VELOCITY_Y);
-    Position initialPosition = new Position(INITIAL_X, INITIAL_Y);
-    Position expectedPosition =
-        new Position(
+    VelocityComponent velocity = new VelocityComponent(POSITIVE_VELOCITY_X, POSITIVE_VELOCITY_Y);
+    PositionComponent initialPosition = new PositionComponent(INITIAL_X, INITIAL_Y);
+    PositionComponent expectedPosition =
+        new PositionComponent(
             INITIAL_X + (int) (POSITIVE_VELOCITY_X * DELTA_TIME_SECONDS),
             INITIAL_Y + (int) (POSITIVE_VELOCITY_Y * DELTA_TIME_SECONDS));
     Entity entity = world.createEntity();
     world.addComponentToEntity(entity, initialPosition);
     world.addComponentToEntity(entity, velocity);
     world.update(DELTA_TIME_SECONDS);
-    Position actualPosition = getPositionComponent(entity);
+    PositionComponent actualPosition = getPositionComponent(entity);
     assertEquals(expectedPosition, actualPosition, "Entity did not move to the expected position.");
-    assertNotSame(initialPosition, actualPosition, "Position component must be a new instance.");
+    assertNotSame(
+        initialPosition, actualPosition, "PositionComponent component must be a new instance.");
     assertFalse(
         world.getComponentsOfEntity(entity).contains(initialPosition),
         "Initial position component must be removed.");
@@ -66,17 +68,17 @@ public class MovementSystemTest {
 
   @Test
   void testEntityWithNegativeVelocityMovesCorrectly() {
-    Velocity velocity = new Velocity(NEGATIVE_VELOCITY_X, NEGATIVE_VELOCITY_Y);
-    Position initialPosition = new Position(INITIAL_X, INITIAL_Y);
-    Position expectedPosition =
-        new Position(
+    VelocityComponent velocity = new VelocityComponent(NEGATIVE_VELOCITY_X, NEGATIVE_VELOCITY_Y);
+    PositionComponent initialPosition = new PositionComponent(INITIAL_X, INITIAL_Y);
+    PositionComponent expectedPosition =
+        new PositionComponent(
             INITIAL_X + (int) (NEGATIVE_VELOCITY_X * DELTA_TIME_SECONDS),
             INITIAL_Y + (int) (NEGATIVE_VELOCITY_Y * DELTA_TIME_SECONDS));
     Entity entity = world.createEntity();
     world.addComponentToEntity(entity, initialPosition);
     world.addComponentToEntity(entity, velocity);
     world.update(DELTA_TIME_SECONDS);
-    Position actualPosition = getPositionComponent(entity);
+    PositionComponent actualPosition = getPositionComponent(entity);
     assertEquals(
         expectedPosition,
         actualPosition,
@@ -85,16 +87,16 @@ public class MovementSystemTest {
 
   @Test
   void testEntityWithoutVelocityDoesNotMove() {
-    Position initialPosition = new Position(INITIAL_X, INITIAL_Y);
+    PositionComponent initialPosition = new PositionComponent(INITIAL_X, INITIAL_Y);
     Entity entity = world.createEntity();
     world.addComponentToEntity(entity, initialPosition);
     world.addComponentToEntity(entity, new TestComponent());
     world.update(DELTA_TIME_SECONDS);
-    Position actualPosition = getPositionComponent(entity);
+    PositionComponent actualPosition = getPositionComponent(entity);
     assertEquals(
         initialPosition,
         actualPosition,
-        "Entity position must remain unchanged without Velocity component.");
+        "Entity position must remain unchanged without VelocityComponent component.");
     assertTrue(
         world.getComponentsOfEntity(entity).contains(initialPosition),
         "Initial position instance must be present if no movement occurred.");
@@ -102,13 +104,13 @@ public class MovementSystemTest {
 
   @Test
   void testZeroVelocityStaysInPlace() {
-    Position initialPosition = new Position(INITIAL_X, INITIAL_Y);
-    Velocity velocity = new Velocity(ZERO_VELOCITY, ZERO_VELOCITY);
+    PositionComponent initialPosition = new PositionComponent(INITIAL_X, INITIAL_Y);
+    VelocityComponent velocity = new VelocityComponent(ZERO_VELOCITY, ZERO_VELOCITY);
     Entity entity = world.createEntity();
     world.addComponentToEntity(entity, initialPosition);
     world.addComponentToEntity(entity, velocity);
     world.update(DELTA_TIME_SECONDS);
-    Position actualPosition = getPositionComponent(entity);
+    PositionComponent actualPosition = getPositionComponent(entity);
     assertEquals(INITIAL_X, actualPosition.x());
     assertEquals(INITIAL_Y, actualPosition.y());
     assertNotSame(
@@ -119,19 +121,19 @@ public class MovementSystemTest {
 
   @Test
   void testEntityLosingComponentStopsMoving() {
-    Position position = new Position(ORIGIN, ORIGIN);
-    Velocity velocity = new Velocity(POSITIVE_VELOCITY_X, ZERO_VELOCITY);
+    PositionComponent position = new PositionComponent(ORIGIN, ORIGIN);
+    VelocityComponent velocity = new VelocityComponent(POSITIVE_VELOCITY_X, ZERO_VELOCITY);
     Entity entity = world.createEntity();
     world.addComponentToEntity(entity, position);
     world.addComponentToEntity(entity, velocity);
     world.update(DELTA_TIME_SECONDS);
-    Position positionAfterFirstMove = getPositionComponent(entity);
+    PositionComponent positionAfterFirstMove = getPositionComponent(entity);
     world.removeComponentFromEntity(entity, velocity);
     world.update(DELTA_TIME_SECONDS);
-    Position posAfterSecondMove = getPositionComponent(entity);
+    PositionComponent posAfterSecondMove = getPositionComponent(entity);
     assertEquals(
         positionAfterFirstMove.x(),
         posAfterSecondMove.x(),
-        "Position must not change after Velocity component removal.");
+        "PositionComponent must not change after VelocityComponent component removal.");
   }
 }

@@ -17,8 +17,9 @@ public class BoundariesSystem implements GameSystem {
   public void update(World world, float deltaTime) {
     final List<Entity> entitiesToRemove = new ArrayList<>();
 
-    for (Entity entity : world.getEntitiesWithComponents(List.of(Position.class, Collider.class))) {
-      final Position position = entity.getComponent(Position.class).orElseThrow();
+    for (Entity entity :
+        world.getEntitiesWithComponents(List.of(PositionComponent.class, Collider.class))) {
+      final PositionComponent position = entity.getComponent(PositionComponent.class).orElseThrow();
       final Collider collider = entity.getComponent(Collider.class).orElseThrow();
       final double halfWidth = collider.width() / 2.0;
       final double halfHeight = collider.height() / 2.0;
@@ -28,20 +29,20 @@ public class BoundariesSystem implements GameSystem {
           Math.min(Math.max(position.y(), halfHeight), Constants.WORLD_HEIGHT - halfHeight);
 
       if (newX != position.x() || newY != position.y()) {
-        if (entity.getComponent(Bounciness.class).isPresent()
+        if (entity.getComponent(BouncinessComponent.class).isPresent()
             && position.y() > BOTTOM_THRESHOLD
             && newX != position.x()) {
           entitiesToRemove.add(entity);
         } else {
-          entity.updateComponent(position, new Position(newX, newY));
-          if (entity.getComponent(Bounciness.class).isPresent()) {
+          entity.updateComponent(position, new PositionComponent(newX, newY));
+          if (entity.getComponent(BouncinessComponent.class).isPresent()) {
             entity
-                .getComponent(Velocity.class)
+                .getComponent(VelocityComponent.class)
                 .ifPresent(
                     velocity ->
                         entity.updateComponent(
                             velocity,
-                            new Velocity(
+                            new VelocityComponent(
                                 (newX != position.x() ? -1 : 1) * velocity.dx(),
                                 (newY != position.y() ? -1 : 1) * velocity.dy())));
           }

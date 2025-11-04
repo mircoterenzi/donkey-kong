@@ -34,9 +34,10 @@ public class RenderingSystem implements GameSystem {
   }
 
   private void sliceSpriteSheetFrames(
-      Graphic graphic, State state, Map<State, List<Image>> stateMap) {
+      GraphicComponent graphic, State state, Map<State, List<Image>> stateMap) {
     List<Image> frames = new ArrayList<>();
-    final Graphic.AnimationSettings settings = graphic.stateToAnimationSettings().apply(state);
+    final GraphicComponent.AnimationSettings settings =
+        graphic.stateToAnimationSettings().apply(state);
     final Image sourceImage;
     try {
       sourceImage =
@@ -91,9 +92,9 @@ public class RenderingSystem implements GameSystem {
     context.clearRect(0, 0, Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
     context.drawImage(this.backgroundImage, 0, 0, Constants.WORLD_WIDTH, Constants.WORLD_HEIGHT);
     for (final Entity entity :
-        world.getEntitiesWithComponents(List.of(Position.class, Graphic.class))) {
-      final Position position = entity.getComponent(Position.class).orElseThrow();
-      final Graphic graphic = entity.getComponent(Graphic.class).orElseThrow();
+        world.getEntitiesWithComponents(List.of(PositionComponent.class, GraphicComponent.class))) {
+      final PositionComponent position = entity.getComponent(PositionComponent.class).orElseThrow();
+      final GraphicComponent graphic = entity.getComponent(GraphicComponent.class).orElseThrow();
       final Optional<AnimationComponent> optAnimation =
           entity.getComponent(AnimationComponent.class);
       final Optional<StateComponent> optState = entity.getComponent(StateComponent.class);
@@ -143,12 +144,12 @@ public class RenderingSystem implements GameSystem {
     context.setStroke(javafx.scene.paint.Color.RED);
     for (final Entity entity :
         world.getEntitiesWithComponents(
-            List.of(Position.class, RectangleCollider.class, SolidComponent.class))) {
+            List.of(PositionComponent.class, RectangleCollider.class, SolidComponent.class))) {
 
-      final Position pos = entity.getComponent(Position.class).orElseThrow();
+      final PositionComponent pos = entity.getComponent(PositionComponent.class).orElseThrow();
       final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();
 
-      // Assumendo che Position sia il centro, come per le entità con Graphic
+      // Assumendo che PositionComponent sia il centro, come per le entità con GraphicComponent
       final double x = pos.x() - (double) coll.width() / 2;
       final double y = pos.y() - (double) coll.height() / 2;
 
@@ -158,12 +159,12 @@ public class RenderingSystem implements GameSystem {
     context.setStroke(javafx.scene.paint.Color.BLUE);
     for (final Entity entity :
         world.getEntitiesWithComponents(
-            List.of(Position.class, RectangleCollider.class, Climbable.class))) {
+            List.of(PositionComponent.class, RectangleCollider.class, ClimbableComponent.class))) {
 
-      final Position pos = entity.getComponent(Position.class).orElseThrow();
+      final PositionComponent pos = entity.getComponent(PositionComponent.class).orElseThrow();
       final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();
 
-      // Assumendo che Position sia il centro
+      // Assumendo che PositionComponent sia il centro
       final double x = pos.x() - (double) coll.width() / 2;
       final double y = pos.y() - (double) coll.height() / 2;
 

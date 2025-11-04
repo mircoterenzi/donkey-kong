@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import it.unibo.donkeykong.core.WorldImpl;
 import it.unibo.donkeykong.core.api.World;
-import it.unibo.donkeykong.ecs.component.CollisionEvent;
-import it.unibo.donkeykong.ecs.component.Damage;
-import it.unibo.donkeykong.ecs.component.Health;
+import it.unibo.donkeykong.ecs.component.CollisionEventComponent;
+import it.unibo.donkeykong.ecs.component.DamageComponent;
+import it.unibo.donkeykong.ecs.component.HealthComponent;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,34 +26,36 @@ public class HealthSystemTest {
     world.addSystem(new HealthSystem());
   }
 
-  private Health getHealthComponent(Entity entity) {
+  private HealthComponent getHealthComponent(Entity entity) {
     return entity
-        .getComponent(Health.class)
-        .orElseThrow(() -> new AssertionError("Health component missing after update."));
+        .getComponent(HealthComponent.class)
+        .orElseThrow(() -> new AssertionError("HealthComponent component missing after update."));
   }
 
   @Test
   void testCollisionWithDamageReducesHealth() {
-    Entity target = world.createEntity().addComponent(new Health(HealthSystemTest.INITIAL_LIVES));
+    Entity target =
+        world.createEntity().addComponent(new HealthComponent(HealthSystemTest.INITIAL_LIVES));
     Entity damageSource =
-        world.createEntity().addComponent(new Damage(HealthSystemTest.DAMAGE_AMOUNT));
-    target.addComponent(new CollisionEvent(damageSource));
+        world.createEntity().addComponent(new DamageComponent(HealthSystemTest.DAMAGE_AMOUNT));
+    target.addComponent(new CollisionEventComponent(damageSource));
     world.update(DELTA_TIME_IGNORED);
     assertEquals(
         EXPECTED_LIVES_AFTER_HIT,
         getHealthComponent(target).livesCount(),
-        "Health should be reduced by the damage amount.");
+        "HealthComponent should be reduced by the damage amount.");
   }
 
   @Test
   void testCollisionWithoutDamageDoesNotReduceHealth() {
-    Entity target = world.createEntity().addComponent(new Health(HealthSystemTest.INITIAL_LIVES));
+    Entity target =
+        world.createEntity().addComponent(new HealthComponent(HealthSystemTest.INITIAL_LIVES));
     Entity harmlessSource = world.createEntity();
-    target.addComponent(new CollisionEvent(harmlessSource));
+    target.addComponent(new CollisionEventComponent(harmlessSource));
     world.update(DELTA_TIME_IGNORED);
     assertEquals(
         INITIAL_LIVES,
         getHealthComponent(target).livesCount(),
-        "Health should remain unchanged when colliding with a non-damaging entity.");
+        "HealthComponent should remain unchanged when colliding with a non-damaging entity.");
   }
 }

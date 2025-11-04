@@ -15,10 +15,10 @@ public class PhysicsSystemTest {
 
   private static final long DELTA_TIME = 1L;
   private static final RectangleCollider COLLIDER = new RectangleCollider(15, 18);
-  private static final Position POSITION = new Position(0, 0);
+  private static final PositionComponent POSITION = new PositionComponent(0, 0);
   private static final double UNCOLLIDING_OFFSET = 20.0;
   private static final double COLLIDING_OFFSET = 10.0;
-  private static final Velocity VELOCITY = new Velocity(10.0, 5.0);
+  private static final VelocityComponent VELOCITY = new VelocityComponent(10.0, 5.0);
 
   private World world;
   private Entity entity, obstacle;
@@ -36,15 +36,16 @@ public class PhysicsSystemTest {
             .addComponent(new SolidComponent());
   }
 
-  private void assertEntitiesPositionEquals(Position expected, Entity actual) {
-    Optional<Position> actualComponent = actual.getComponent(Position.class);
+  private void assertEntitiesPositionEquals(PositionComponent expected, Entity actual) {
+    Optional<PositionComponent> actualComponent = actual.getComponent(PositionComponent.class);
     assertTrue(actualComponent.isPresent());
     assertEquals(expected, actualComponent.get());
   }
 
   @Test
   void testNonCollidingEntityNotAltered() {
-    Position position = new Position(POSITION.x(), POSITION.y() + UNCOLLIDING_OFFSET);
+    PositionComponent position =
+        new PositionComponent(POSITION.x(), POSITION.y() + UNCOLLIDING_OFFSET);
     this.entity.addComponent(position);
     this.world.update(DELTA_TIME);
     assertEntitiesPositionEquals(position, this.entity);
@@ -54,21 +55,21 @@ public class PhysicsSystemTest {
   @Test
   void testVerticalCollidingEntityPositionAdjusted() {
     this.entity
-        .addComponent(new Position(POSITION.x(), POSITION.y() - COLLIDING_OFFSET))
-        .addComponent(new CollisionEvent(this.obstacle));
+        .addComponent(new PositionComponent(POSITION.x(), POSITION.y() - COLLIDING_OFFSET))
+        .addComponent(new CollisionEventComponent(this.obstacle));
     this.world.update(DELTA_TIME);
     assertEntitiesPositionEquals(
-        new Position(POSITION.x(), POSITION.y() - COLLIDER.height()), this.entity);
+        new PositionComponent(POSITION.x(), POSITION.y() - COLLIDER.height()), this.entity);
   }
 
   @Test
   void testHorizontalCollidingEntityPositionAdjusted() {
     this.entity
-        .addComponent(new Position(POSITION.x() - COLLIDING_OFFSET, POSITION.y()))
-        .addComponent(new CollisionEvent(this.obstacle));
+        .addComponent(new PositionComponent(POSITION.x() - COLLIDING_OFFSET, POSITION.y()))
+        .addComponent(new CollisionEventComponent(this.obstacle));
     this.world.update(DELTA_TIME);
     assertEntitiesPositionEquals(
-        new Position(POSITION.x() - COLLIDER.width(), POSITION.x()), this.entity);
+        new PositionComponent(POSITION.x() - COLLIDER.width(), POSITION.x()), this.entity);
   }
 
   @Test
@@ -76,11 +77,12 @@ public class PhysicsSystemTest {
     double lessCollidingOffset = COLLIDING_OFFSET - 1;
     this.entity
         .addComponent(
-            new Position(POSITION.x() - lessCollidingOffset, POSITION.y() - COLLIDING_OFFSET))
-        .addComponent(new CollisionEvent(this.obstacle));
+            new PositionComponent(
+                POSITION.x() - lessCollidingOffset, POSITION.y() - COLLIDING_OFFSET))
+        .addComponent(new CollisionEventComponent(this.obstacle));
     this.world.update(DELTA_TIME);
-    Position position = this.entity.getComponent(Position.class).orElseThrow();
+    PositionComponent position = this.entity.getComponent(PositionComponent.class).orElseThrow();
     assertEntitiesPositionEquals(
-        new Position(POSITION.x() - COLLIDER.width(), position.y()), this.entity);
+        new PositionComponent(POSITION.x() - COLLIDER.width(), position.y()), this.entity);
   }
 }

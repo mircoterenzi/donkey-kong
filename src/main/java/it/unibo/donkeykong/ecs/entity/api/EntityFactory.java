@@ -1,6 +1,6 @@
 package it.unibo.donkeykong.ecs.entity.api;
 
-import it.unibo.donkeykong.ecs.component.Position;
+import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.RectangleCollider;
 import it.unibo.donkeykong.ecs.component.StateComponent.Direction;
 
@@ -41,7 +41,7 @@ public interface EntityFactory {
    * @param direction the initial direction of the barrel
    * @return a new entity representing a barrel
    */
-  Entity createBarrel(Position position, Direction direction);
+  Entity createBarrel(PositionComponent position, Direction direction);
 
   /**
    * Creates a platform entity.
@@ -50,7 +50,7 @@ public interface EntityFactory {
    * @param collider the rectangle collider of the platform
    * @return a new entity representing a platform
    */
-  Entity createPlatform(Position position, RectangleCollider collider);
+  Entity createPlatform(PositionComponent position, RectangleCollider collider);
 
   /**
    * Creates a ladder entity.
@@ -59,5 +59,5 @@ public interface EntityFactory {
    * @param collider the rectangle collider of the ladder
    * @return a new entity representing a ladder
    */
-  Entity createLadder(Position position, RectangleCollider collider);
+  Entity createLadder(PositionComponent position, RectangleCollider collider);
 }

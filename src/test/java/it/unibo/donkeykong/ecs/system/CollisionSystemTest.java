@@ -5,11 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import it.unibo.donkeykong.core.WorldImpl;
 import it.unibo.donkeykong.core.api.World;
-import it.unibo.donkeykong.ecs.component.CircleCollider;
-import it.unibo.donkeykong.ecs.component.CollisionEvent;
-import it.unibo.donkeykong.ecs.component.Position;
-import it.unibo.donkeykong.ecs.component.RectangleCollider;
-import it.unibo.donkeykong.ecs.component.Velocity;
+import it.unibo.donkeykong.ecs.component.*;
+import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.api.Collider;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,36 +32,38 @@ public class CollisionSystemTest {
     world.addSystem(new CollisionSystem());
   }
 
-  private Entity createMovingSolidEntity(Position position, Collider collider) {
+  private Entity createMovingSolidEntity(PositionComponent position, Collider collider) {
     return world
         .createEntity()
         .addComponent(position)
         .addComponent(collider)
-        .addComponent(new Velocity(VELOCITY_ZERO, VELOCITY_ZERO));
+        .addComponent(new VelocityComponent(VELOCITY_ZERO, VELOCITY_ZERO));
   }
 
   private void assertCollisionExists(Entity entity, Entity otherEntity) {
     assertTrue(
-        entity.getComponent(CollisionEvent.class).isPresent(), "Expected collision for entity.");
+        entity.getComponent(CollisionEventComponent.class).isPresent(),
+        "Expected collision for entity.");
     assertTrue(
-        otherEntity.getComponent(CollisionEvent.class).isPresent(),
+        otherEntity.getComponent(CollisionEventComponent.class).isPresent(),
         "Expected collision for other entity.");
   }
 
   private void assertNoCollision(Entity entity) {
     assertFalse(
-        entity.getComponent(CollisionEvent.class).isPresent(), "No collision expected for entity.");
+        entity.getComponent(CollisionEventComponent.class).isPresent(),
+        "No collision expected for entity.");
   }
 
   @Test
   void testRectangleRectangleTouching() {
     Entity entity1 =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO),
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_MEDIUM, SIZE_MEDIUM));
     Entity entity2 =
         createMovingSolidEntity(
-            new Position(POSITION_TOUCHING, POSITION_ZERO),
+            new PositionComponent(POSITION_TOUCHING, POSITION_ZERO),
             new RectangleCollider(SIZE_MEDIUM, SIZE_MEDIUM));
 
     world.update(DELTA_TIME_IGNORED);
@@ -75,11 +74,11 @@ public class CollisionSystemTest {
   void testRectangleRectangleOverlapping() {
     Entity entity1 =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO),
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_LARGE, SIZE_LARGE));
     Entity entity2 =
         createMovingSolidEntity(
-            new Position(POSITION_MEDIUM, POSITION_MEDIUM),
+            new PositionComponent(POSITION_MEDIUM, POSITION_MEDIUM),
             new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
@@ -90,10 +89,11 @@ public class CollisionSystemTest {
   void testRectangleRectangleNotColliding() {
     Entity entity1 =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO),
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
     createMovingSolidEntity(
-        new Position(POSITION_FAR, POSITION_FAR), new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
+        new PositionComponent(POSITION_FAR, POSITION_FAR),
+        new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
     assertNoCollision(entity1);
@@ -103,10 +103,10 @@ public class CollisionSystemTest {
   void testCircleCircleTouching() {
     Entity entity1 =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO), new CircleCollider(SIZE_MEDIUM));
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO), new CircleCollider(SIZE_MEDIUM));
     Entity entity2 =
         createMovingSolidEntity(
-            new Position(SIZE_LARGE, POSITION_ZERO), new CircleCollider(SIZE_MEDIUM));
+            new PositionComponent(SIZE_LARGE, POSITION_ZERO), new CircleCollider(SIZE_MEDIUM));
 
     world.update(DELTA_TIME_IGNORED);
     assertCollisionExists(entity1, entity2);
@@ -116,10 +116,10 @@ public class CollisionSystemTest {
   void testCircleCircleOverlapping() {
     Entity entity1 =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO), new CircleCollider(SIZE_LARGE));
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO), new CircleCollider(SIZE_LARGE));
     Entity entity2 =
         createMovingSolidEntity(
-            new Position(SIZE_MEDIUM, POSITION_ZERO), new CircleCollider(SIZE_MEDIUM));
+            new PositionComponent(SIZE_MEDIUM, POSITION_ZERO), new CircleCollider(SIZE_MEDIUM));
 
     world.update(DELTA_TIME_IGNORED);
     assertCollisionExists(entity1, entity2);
@@ -129,9 +129,9 @@ public class CollisionSystemTest {
   void testCircleCircleNotColliding() {
     Entity entity1 =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO), new CircleCollider(SIZE_SMALL));
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO), new CircleCollider(SIZE_SMALL));
     createMovingSolidEntity(
-        new Position(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
+        new PositionComponent(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
     assertNoCollision(entity1);
@@ -141,11 +141,11 @@ public class CollisionSystemTest {
   void testRectangleCircleTouchingEdge() {
     Entity entity1 =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO),
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_LARGE, SIZE_LARGE));
     Entity entity2 =
         createMovingSolidEntity(
-            new Position(SIZE_LARGE, POSITION_ZERO), new CircleCollider(SIZE_MEDIUM));
+            new PositionComponent(SIZE_LARGE, POSITION_ZERO), new CircleCollider(SIZE_MEDIUM));
 
     world.update(DELTA_TIME_IGNORED);
     assertCollisionExists(entity1, entity2);
@@ -155,11 +155,11 @@ public class CollisionSystemTest {
   void testRectangleCircleOverlapping() {
     Entity entity1 =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO),
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_LARGE, SIZE_LARGE));
     Entity entity2 =
         createMovingSolidEntity(
-            new Position(POSITION_MEDIUM, POSITION_ZERO), new CircleCollider(SIZE_MEDIUM));
+            new PositionComponent(POSITION_MEDIUM, POSITION_ZERO), new CircleCollider(SIZE_MEDIUM));
 
     world.update(DELTA_TIME_IGNORED);
     assertCollisionExists(entity1, entity2);
@@ -169,11 +169,12 @@ public class CollisionSystemTest {
   void testRectangleCircleCornerTouching() {
     Entity entity1 =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO),
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_MEDIUM, SIZE_MEDIUM));
     Entity entity2 =
         createMovingSolidEntity(
-            new Position(POSITION_TOUCHING, POSITION_ZERO), new CircleCollider(SIZE_SMALL));
+            new PositionComponent(POSITION_TOUCHING, POSITION_ZERO),
+            new CircleCollider(SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
     assertCollisionExists(entity1, entity2);
@@ -183,10 +184,10 @@ public class CollisionSystemTest {
   void testRectangleCircleNotColliding() {
     Entity entity1 =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO),
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_SMALL, SIZE_SMALL));
     createMovingSolidEntity(
-        new Position(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
+        new PositionComponent(POSITION_FAR, POSITION_FAR), new CircleCollider(SIZE_SMALL));
 
     world.update(DELTA_TIME_IGNORED);
     assertNoCollision(entity1);
@@ -196,11 +197,12 @@ public class CollisionSystemTest {
   void testSelfCollisionIgnored() {
     Entity entity =
         createMovingSolidEntity(
-            new Position(POSITION_ZERO, POSITION_ZERO),
+            new PositionComponent(POSITION_ZERO, POSITION_ZERO),
             new RectangleCollider(SIZE_MEDIUM, SIZE_MEDIUM));
 
     world.update(DELTA_TIME_IGNORED);
     assertFalse(
-        entity.getComponent(CollisionEvent.class).isPresent(), "Self-collision should be ignored.");
+        entity.getComponent(CollisionEventComponent.class).isPresent(),
+        "Self-collision should be ignored.");
   }
 }

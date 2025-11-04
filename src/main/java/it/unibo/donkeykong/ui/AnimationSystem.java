@@ -2,7 +2,7 @@ package it.unibo.donkeykong.ui;
 
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.AnimationComponent;
-import it.unibo.donkeykong.ecs.component.Graphic;
+import it.unibo.donkeykong.ecs.component.GraphicComponent;
 import it.unibo.donkeykong.ecs.component.StateComponent;
 import it.unibo.donkeykong.ecs.component.StateComponent.State;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
@@ -16,9 +16,9 @@ public class AnimationSystem implements GameSystem {
   @Override
   public void update(World world, float deltaTime) {
     Set<Entity> animatedEntities =
-        world.getEntitiesWithComponents(List.of(Graphic.class, StateComponent.class));
+        world.getEntitiesWithComponents(List.of(GraphicComponent.class, StateComponent.class));
     for (final Entity entity : animatedEntities) {
-      final Graphic graphic = entity.getComponent(Graphic.class).orElseThrow();
+      final GraphicComponent graphic = entity.getComponent(GraphicComponent.class).orElseThrow();
       final State state = entity.getComponent(StateComponent.class).orElseThrow().state();
       AnimationComponent animation =
           entity

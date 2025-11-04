@@ -48,11 +48,11 @@ public class FactoryTest {
   void testCreateFirstPlayer() {
     Entity player = entityFactory.createFirstPlayer();
     assertNotNull(player);
-    assertComponentPresence(player, Position.class, FIRST_PLAYER_SPAWN);
-    assertComponentPresence(player, Velocity.class, new Velocity(0, 0));
-    assertComponentPresence(player, Gravity.class, new Gravity(GRAVITY));
-    assertComponentPresence(player, Health.class, new Health(PLAYER_LIVES));
-    assertComponentPresence(player, Input.class);
+    assertComponentPresence(player, PositionComponent.class, FIRST_PLAYER_SPAWN);
+    assertComponentPresence(player, VelocityComponent.class, new VelocityComponent(0, 0));
+    assertComponentPresence(player, GravityComponent.class, new GravityComponent(GRAVITY));
+    assertComponentPresence(player, HealthComponent.class, new HealthComponent(PLAYER_LIVES));
+    assertComponentPresence(player, InputComponent.class);
     assertComponentPresence(
         player, StateComponent.class, new StateComponent(State.IDLE, Direction.RIGHT));
     assertComponentPresence(
@@ -60,15 +60,16 @@ public class FactoryTest {
         RectangleCollider.class,
         new RectangleCollider(PLAYER_COLLISION_WIDTH, PLAYER_COLLISION_HEIGHT));
     assertTrue(
-        player.getComponent(Graphic.class).isPresent(), "Player1 must have a Graphic component");
-    Graphic actualGraphic = player.getComponent(Graphic.class).get();
+        player.getComponent(GraphicComponent.class).isPresent(),
+        "Player1 must have a GraphicComponent component");
+    GraphicComponent actualGraphic = player.getComponent(GraphicComponent.class).get();
     assertEquals("/sprites/mario.png", actualGraphic.path());
     assertEquals(PLAYER_WIDTH, actualGraphic.width());
     assertEquals(PLAYER_HEIGHT, actualGraphic.height());
     assertEquals(PLAYER_BORDER, actualGraphic.border());
     assertEquals(PLAYER_SCALE, actualGraphic.scale());
     assertEquals(PLAYER_FRAME_DURATION, actualGraphic.frameDuration());
-    Function<State, Graphic.AnimationSettings> animationLogic =
+    Function<State, GraphicComponent.AnimationSettings> animationLogic =
         actualGraphic.stateToAnimationSettings();
     assertNotNull(animationLogic, "Animation logic cannot be null");
   }
@@ -77,19 +78,20 @@ public class FactoryTest {
   void testCreateSecondPlayer() {
     Entity player = entityFactory.createSecondPlayer();
     assertNotNull(player);
-    assertComponentPresence(player, Position.class, SECOND_PLAYER_SPAWN);
+    assertComponentPresence(player, PositionComponent.class, SECOND_PLAYER_SPAWN);
     assertComponentPresence(
         player, StateComponent.class, new StateComponent(State.IDLE, Direction.RIGHT));
     assertTrue(
-        player.getComponent(Graphic.class).isPresent(), "Player2 must have a Graphic component");
-    Graphic actualGraphic = player.getComponent(Graphic.class).get();
+        player.getComponent(GraphicComponent.class).isPresent(),
+        "Player2 must have a GraphicComponent component");
+    GraphicComponent actualGraphic = player.getComponent(GraphicComponent.class).get();
     assertEquals("/sprites/luigi.png", actualGraphic.path());
     assertEquals(PLAYER_WIDTH, actualGraphic.width());
     assertEquals(PLAYER_HEIGHT, actualGraphic.height());
     assertEquals(PLAYER_BORDER, actualGraphic.border());
     assertEquals(PLAYER_SCALE, actualGraphic.scale());
     assertEquals(PLAYER_FRAME_DURATION, actualGraphic.frameDuration());
-    Function<State, Graphic.AnimationSettings> animationLogic =
+    Function<State, GraphicComponent.AnimationSettings> animationLogic =
         actualGraphic.stateToAnimationSettings();
     assertNotNull(animationLogic, "Animation logic cannot be null");
   }
@@ -98,21 +100,22 @@ public class FactoryTest {
   void testCreatePauline() {
     Entity pauline = entityFactory.createPauline();
     assertNotNull(pauline);
-    assertComponentPresence(pauline, Position.class, PAULINE_POSITION);
+    assertComponentPresence(pauline, PositionComponent.class, PAULINE_POSITION);
     assertComponentPresence(
         pauline,
         RectangleCollider.class,
         new RectangleCollider(PAULINE_COLLISION_WIDTH, PAULINE_COLLISION_HEIGHT));
     assertTrue(
-        pauline.getComponent(Graphic.class).isPresent(), "Pauline deve avere un Graphic component");
-    Graphic actualGraphic = pauline.getComponent(Graphic.class).get();
+        pauline.getComponent(GraphicComponent.class).isPresent(),
+        "Pauline deve avere un GraphicComponent component");
+    GraphicComponent actualGraphic = pauline.getComponent(GraphicComponent.class).get();
     assertEquals("/sprites/pauline.png", actualGraphic.path());
     assertEquals(PAULINE_WIDTH, actualGraphic.width());
     assertEquals(PAULINE_HEIGHT, actualGraphic.height());
     assertEquals(PAULINE_BORDER, actualGraphic.border());
     assertEquals(PAULINE_SCALE, actualGraphic.scale());
     assertEquals(PAULINE_FRAME_DURATION, actualGraphic.frameDuration());
-    Function<State, Graphic.AnimationSettings> animationLogic =
+    Function<State, GraphicComponent.AnimationSettings> animationLogic =
         actualGraphic.stateToAnimationSettings();
     assertNotNull(animationLogic, "La logica di animazione non può essere null");
   }
@@ -121,75 +124,78 @@ public class FactoryTest {
   void testCreateDonkeyKong() {
     Entity dk = entityFactory.createDonkeyKong();
     assertNotNull(dk);
-    assertComponentPresence(dk, Position.class, DK_POSITION);
+    assertComponentPresence(dk, PositionComponent.class, DK_POSITION);
     assertComponentPresence(
         dk,
         RectangleCollider.class,
         new RectangleCollider(DK_COLLISION_WIDTH, DK_COLLISION_HEIGHT));
     assertTrue(
-        dk.getComponent(Graphic.class).isPresent(), "DonkeyKong must have a Graphic component");
-    Graphic actualGraphic = dk.getComponent(Graphic.class).get();
+        dk.getComponent(GraphicComponent.class).isPresent(),
+        "DonkeyKong must have a GraphicComponent component");
+    GraphicComponent actualGraphic = dk.getComponent(GraphicComponent.class).get();
     assertEquals("/sprites/donkey.png", actualGraphic.path());
     assertEquals(DK_WIDTH, actualGraphic.width());
     assertEquals(DK_HEIGHT, actualGraphic.height());
     assertEquals(DK_BORDER, actualGraphic.border());
     assertEquals(DK_SCALE, actualGraphic.scale());
     assertEquals(DK_FRAME_DURATION, actualGraphic.frameDuration());
-    Function<State, Graphic.AnimationSettings> animationLogic =
+    Function<State, GraphicComponent.AnimationSettings> animationLogic =
         actualGraphic.stateToAnimationSettings();
     assertNotNull(animationLogic, "Animation logic cannot be null");
   }
 
   @Test
   void testCreateBarrel() {
-    Position testPos = new Position(100, 100);
+    PositionComponent testPos = new PositionComponent(100, 100);
     Direction testDir = Direction.RIGHT;
     Entity barrel = entityFactory.createBarrel(testPos, testDir);
 
     assertNotNull(barrel);
-    assertComponentPresence(barrel, Position.class, testPos);
-    assertComponentPresence(barrel, Velocity.class, new Velocity(BARREL_VELOCITY, 0));
-    assertComponentPresence(barrel, Bounciness.class);
-    assertComponentPresence(barrel, Gravity.class, new Gravity(GRAVITY));
+    assertComponentPresence(barrel, PositionComponent.class, testPos);
+    assertComponentPresence(
+        barrel, VelocityComponent.class, new VelocityComponent(BARREL_VELOCITY, 0));
+    assertComponentPresence(barrel, BouncinessComponent.class);
+    assertComponentPresence(barrel, GravityComponent.class, new GravityComponent(GRAVITY));
     assertComponentPresence(
         barrel, StateComponent.class, new StateComponent(State.MOVING, testDir));
     assertComponentPresence(
         barrel, CircleCollider.class, new CircleCollider(BARREL_COLLISION_RADIUS));
     assertTrue(
-        barrel.getComponent(Graphic.class).isPresent(), "Barrel must have a Graphic component");
-    Graphic actualGraphic = barrel.getComponent(Graphic.class).get();
+        barrel.getComponent(GraphicComponent.class).isPresent(),
+        "Barrel must have a GraphicComponent component");
+    GraphicComponent actualGraphic = barrel.getComponent(GraphicComponent.class).get();
     assertEquals("/sprites/barrel.png", actualGraphic.path());
     assertEquals(BARREL_WIDTH, actualGraphic.width());
     assertEquals(BARREL_HEIGHT, actualGraphic.height());
     assertEquals(BARREL_BORDER, actualGraphic.border());
     assertEquals(BARREL_SCALE, actualGraphic.scale());
     assertEquals(BARREL_FRAME_DURATION, actualGraphic.frameDuration());
-    Function<State, Graphic.AnimationSettings> animationLogic =
+    Function<State, GraphicComponent.AnimationSettings> animationLogic =
         actualGraphic.stateToAnimationSettings();
     assertNotNull(animationLogic, "Animation logic cannot be null");
   }
 
   @Test
   void testCreatePlatform() {
-    Position testPos = new Position(50, 50);
+    PositionComponent testPos = new PositionComponent(50, 50);
     RectangleCollider testCollider = new RectangleCollider(100, 20);
     Entity platform = entityFactory.createPlatform(testPos, testCollider);
 
     assertNotNull(platform);
-    assertComponentPresence(platform, Position.class, testPos);
+    assertComponentPresence(platform, PositionComponent.class, testPos);
     assertComponentPresence(platform, SolidComponent.class);
     assertComponentPresence(platform, RectangleCollider.class, testCollider);
   }
 
   @Test
   void testCreateLadder() {
-    Position testPos = new Position(30, 60);
+    PositionComponent testPos = new PositionComponent(30, 60);
     RectangleCollider testCollider = new RectangleCollider(10, 80);
     Entity ladder = entityFactory.createLadder(testPos, testCollider);
 
     assertNotNull(ladder);
-    assertComponentPresence(ladder, Position.class, testPos);
-    assertComponentPresence(ladder, Climbable.class);
+    assertComponentPresence(ladder, PositionComponent.class, testPos);
+    assertComponentPresence(ladder, ClimbableComponent.class);
     assertComponentPresence(ladder, RectangleCollider.class, testCollider);
   }
 }

@@ -1,6 +1,6 @@
 package it.unibo.donkeykong.ecs.system.common;
 
-import it.unibo.donkeykong.ecs.component.Position;
+import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.RectangleCollider;
 
 /**
@@ -33,11 +33,13 @@ public final class CollisionUtils {
    * @param rectangleCollider the rectangle collider
    * @return the clamped position
    */
-  public static Position clampOnRectangle(
-      Position position, Position rectanglePosition, RectangleCollider rectangleCollider) {
+  public static PositionComponent clampOnRectangle(
+      PositionComponent position,
+      PositionComponent rectanglePosition,
+      RectangleCollider rectangleCollider) {
     double halfWidth = rectangleCollider.width() / 2.0;
     double halfHeight = rectangleCollider.height() / 2.0;
-    return new Position(
+    return new PositionComponent(
         clampOnRange(
             position.x(), rectanglePosition.x() - halfWidth, rectanglePosition.x() + halfWidth),
         clampOnRange(

@@ -16,14 +16,16 @@ public class PhysicsSystem implements GameSystem {
 
   private static void resetVerticalVelocity(Entity entity) {
     entity
-        .getComponent(Velocity.class)
-        .ifPresent(velocity -> entity.updateComponent(velocity, new Velocity(velocity.dx(), 0)));
+        .getComponent(VelocityComponent.class)
+        .ifPresent(
+            velocity -> entity.updateComponent(velocity, new VelocityComponent(velocity.dx(), 0)));
   }
 
   private static void handleCollision(Entity entity, Entity otherEntity) {
-    Position position = entity.getComponent(Position.class).orElseThrow();
+    PositionComponent position = entity.getComponent(PositionComponent.class).orElseThrow();
     Collider collider = entity.getComponent(Collider.class).orElseThrow();
-    Position otherPosition = otherEntity.getComponent(Position.class).orElseThrow();
+    PositionComponent otherPosition =
+        otherEntity.getComponent(PositionComponent.class).orElseThrow();
     Collider otherCollider = otherEntity.getComponent(Collider.class).orElseThrow();
     double newX = position.x();
     double newY = position.y();
@@ -42,7 +44,7 @@ public class PhysicsSystem implements GameSystem {
       }
     }
     if (newX != position.x() || newY != position.y()) {
-      entity.updateComponent(position, new Position(newX, newY));
+      entity.updateComponent(position, new PositionComponent(newX, newY));
       if (newY <= position.y()) {
         resetVerticalVelocity(entity);
       }
@@ -53,14 +55,18 @@ public class PhysicsSystem implements GameSystem {
   public void update(World world, float deltaTime) {
     Set<Entity> targetEntities =
         world.getEntitiesWithComponents(
-            List.of(CollisionEvent.class, Position.class, Velocity.class, Collider.class));
+            List.of(
+                CollisionEventComponent.class,
+                PositionComponent.class,
+                VelocityComponent.class,
+                Collider.class));
     targetEntities.forEach(
         entity ->
             entity
-                .getComponent(CollisionEvent.class)
+                .getComponent(CollisionEventComponent.class)
                 .ifPresent(
                     collisionEvent ->
-                        collisionEvent.getCollisionsWith(Position.class).stream()
+                        collisionEvent.getCollisionsWith(PositionComponent.class).stream()
                             .filter(
                                 otherEntity ->
                                     otherEntity.getComponent(SolidComponent.class).isPresent())
