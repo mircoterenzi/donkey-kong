@@ -10,6 +10,7 @@ import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.component.api.Collider;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
 import it.unibo.donkeykong.ecs.system.api.GameSystem;
+import it.unibo.donkeykong.ecs.system.common.CollisionUtils;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,7 +38,7 @@ public class InputProcessorSystem implements GameSystem {
                   collisionEvent.flatMap(
                       event ->
                           event.getCollisionsWith(ClimbableComponent.class).stream().findFirst());
-              final boolean canClimb = isAlignedWithLadder(ladder, entity);
+              final boolean canClimb = CollisionUtils.areAligned(entity, ladder);
               final boolean isGrounded =
                   collisionEvent
                       .map(event -> event.hasCollisionsWith(SolidComponent.class))
@@ -76,16 +77,21 @@ public class InputProcessorSystem implements GameSystem {
                   snapToLadderCenter(entity, ladder);
                   switch (input.getCurrentVInput()) {
                     case MOVE_UP -> {
-                      newDy = -(gravity.gravity() + PLAYER_VELOCITY);
+                      newDy = oldVelocity.dy() - PLAYER_VELOCITY;
                       newState = UP;
                     }
                     case MOVE_DOWN -> {
-                      newDy = -gravity.gravity() + PLAYER_VELOCITY;
+                      newDy = oldVelocity.dy() + PLAYER_VELOCITY;
                       newState = DOWN;
                     }
                     default -> {
-                      newDy = -gravity.gravity();
-                      newState = STOP_CLIMB;
+                      if(oldState.state() != JUMP && oldState.state() != FALL && oldState.state() != FAST_FALL) {
+                        newDy = oldVelocity.dy();
+                        newState = STOP_CLIMB;
+                      } else {
+                        newDy = oldVelocity.dy();
+                        newState = oldState.state();
+                      }
                     }
                   }
                 } else {
@@ -102,34 +108,19 @@ public class InputProcessorSystem implements GameSystem {
                 newState = newDx == 0 ? IDLE : MOVING;
               } else if (input.getCurrentVInput() == InputComponent.VerticalInput.MOVE_DOWN) {
                 newDy = FALL_FACTOR * gravity.gravity();
-                newState = FALL;
+                newState = FAST_FALL;
               } else {
                 newDy = oldVelocity.dy();
-                if (oldState.state() == FALL) {
+                if (oldState.state() == FAST_FALL) {
                   newDy = gravity.gravity();
                 }
-                newState = newDy < 0 ? JUMP : IDLE;
+                newState = newDy < 0 ? JUMP : FALL;
               }
 
               var state = new StateComponent(newState, newDir);
               entity.updateComponent(oldState, state);
               entity.updateComponent(oldVelocity, new VelocityComponent(newDx, newDy));
             });
-  }
-
-  private boolean isAlignedWithLadder(Optional<Entity> ladder, Entity entity) {
-    if (ladder.isEmpty()) {
-      return false;
-    }
-    PositionComponent entityPos = entity.getComponent(PositionComponent.class).orElseThrow();
-    PositionComponent ladderPos = ladder.get().getComponent(PositionComponent.class).orElseThrow();
-    Collider ladderCollider = ladder.get().getComponent(Collider.class).orElseThrow();
-    if (!(ladderCollider instanceof RectangleCollider rectCollider)) {
-      return false;
-    }
-    double ladderHalfWidth = rectCollider.width() / 2.0;
-    double horizontalDistance = Math.abs(ladderPos.x() - entityPos.x());
-    return horizontalDistance < ladderHalfWidth;
   }
 
   private void snapToLadderCenter(Entity entity, Optional<Entity> ladder) {

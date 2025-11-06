@@ -2,6 +2,10 @@ package it.unibo.donkeykong.ecs.system.common;
 
 import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.RectangleCollider;
+import it.unibo.donkeykong.ecs.component.api.Collider;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+
+import java.util.Optional;
 
 /**
  * Utility class for collision detection and handling. Credits to "2D Game Collision Detection" by
@@ -44,5 +48,28 @@ public final class CollisionUtils {
             position.x(), rectanglePosition.x() - halfWidth, rectanglePosition.x() + halfWidth),
         clampOnRange(
             position.y(), rectanglePosition.y() - halfHeight, rectanglePosition.y() + halfHeight));
+  }
+
+  /**
+   * Checks if two entities are horizontally aligned (if second entity hasn't been provided or
+   * doesn't have a rectangle collider, returns false).
+   *
+   * @param entity the first entity
+   * @param other the optional second entity
+   * @return true if the entities are aligned, false otherwise
+   */
+  public static boolean areAligned(Entity entity, Optional<Entity> other) {
+    if (other.isEmpty()) {
+      return false;
+    }
+    PositionComponent entityPos = entity.getComponent(PositionComponent.class).orElseThrow();
+    PositionComponent otherPos = other.get().getComponent(PositionComponent.class).orElseThrow();
+    Collider otherCollider = other.get().getComponent(Collider.class).orElseThrow();
+    if (!(otherCollider instanceof RectangleCollider rectCollider)) {
+      return false;
+    }
+    double otherHalfWidth = rectCollider.width() / 2.0;
+    double horizontalDistance = Math.abs(otherPos.x() - entityPos.x());
+    return horizontalDistance < otherHalfWidth;
   }
 }

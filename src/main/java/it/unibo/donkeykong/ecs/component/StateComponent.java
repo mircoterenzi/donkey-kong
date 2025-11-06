@@ -13,6 +13,7 @@ public record StateComponent(State state, Direction direction) implements Compon
     MOVING,
     JUMP,
     FALL,
+    FAST_FALL,
     UP,
     DOWN,
     STOP_CLIMB
