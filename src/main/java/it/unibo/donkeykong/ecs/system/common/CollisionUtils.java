@@ -4,7 +4,6 @@ import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.RectangleCollider;
 import it.unibo.donkeykong.ecs.component.api.Collider;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
-
 import java.util.Optional;
 
 /**

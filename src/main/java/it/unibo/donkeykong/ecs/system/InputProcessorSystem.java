@@ -77,15 +77,23 @@ public class InputProcessorSystem implements GameSystem {
                   snapToLadderCenter(entity, ladder);
                   switch (input.getCurrentVInput()) {
                     case MOVE_UP -> {
-                      newDy = oldVelocity.dy() - PLAYER_VELOCITY;
-                      newState = UP;
+                      if (isAtTopOfLadder(entity, ladder)) {
+                        snapToLadderTop(entity, ladder);
+                        newDy = 0;
+                        newState = IDLE;
+                      } else {
+                        newDy = oldVelocity.dy() - PLAYER_VELOCITY;
+                        newState = UP;
+                      }
                     }
                     case MOVE_DOWN -> {
                       newDy = oldVelocity.dy() + PLAYER_VELOCITY;
                       newState = DOWN;
                     }
                     default -> {
-                      if(oldState.state() != JUMP && oldState.state() != FALL && oldState.state() != FAST_FALL) {
+                      if (oldState.state() != JUMP
+                          && oldState.state() != FALL
+                          && oldState.state() != FAST_FALL) {
                         newDy = oldVelocity.dy();
                         newState = STOP_CLIMB;
                       } else {
@@ -123,6 +131,22 @@ public class InputProcessorSystem implements GameSystem {
             });
   }
 
+  private boolean isAtTopOfLadder(Entity entity, Optional<Entity> ladder) {
+    if (ladder.isEmpty()) {
+      return false;
+    }
+    PositionComponent entityPos = entity.getComponent(PositionComponent.class).orElseThrow();
+    PositionComponent ladderPos = ladder.get().getComponent(PositionComponent.class).orElseThrow();
+    Collider ladderCollider = ladder.get().getComponent(Collider.class).orElseThrow();
+
+    if (ladderCollider instanceof RectangleCollider rectCollider) {
+      final double ladderHalfHeight = rectCollider.height() / 2.0;
+      final double ladderTopY = ladderPos.y() - ladderHalfHeight;
+      return entityPos.y() <= ladderTopY;
+    }
+    return false;
+  }
+
   private void snapToLadderCenter(Entity entity, Optional<Entity> ladder) {
     if (ladder.isPresent()) {
       PositionComponent entityPos = entity.getComponent(PositionComponent.class).orElseThrow();
@@ -146,6 +170,23 @@ public class InputProcessorSystem implements GameSystem {
             velocity.dx() < 0 ? ladderPos.x() - ladderHalfWidth : ladderPos.x() + ladderHalfWidth;
 
         entity.updateComponent(entityPos, new PositionComponent(newX, entityPos.y()));
+      }
+    }
+  }
+
+  private void snapToLadderTop(Entity entity, Optional<Entity> ladder) {
+    if (ladder.isPresent()) {
+      PositionComponent entityPos = entity.getComponent(PositionComponent.class).orElseThrow();
+      PositionComponent ladderPos =
+          ladder.get().getComponent(PositionComponent.class).orElseThrow();
+      Collider ladderCollider = ladder.get().getComponent(Collider.class).orElseThrow();
+      Collider entityCollider = entity.getComponent(Collider.class).orElseThrow();
+
+      if (ladderCollider instanceof RectangleCollider rectCollider) {
+        final double ladderTop = ladderPos.y() - rectCollider.height() / 2.0;
+        double newY = ladderTop - entityCollider.height() / 2.0;
+
+        entity.updateComponent(entityPos, new PositionComponent(entityPos.x(), newY));
       }
     }
   }
