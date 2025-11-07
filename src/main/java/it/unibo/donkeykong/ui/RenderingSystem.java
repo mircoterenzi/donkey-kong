@@ -146,39 +146,6 @@ public class RenderingSystem implements GameSystem {
                     drawFallbackShapeBasedOnCollision(renderPositionX, renderPositionY, collider));
       }
     }
-
-    context.setLineWidth(1);
-
-    context.setStroke(javafx.scene.paint.Color.RED);
-    for (final Entity entity :
-        world.getEntitiesWithComponents(
-            List.of(PositionComponent.class, RectangleCollider.class, SolidComponent.class))) {
-
-      final PositionComponent pos = entity.getComponent(PositionComponent.class).orElseThrow();
-      final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();
-
-      // Assumendo che PositionComponent sia il centro, come per le entità con GraphicComponent
-      final double x = pos.x() - (double) coll.width() / 2;
-      final double y = pos.y() - (double) coll.height() / 2;
-
-      context.strokeRect(x, y, coll.width(), coll.height());
-    }
-
-    context.setStroke(javafx.scene.paint.Color.BLUE);
-    for (final Entity entity :
-        world.getEntitiesWithComponents(
-            List.of(PositionComponent.class, RectangleCollider.class, ClimbableComponent.class))) {
-
-      final PositionComponent pos = entity.getComponent(PositionComponent.class).orElseThrow();
-      final RectangleCollider coll = entity.getComponent(RectangleCollider.class).orElseThrow();
-
-      // Assumendo che PositionComponent sia il centro
-      final double x = pos.x() - (double) coll.width() / 2;
-      final double y = pos.y() - (double) coll.height() / 2;
-
-      context.strokeRect(x, y, coll.width(), coll.height());
-    }
-
     context.restore();
   }
 }
