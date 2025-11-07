@@ -25,6 +25,7 @@ public class InputProcessorSystemTest {
   @BeforeEach
   void setUp() {
     world = new WorldImpl();
+    world.addSystem(new ClimbingSystem());
     world.addSystem(new InputProcessorSystem());
 
     playerInput = new InputComponent();
@@ -39,7 +40,8 @@ public class InputProcessorSystemTest {
             .addComponent(initialVelocity)
             .addComponent(initialPlayerState)
             .addComponent(initialPosition)
-            .addComponent(new GravityComponent(GRAVITY));
+            .addComponent(new GravityComponent(GRAVITY))
+            .addComponent(new RectangleCollider(PLAYER_COLLISION_WIDTH, PLAYER_COLLISION_HEIGHT));
   }
 
   private VelocityComponent getVelocityComponent(Entity entity) {
@@ -260,23 +262,6 @@ public class InputProcessorSystemTest {
   }
 
   @Test
-  void testFastFall() {
-    playerInput.setCurrentVInput(InputComponent.VerticalInput.MOVE_DOWN);
-    world.update(DELTA_TIME_IGNORED);
-
-    VelocityComponent updatedVelocity = getVelocityComponent(player);
-    StateComponent updatedState = getStateComponent(player);
-    GravityComponent gravity = player.getComponent(GravityComponent.class).orElseThrow();
-
-    assertEquals(0, updatedVelocity.dx(), "Horizontal velocity should remain zero");
-    assertEquals(
-        FALL_FACTOR * gravity.gravity(),
-        updatedVelocity.dy(),
-        "Vertical velocity should match FALL_FACTOR calculation");
-    assertEquals(State.FALL, updatedState.state(), "State should be FALL");
-  }
-
-  @Test
   void testAirborneNoInput() {
     GravityComponent gravity = player.getComponent(GravityComponent.class).orElseThrow();
     player.updateComponent(initialVelocity, new VelocityComponent(0.0, gravity.gravity()));
@@ -291,13 +276,13 @@ public class InputProcessorSystemTest {
         updatedVelocity.dy(),
         "Vertical velocity should remain unchanged if less or equal than gravity");
     assertEquals(
-        initialPlayerState,
-        updatedState,
-        "State should remain the same when airborne with no input");
+        State.FALL,
+        updatedState.state(),
+        "State should be FALL when airborne with no input falling");
   }
 
   @Test
-  void testFastFallThenNormalFall() {
+  void testFastFall() {
     GravityComponent gravity = player.getComponent(GravityComponent.class).orElseThrow();
     playerInput.setCurrentVInput(InputComponent.VerticalInput.MOVE_DOWN);
     world.update(DELTA_TIME_IGNORED);
@@ -310,17 +295,20 @@ public class InputProcessorSystemTest {
         FALL_FACTOR * gravity.gravity(),
         updatedVelocity.dy(),
         "Vertical velocity should match FALL_FACTOR calculation");
-    assertEquals(State.FALL, updatedState.state(), "State should be FALL");
+    assertEquals(State.FAST_FALL, updatedState.state(), "State should be FAST_FALL");
 
     playerInput.setCurrentVInput(InputComponent.VerticalInput.NONE);
     world.update(DELTA_TIME_IGNORED);
 
     updatedVelocity = getVelocityComponent(player);
+    updatedState = getStateComponent(player);
 
     assertEquals(0, updatedVelocity.dx(), "Horizontal velocity should remain zero");
     assertEquals(
         gravity.gravity(),
         updatedVelocity.dy(),
         "Vertical velocity should return normal gravity after fast fall");
+    assertEquals(
+        State.FALL, updatedState.state(), "State should return FALL after releasing fast fall");
   }
 }
