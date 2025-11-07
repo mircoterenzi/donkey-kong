@@ -34,8 +34,8 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 (state) ->
                     switch (state) {
                       case MOVING -> new AnimationSettings(1, 0, 2);
-                      case JUMP -> new AnimationSettings(3, 0, 1);
-                      case FALL -> new AnimationSettings(4, 0, 1);
+                      case JUMP, FALL -> new AnimationSettings(3, 0, 1);
+                      case FAST_FALL -> new AnimationSettings(4, 0, 1);
                       case UP, DOWN -> new AnimationSettings(5, 0, 2);
                       case STOP_CLIMB -> new AnimationSettings(5, 0, 1);
                       default -> new AnimationSettings(0, 0, 1);
