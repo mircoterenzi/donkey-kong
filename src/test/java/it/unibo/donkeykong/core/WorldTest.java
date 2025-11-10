@@ -1,8 +1,7 @@
-package it.unibo.donkeykong.ecs;
+package it.unibo.donkeykong.core;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import it.unibo.donkeykong.core.WorldImpl;
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.api.Component;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
