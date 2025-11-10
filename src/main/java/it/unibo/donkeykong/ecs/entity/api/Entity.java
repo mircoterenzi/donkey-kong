@@ -2,7 +2,6 @@ package it.unibo.donkeykong.ecs.entity.api;
 
 import it.unibo.donkeykong.ecs.component.api.Component;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * This interface represents an entity in the ECS (Entity-Component-System) architecture. An Entity
@@ -16,13 +15,6 @@ public interface Entity {
    * @return the entity ID
    */
   int getId();
-
-  /**
-   * Gets the set of {@link Component} associated with this entity.
-   *
-   * @return a set of components
-   */
-  Set<Component> getComponents();
 
   /**
    * Retrieves a {@link Component} of the specified class type if it exists.

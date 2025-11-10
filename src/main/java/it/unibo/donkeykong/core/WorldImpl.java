@@ -24,11 +24,6 @@ public class WorldImpl implements World {
     }
 
     @Override
-    public Set<Component> getComponents() {
-      return this.world.getComponentsOfEntity(this);
-    }
-
-    @Override
     public <T extends Component> Optional<T> getComponent(Class<T> componentClass) {
       return this.world.getComponentsOfEntity(this).stream()
           .filter(componentClass::isInstance)
