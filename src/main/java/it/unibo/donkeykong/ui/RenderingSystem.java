@@ -21,6 +21,7 @@ public class RenderingSystem implements GameSystem {
   private final double scaleX;
   private final double scaleY;
   private final Image backgroundImage;
+  private final Map<String, Image> sourceImageCache = new HashMap<>();
 
   public RenderingSystem(final Canvas canvas) {
     this.context = canvas.getGraphicsContext2D();
@@ -41,8 +42,10 @@ public class RenderingSystem implements GameSystem {
     final Image sourceImage;
     try {
       sourceImage =
-          new Image(
-              Objects.requireNonNull(getClass().getResource(graphic.path())).toExternalForm());
+          this.sourceImageCache.computeIfAbsent(
+              graphic.path(),
+              path ->
+                  new Image(Objects.requireNonNull(getClass().getResource(path)).toExternalForm()));
     } catch (Exception e) {
       System.err.println("Failed to load source image for path: " + graphic.path());
       stateMap.put(state, Collections.emptyList());
