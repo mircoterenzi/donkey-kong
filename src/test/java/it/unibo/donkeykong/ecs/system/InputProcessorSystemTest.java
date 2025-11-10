@@ -213,7 +213,7 @@ public class InputProcessorSystemTest {
     var ladderPos = ladder.getComponent(PositionComponent.class).orElseThrow().x();
     var ladderCollider = ladder.getComponent(RectangleCollider.class).orElseThrow();
     var ladderEdge = ladderPos + (ladderCollider.width() / 2.0);
-    player.updateComponent(initialPlayerState, new StateComponent(State.UP, Direction.RIGHT));
+    player.updateComponent(new StateComponent(State.UP, Direction.RIGHT));
     playerInput.setCurrentHInput(InputComponent.HorizontalInput.MOVE_RIGHT);
     world.update(DELTA_TIME_IGNORED);
 
@@ -264,7 +264,7 @@ public class InputProcessorSystemTest {
   @Test
   void testAirborneNoInput() {
     GravityComponent gravity = player.getComponent(GravityComponent.class).orElseThrow();
-    player.updateComponent(initialVelocity, new VelocityComponent(0.0, gravity.gravity()));
+    player.updateComponent(new VelocityComponent(0.0, gravity.gravity()));
     world.update(DELTA_TIME_IGNORED);
 
     VelocityComponent updatedVelocity = getVelocityComponent(player);

@@ -17,8 +17,7 @@ public class PhysicsSystem implements GameSystem {
   private static void resetVerticalVelocity(Entity entity) {
     entity
         .getComponent(VelocityComponent.class)
-        .ifPresent(
-            velocity -> entity.updateComponent(velocity, new VelocityComponent(velocity.dx(), 0)));
+        .ifPresent(velocity -> entity.updateComponent(new VelocityComponent(velocity.dx(), 0)));
   }
 
   private static void handleCollision(Entity entity, Entity otherEntity) {
@@ -44,7 +43,7 @@ public class PhysicsSystem implements GameSystem {
       }
     }
     if (newX != position.x() || newY != position.y()) {
-      entity.updateComponent(position, new PositionComponent(newX, newY));
+      entity.updateComponent(new PositionComponent(newX, newY));
       if (newY <= position.y()) {
         resetVerticalVelocity(entity);
       }

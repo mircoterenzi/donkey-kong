@@ -44,6 +44,15 @@ public interface World {
   void removeComponentFromEntity(Entity entity, Component component);
 
   /**
+   * Replaces an existing {@link Component} of the same type on the specified {@link Entity} with
+   * the provided component instance.
+   *
+   * @param entity the entity from which the component will be updated
+   * @param component the updated version of the component
+   */
+  void updateComponentOnEntity(Entity entity, Component component);
+
+  /**
    * Removes the specified {@link Entity} from the world.
    *
    * @param entity the entity to remove

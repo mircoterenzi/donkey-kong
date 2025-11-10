@@ -42,10 +42,10 @@ public class HealthSystem implements GameSystem {
                       .reduce(0, Integer::sum);
               int newLives = currentLives - totalDamage;
               if (newLives > 0) {
-                entity.updateComponent(health, new HealthComponent(newLives));
+                entity.updateComponent(new HealthComponent(newLives));
                 entity
                     .getComponent(PositionComponent.class)
-                    .ifPresent(position -> entity.updateComponent(position, RESPAWN_POSITION));
+                    .ifPresent(position -> entity.updateComponent(RESPAWN_POSITION));
               } else {
                 world.removeEntity(entity);
               }

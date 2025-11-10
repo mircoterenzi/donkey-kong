@@ -125,7 +125,7 @@ public class WorldTest {
         entity.getComponent(TestComponent.class).get(),
         "Instance should be the old one.");
 
-    entity.updateComponent(oldComponent, newComponent);
+    entity.updateComponent(newComponent);
 
     Set<Component> components = world.getComponentsOfEntity(entity);
     assertFalse(components.contains(oldComponent), "Old component should be removed.");

@@ -49,9 +49,8 @@ public class WorldImpl implements World {
     }
 
     @Override
-    public Entity updateComponent(Component oldComponent, Component newComponent) {
-      this.world.removeComponentFromEntity(this, oldComponent);
-      this.world.addComponentToEntity(this, newComponent);
+    public Entity updateComponent(Component component) {
+      this.world.updateComponentOnEntity(this, component);
       return this;
     }
 
@@ -95,6 +94,17 @@ public class WorldImpl implements World {
   @Override
   public void removeComponentFromEntity(Entity entity, Component component) {
     this.componentsByEntity.get(entity).remove(component);
+  }
+
+  @Override
+  public void updateComponentOnEntity(Entity entity, Component component) {
+    Set<Component> components = this.componentsByEntity.get(entity);
+    if (components != null) {
+      components.removeIf(c -> c.getClass() == component.getClass());
+      components.add(component);
+    } else {
+      System.err.println("Entity not found in world: " + entity.getId());
+    }
   }
 
   @Override

@@ -28,14 +28,13 @@ public class MovementSystem implements GameSystem {
         if (velocity.get().dy() >= MAX_VELOCITY) {
           VelocityComponent updatedVelocity =
               new VelocityComponent(velocity.get().dx(), MAX_VELOCITY);
-          entity.updateComponent(velocity.get(), updatedVelocity);
+          entity.updateComponent(updatedVelocity);
           velocity = Optional.of(updatedVelocity);
         }
         double updatedX = startingPosition.get().x() + (velocity.get().dx() * deltaTime);
         double updatedY = startingPosition.get().y() + (velocity.get().dy() * deltaTime);
 
-        world.removeComponentFromEntity(entity, startingPosition.get());
-        world.addComponentToEntity(entity, new PositionComponent(updatedX, updatedY));
+        world.updateComponentOnEntity(entity, new PositionComponent(updatedX, updatedY));
       }
     }
   }

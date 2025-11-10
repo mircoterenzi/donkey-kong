@@ -31,7 +31,7 @@ public class AnimationSystem implements GameSystem {
                   });
       if (animation.state() != state) {
         AnimationComponent newAnimation = new AnimationComponent(0, state, 0);
-        entity.updateComponent(animation, newAnimation);
+        entity.updateComponent(newAnimation);
         animation = newAnimation;
       }
       final int numberOfFrames = graphic.stateToAnimationSettings().apply(state).numberOfFrames();
@@ -39,10 +39,10 @@ public class AnimationSystem implements GameSystem {
         float timeSinceLastFrame = animation.timeSinceLastFrame() + deltaTime;
         if (timeSinceLastFrame >= graphic.frameDuration()) {
           final int updatedFrameIndex = (animation.frameIndex() + 1) % numberOfFrames;
-          entity.updateComponent(animation, new AnimationComponent(updatedFrameIndex, state, 0));
+          entity.updateComponent(new AnimationComponent(updatedFrameIndex, state, 0));
         } else {
           entity.updateComponent(
-              animation, new AnimationComponent(animation.frameIndex(), state, timeSinceLastFrame));
+              new AnimationComponent(animation.frameIndex(), state, timeSinceLastFrame));
         }
       }
     }

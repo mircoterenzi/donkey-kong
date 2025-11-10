@@ -37,7 +37,7 @@ public class ClimbingSystem implements GameSystem {
                     .ifPresent(
                         velocity ->
                             entity.updateComponent(
-                                velocity, new VelocityComponent(velocity.dx(), -verticalVelocity)));
+                                new VelocityComponent(velocity.dx(), -verticalVelocity)));
               }
             });
   }

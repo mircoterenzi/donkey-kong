@@ -126,8 +126,8 @@ public class InputProcessorSystem implements GameSystem {
               }
 
               var state = new StateComponent(newState, newDir);
-              entity.updateComponent(oldState, state);
-              entity.updateComponent(oldVelocity, new VelocityComponent(newDx, newDy));
+              entity.updateComponent(state);
+              entity.updateComponent(new VelocityComponent(newDx, newDy));
             });
   }
 
@@ -152,7 +152,7 @@ public class InputProcessorSystem implements GameSystem {
       PositionComponent entityPos = entity.getComponent(PositionComponent.class).orElseThrow();
       PositionComponent ladderPos =
           ladder.get().getComponent(PositionComponent.class).orElseThrow();
-      entity.updateComponent(entityPos, new PositionComponent(ladderPos.x(), entityPos.y()));
+      entity.updateComponent(new PositionComponent(ladderPos.x(), entityPos.y()));
     }
   }
 
@@ -169,7 +169,7 @@ public class InputProcessorSystem implements GameSystem {
         final double newX =
             velocity.dx() < 0 ? ladderPos.x() - ladderHalfWidth : ladderPos.x() + ladderHalfWidth;
 
-        entity.updateComponent(entityPos, new PositionComponent(newX, entityPos.y()));
+        entity.updateComponent(new PositionComponent(newX, entityPos.y()));
       }
     }
   }
@@ -186,7 +186,7 @@ public class InputProcessorSystem implements GameSystem {
         final double ladderTop = ladderPos.y() - rectCollider.height() / 2.0;
         double newY = ladderTop - entityCollider.height() / 2.0;
 
-        entity.updateComponent(entityPos, new PositionComponent(entityPos.x(), newY));
+        entity.updateComponent(new PositionComponent(entityPos.x(), newY));
       }
     }
   }

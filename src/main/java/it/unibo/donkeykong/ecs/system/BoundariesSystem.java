@@ -34,14 +34,13 @@ public class BoundariesSystem implements GameSystem {
             && newX != position.x()) {
           entitiesToRemove.add(entity);
         } else {
-          entity.updateComponent(position, new PositionComponent(newX, newY));
+          entity.updateComponent(new PositionComponent(newX, newY));
           if (entity.getComponent(BouncinessComponent.class).isPresent()) {
             entity
                 .getComponent(VelocityComponent.class)
                 .ifPresent(
                     velocity ->
                         entity.updateComponent(
-                            velocity,
                             new VelocityComponent(
                                 (newX != position.x() ? -1 : 1) * velocity.dx(),
                                 (newY != position.y() ? -1 : 1) * velocity.dy())));

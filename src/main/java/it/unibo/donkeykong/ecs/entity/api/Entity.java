@@ -52,8 +52,7 @@ public interface Entity {
   /**
    * Updates an existing {@link Component} with a new one.
    *
-   * @param oldComponent the component to be replaced
-   * @param newComponent the new component to add
+   * @param component the new component to add
    */
-  Entity updateComponent(Component oldComponent, Component newComponent);
+  Entity updateComponent(Component component);
 }
