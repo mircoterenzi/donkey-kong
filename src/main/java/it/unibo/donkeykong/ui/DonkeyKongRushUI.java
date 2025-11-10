@@ -21,6 +21,8 @@ public class DonkeyKongRushUI extends Application {
   /** Target frame duration in nanoseconds for 60 FPS. */
   private static final long TARGET_FPS_NANO = 1_000_000_000L / 60;
 
+  public static final String WINDOW_TITLE = "Donkey Kong: Rush";
+
   @Override
   public void start(Stage primaryStage) {
     final World world = new WorldImpl();
@@ -74,7 +76,7 @@ public class DonkeyKongRushUI extends Application {
       }
     }.start();
 
-    primaryStage.setTitle(ConfigurationUI.WINDOW_TITLE);
+    primaryStage.setTitle(WINDOW_TITLE);
     primaryStage.setScene(scene);
     primaryStage.show();
     primaryStage.setResizable(false);
