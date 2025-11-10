@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import it.unibo.donkeykong.core.WorldImpl;
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
-import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.api.Collider;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
 import org.junit.jupiter.api.BeforeEach;
