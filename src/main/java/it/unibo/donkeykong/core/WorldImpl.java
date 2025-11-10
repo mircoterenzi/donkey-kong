@@ -44,9 +44,8 @@ public class WorldImpl implements World {
     }
 
     @Override
-    public Entity updateComponent(Component component) {
+    public void updateComponent(Component component) {
       this.world.updateComponentOnEntity(this, component);
-      return this;
     }
 
     @Override

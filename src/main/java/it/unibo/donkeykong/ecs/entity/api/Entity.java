@@ -46,5 +46,5 @@ public interface Entity {
    *
    * @param component the new component to add
    */
-  Entity updateComponent(Component component);
+  void updateComponent(Component component);
 }
