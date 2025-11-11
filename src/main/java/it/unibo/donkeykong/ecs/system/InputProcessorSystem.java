@@ -47,6 +47,10 @@ public class InputProcessorSystem implements GameSystem {
                   oldState.state() == UP
                       || oldState.state() == DOWN
                       || oldState.state() == STOP_CLIMB;
+              final boolean wasInAir =
+                  oldState.state() == JUMP
+                      || oldState.state() == FALL
+                      || oldState.state() == FAST_FALL;
 
               switch (input.getCurrentHInput()) {
                 case MOVE_LEFT -> {
@@ -64,7 +68,7 @@ public class InputProcessorSystem implements GameSystem {
               }
 
               if (input.isJumpPressed()) {
-                if (isGrounded || canClimb) {
+                if (isGrounded || (canClimb && !wasInAir)) {
                   newDy = JUMP_FACTOR * -gravity.gravity();
                   newState = JUMP;
                 } else {
@@ -91,13 +95,10 @@ public class InputProcessorSystem implements GameSystem {
                       newState = DOWN;
                     }
                     default -> {
-                      if (oldState.state() != JUMP
-                          && oldState.state() != FALL
-                          && oldState.state() != FAST_FALL) {
-                        newDy = oldVelocity.dy();
+                      newDy = oldVelocity.dy();
+                      if (!wasInAir) {
                         newState = STOP_CLIMB;
                       } else {
-                        newDy = oldVelocity.dy();
                         newState = oldState.state();
                       }
                     }
