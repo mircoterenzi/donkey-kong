@@ -224,9 +224,9 @@ public class InputSystemTest {
     assertEquals(PLAYER_VELOCITY, updatedVelocity.dx(), "Player should be moving horizontally");
     assertEquals(ladderEdge, updatedPosition.x(), "Player should snap to ladder edge");
     assertEquals(
-        new StateComponent(State.IDLE, Direction.RIGHT),
+        new StateComponent(State.FALL, Direction.RIGHT),
         updatedState,
-        "State should be IDLE after detaching from ladder");
+        "State should be FALL after detaching from ladder");
   }
 
   @Test
