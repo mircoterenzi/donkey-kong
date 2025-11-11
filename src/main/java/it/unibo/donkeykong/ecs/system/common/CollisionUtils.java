@@ -1,5 +1,6 @@
 package it.unibo.donkeykong.ecs.system.common;
 
+import it.unibo.donkeykong.ecs.component.CircleCollider;
 import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.RectangleCollider;
 import it.unibo.donkeykong.ecs.component.api.Collider;
@@ -70,5 +71,67 @@ public final class CollisionUtils {
     double otherHalfWidth = rectCollider.width() / 2.0;
     double horizontalDistance = Math.abs(otherPos.x() - entityPos.x());
     return horizontalDistance < otherHalfWidth;
+  }
+
+  private static boolean checkCollision(
+      PositionComponent rectanglePosition,
+      RectangleCollider rectangleCollider,
+      PositionComponent circlePosition,
+      CircleCollider circleCollider) {
+    return checkCollision(
+        circlePosition,
+        circleCollider,
+        clampOnRectangle(circlePosition, rectanglePosition, rectangleCollider),
+        new CircleCollider(0));
+  }
+
+  private static boolean checkCollision(
+      PositionComponent position,
+      CircleCollider collider,
+      PositionComponent otherPosition,
+      CircleCollider otherCollider) {
+    return position.distanceFrom(otherPosition) <= (collider.radius() + otherCollider.radius());
+  }
+
+  private static boolean checkCollision(
+      PositionComponent position,
+      RectangleCollider collider,
+      PositionComponent otherPosition,
+      RectangleCollider otherCollider) {
+    return Math.abs(position.x() - otherPosition.x())
+            <= (collider.width() + otherCollider.width()) / 2.0
+        && Math.abs(position.y() - otherPosition.y())
+            <= (collider.height() + otherCollider.height()) / 2.0;
+  }
+
+  /**
+   * Checks if two entities are colliding based on their position and collider components.
+   *
+   * @param position the position of the first entity
+   * @param collider the collider of the first entity
+   * @param otherPosition the position of the second entity
+   * @param otherCollider the collider of the second entity
+   * @return true if the entities are colliding, false otherwise
+   */
+  public static boolean isColliding(
+      PositionComponent position,
+      Collider collider,
+      PositionComponent otherPosition,
+      Collider otherCollider) {
+    if (collider instanceof RectangleCollider rectangleCollider
+        && otherCollider instanceof RectangleCollider otherRectangleCollider) {
+      return checkCollision(position, rectangleCollider, otherPosition, otherRectangleCollider);
+    } else if (collider instanceof RectangleCollider rectangleCollider
+        && otherCollider instanceof CircleCollider circleCollider) {
+      return checkCollision(position, rectangleCollider, otherPosition, circleCollider);
+    } else if (collider instanceof CircleCollider circleCollider
+        && otherCollider instanceof RectangleCollider rectangleCollider) {
+      return checkCollision(otherPosition, rectangleCollider, position, circleCollider);
+    } else if (collider instanceof CircleCollider circleCollider
+        && otherCollider instanceof CircleCollider otherCircleCollider) {
+      return checkCollision(position, circleCollider, otherPosition, otherCircleCollider);
+    } else {
+      throw new IllegalArgumentException("One or more unknown collider types");
+    }
   }
 }
