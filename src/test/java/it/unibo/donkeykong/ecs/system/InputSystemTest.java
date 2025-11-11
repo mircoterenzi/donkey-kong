@@ -11,7 +11,7 @@ import it.unibo.donkeykong.ecs.entity.api.Entity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class InputProcessorSystemTest {
+public class InputSystemTest {
 
   private static final long DELTA_TIME_IGNORED = 0L;
 
@@ -26,7 +26,7 @@ public class InputProcessorSystemTest {
   void setUp() {
     world = new WorldImpl();
     world.addSystem(new ClimbingSystem());
-    world.addSystem(new InputProcessorSystem());
+    world.addSystem(new InputSystem());
 
     playerInput = new InputComponent();
     initialVelocity = new VelocityComponent(0.0, 0.0);
