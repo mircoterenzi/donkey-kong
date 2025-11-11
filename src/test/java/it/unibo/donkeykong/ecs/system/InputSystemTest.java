@@ -11,7 +11,7 @@ import it.unibo.donkeykong.ecs.entity.api.Entity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class InputProcessorSystemTest {
+public class InputSystemTest {
 
   private static final long DELTA_TIME_IGNORED = 0L;
 
@@ -26,7 +26,7 @@ public class InputProcessorSystemTest {
   void setUp() {
     world = new WorldImpl();
     world.addSystem(new ClimbingSystem());
-    world.addSystem(new InputProcessorSystem());
+    world.addSystem(new InputSystem());
 
     playerInput = new InputComponent();
     initialVelocity = new VelocityComponent(0.0, 0.0);
@@ -224,9 +224,9 @@ public class InputProcessorSystemTest {
     assertEquals(PLAYER_VELOCITY, updatedVelocity.dx(), "Player should be moving horizontally");
     assertEquals(ladderEdge, updatedPosition.x(), "Player should snap to ladder edge");
     assertEquals(
-        new StateComponent(State.IDLE, Direction.RIGHT),
+        new StateComponent(State.FALL, Direction.RIGHT),
         updatedState,
-        "State should be IDLE after detaching from ladder");
+        "State should be FALL after detaching from ladder");
   }
 
   @Test

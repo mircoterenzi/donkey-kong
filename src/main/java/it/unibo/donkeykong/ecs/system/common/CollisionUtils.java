@@ -5,7 +5,6 @@ import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.RectangleCollider;
 import it.unibo.donkeykong.ecs.component.api.Collider;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
-import java.util.Optional;
 
 /** Utility class for collision detection and handling. */
 public final class CollisionUtils {
@@ -48,20 +47,17 @@ public final class CollisionUtils {
   }
 
   /**
-   * Checks if two entities are horizontally aligned (if second entity hasn't been provided or
-   * doesn't have a rectangle collider, returns false).
+   * Checks if two entities are horizontally aligned (if second entity doesn't have a rectangle
+   * collider, returns false).
    *
    * @param entity the first entity
-   * @param other the optional second entity
+   * @param other the second entity
    * @return true if the entities are aligned, false otherwise
    */
-  public static boolean areAligned(Entity entity, Optional<Entity> other) {
-    if (other.isEmpty()) {
-      return false;
-    }
+  public static boolean areAligned(Entity entity, Entity other) {
     PositionComponent entityPos = entity.getComponent(PositionComponent.class).orElseThrow();
-    PositionComponent otherPos = other.get().getComponent(PositionComponent.class).orElseThrow();
-    Collider otherCollider = other.get().getComponent(Collider.class).orElseThrow();
+    PositionComponent otherPos = other.getComponent(PositionComponent.class).orElseThrow();
+    Collider otherCollider = other.getComponent(Collider.class).orElseThrow();
     if (!(otherCollider instanceof RectangleCollider rectCollider)) {
       return false;
     }

@@ -22,7 +22,8 @@ public class ClimbingSystem implements GameSystem {
                   collisionEvent.getCollisionsWith(ClimbableComponent.class).stream().findFirst();
               StateComponent oldState = entity.getComponent(StateComponent.class).orElseThrow();
               boolean canClimb =
-                  CollisionUtils.areAligned(entity, ladder)
+                  ladder.isPresent()
+                      && CollisionUtils.areAligned(entity, ladder.get())
                       && oldState.state() != State.JUMP
                       && oldState.state() != State.FALL
                       && oldState.state() != State.FAST_FALL;
