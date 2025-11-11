@@ -7,10 +7,7 @@ import it.unibo.donkeykong.ecs.component.api.Collider;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
 import java.util.Optional;
 
-/**
- * Utility class for collision detection and handling. Credits to "2D Game Collision Detection" by
- * Thomas Schwarzl.
- */
+/** Utility class for collision detection and handling. */
 public final class CollisionUtils {
 
   private CollisionUtils() {
