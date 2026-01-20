@@ -11,8 +11,6 @@ plugins {
 
 group = "it.unibo"
 
-version = "1.0.0-SNAPSHOT"
-
 repositories { mavenCentral() }
 
 val vertxVersion = "5.0.4"
@@ -66,3 +64,7 @@ tasks.withType<Test> {
 }
 
 tasks.withType<JavaExec> { args = listOf(mainVerticleName) }
+
+tasks.withType<JavaCompile> {
+  dependsOn("spotlessApply")
+}
