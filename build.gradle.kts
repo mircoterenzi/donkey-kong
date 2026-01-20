@@ -65,6 +65,4 @@ tasks.withType<Test> {
 
 tasks.withType<JavaExec> { args = listOf(mainVerticleName) }
 
-tasks.withType<JavaCompile> {
-  dependsOn("spotlessApply")
-}
+tasks.withType<JavaCompile> { dependsOn("spotlessApply") }
