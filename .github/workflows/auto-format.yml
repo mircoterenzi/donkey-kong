@@ -5,6 +5,8 @@ on:
     paths:
       - 'src/**/*.java'
       - '*.gradle.kts'
+    branches-ignore:
+      - 'dependabot/**'
 
 permissions:
   contents: write
