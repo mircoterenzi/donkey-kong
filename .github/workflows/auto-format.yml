@@ -15,7 +15,7 @@ jobs:
     if: github.event.head_commit.author.name != 'github-actions[bot]' || github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
