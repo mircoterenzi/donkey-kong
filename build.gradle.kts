@@ -6,7 +6,7 @@ plugins {
   application
   id("com.github.johnrengelman.shadow") version "7.1.2"
   id("com.diffplug.spotless") version "8.0.0"
-  id("org.openjfx.javafxplugin") version "0.0.13"
+  id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
 group = "it.unibo"
