@@ -25,6 +25,7 @@ jobs:
             ci
             chore
             revert
+          requireScope: false
 
   test:
     runs-on: ubuntu-latest
