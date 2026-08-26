@@ -23,28 +23,30 @@ public class BoundariesSystem implements GameSystem {
       final Collider collider = entity.getComponent(Collider.class).orElseThrow();
       final double halfWidth = collider.width() / 2.0;
       final double halfHeight = collider.height() / 2.0;
+      final boolean isBouncy = entity.getComponent(BouncinessComponent.class).isPresent();
       final double newX =
-          Math.min(Math.max(position.x(), halfWidth), Constants.WORLD_WIDTH - halfWidth);
+          isBouncy && position.y() > BOTTOM_THRESHOLD
+              ? position.x()
+              : Math.min(Math.max(position.x(), halfWidth), Constants.WORLD_WIDTH - halfWidth);
       final double newY =
           Math.min(Math.max(position.y(), halfHeight), Constants.WORLD_HEIGHT - halfHeight);
-
+      if (isBouncy
+          && position.y() > BOTTOM_THRESHOLD
+          && (position.x() < -halfWidth || position.x() > Constants.WORLD_WIDTH + halfWidth)) {
+        entitiesToRemove.add(entity);
+        continue;
+      }
       if (newX != position.x() || newY != position.y()) {
-        if (entity.getComponent(BouncinessComponent.class).isPresent()
-            && position.y() > BOTTOM_THRESHOLD
-            && newX != position.x()) {
-          entitiesToRemove.add(entity);
-        } else {
-          entity.updateComponent(new PositionComponent(newX, newY));
-          if (entity.getComponent(BouncinessComponent.class).isPresent()) {
-            entity
-                .getComponent(VelocityComponent.class)
-                .ifPresent(
-                    velocity ->
-                        entity.updateComponent(
-                            new VelocityComponent(
-                                (newX != position.x() ? -1 : 1) * velocity.dx(),
-                                (newY != position.y() ? -1 : 1) * velocity.dy())));
-          }
+        entity.updateComponent(new PositionComponent(newX, newY));
+        if (isBouncy) {
+          entity
+              .getComponent(VelocityComponent.class)
+              .ifPresent(
+                  velocity ->
+                      entity.updateComponent(
+                          new VelocityComponent(
+                              (newX != position.x() ? -1 : 1) * velocity.dx(),
+                              (newY != position.y() ? -1 : 1) * velocity.dy())));
         }
       }
     }
