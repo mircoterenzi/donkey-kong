@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/mircoterenzi/donkey-kong/compare/v1.0.1...v1.1.0) (2026-08-26)
+
+
+### Features
+
+* **game:** implement win condition and game loop in DonkeyKongRushUI ([b301a72](https://github.com/mircoterenzi/donkey-kong/commit/b301a72fa8192300e1e6388301336df90d002598))
+
 ## [1.0.1](https://github.com/mircoterenzi/donkey-kong/compare/v1.0.0...v1.0.1) (2026-01-20)
 
 
