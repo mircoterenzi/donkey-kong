@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/mircoterenzi/donkey-kong/compare/v1.2.0...v1.2.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* **dependabot:** remove approval step that fails with GitHub Actions token ([ed2ddf1](https://github.com/mircoterenzi/donkey-kong/commit/ed2ddf1338749bed402d7a53c071c723e969a16f))
+
 # [1.2.0](https://github.com/mircoterenzi/donkey-kong/compare/v1.1.0...v1.2.0) (2026-08-27)
 
 
