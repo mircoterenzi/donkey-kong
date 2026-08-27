@@ -1,3 +1,16 @@
+# [1.3.0](https://github.com/mircoterenzi/donkey-kong/compare/v1.2.0...v1.3.0) (2026-08-27)
+
+
+### Bug Fixes
+
+* **dependabot:** remove approval step that fails with GitHub Actions token ([ed2ddf1](https://github.com/mircoterenzi/donkey-kong/commit/ed2ddf1338749bed402d7a53c071c723e969a16f))
+* **dependabot:** wait for tests to pass before enabling auto-merge ([5050406](https://github.com/mircoterenzi/donkey-kong/commit/50504061906c44cf7163fbf99f268ff76feccc74))
+
+
+### Features
+
+* **dependabot:** use PAT token to trigger semantic-release after auto-merge ([ff115a6](https://github.com/mircoterenzi/donkey-kong/commit/ff115a61217446c729f72ef33e946cfc1890121c))
+
 ## [1.2.1](https://github.com/mircoterenzi/donkey-kong/compare/v1.2.0...v1.2.1) (2026-08-27)
 
 
