@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/mircoterenzi/donkey-kong/compare/v1.3.0...v1.3.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* **dependabot:** use PAT_TOKEN to trigger release workflow ([ac96d2f](https://github.com/mircoterenzi/donkey-kong/commit/ac96d2f4102c7e7495401794da6ab6b0030cc5dc))
+
 # [1.3.0](https://github.com/mircoterenzi/donkey-kong/compare/v1.2.0...v1.3.0) (2026-08-27)
 
 
