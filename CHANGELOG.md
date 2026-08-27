@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/mircoterenzi/donkey-kong/compare/v1.1.0...v1.2.0) (2026-08-27)
+
+
+### Features
+
+* **dependabot:** add auto-merge workflow for Dependabot pull requests ([2f89323](https://github.com/mircoterenzi/donkey-kong/commit/2f89323abcd9d3351b609fc31d77383554d63644))
+
 # [1.1.0](https://github.com/mircoterenzi/donkey-kong/compare/v1.0.1...v1.1.0) (2026-08-26)
 
 
