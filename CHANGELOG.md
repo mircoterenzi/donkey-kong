@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/mircoterenzi/donkey-kong/compare/v1.3.1...v1.3.2) (2026-08-27)
+
+
+### Bug Fixes
+
+* **dependabot:** use pull_request_target to access secrets ([3e23a4d](https://github.com/mircoterenzi/donkey-kong/commit/3e23a4da6b5aee9aa307367723361f067a5a5b68))
+
 ## [1.3.1](https://github.com/mircoterenzi/donkey-kong/compare/v1.3.0...v1.3.1) (2026-08-27)
 
 
