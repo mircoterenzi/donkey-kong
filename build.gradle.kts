@@ -13,7 +13,7 @@ group = "it.unibo"
 
 repositories { mavenCentral() }
 
-val vertxVersion = "5.0.7"
+val vertxVersion = "4.5.32"
 val junitJupiterVersion = "5.9.1"
 
 val mainVerticleName = "it.unibo.donkeykong.MainVerticle"
@@ -23,7 +23,6 @@ application { mainClass.set("it.unibo.donkeykong.ui.DonkeyKongRushUI") } // laun
 
 dependencies {
   implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))
-  implementation("io.vertx:vertx-launcher-application")
   implementation("io.vertx:vertx-web")
   testImplementation("io.vertx:vertx-junit5")
   testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
