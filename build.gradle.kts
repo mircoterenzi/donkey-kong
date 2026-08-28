@@ -5,7 +5,7 @@ plugins {
   java
   application
   id("com.github.johnrengelman.shadow") version "7.1.2"
-  id("com.diffplug.spotless") version "8.10.2"
+  id("com.diffplug.spotless") version "8.1.0"
   id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
@@ -13,8 +13,8 @@ group = "it.unibo"
 
 repositories { mavenCentral() }
 
-val vertxVersion = "5.1.8"
-val junitJupiterVersion = "5.14.4"
+val vertxVersion = "4.5.32"
+val junitJupiterVersion = "5.9.1"
 
 val mainVerticleName = "it.unibo.donkeykong.MainVerticle"
 val launcherClassName = "io.vertx.launcher.application.VertxApplication"
@@ -23,12 +23,9 @@ application { mainClass.set("it.unibo.donkeykong.ui.DonkeyKongRushUI") } // laun
 
 dependencies {
   implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))
-  implementation("io.vertx:vertx-launcher-application")
   implementation("io.vertx:vertx-web")
   testImplementation("io.vertx:vertx-junit5")
-  testImplementation(platform("org.junit:junit-bom:$junitJupiterVersion"))
-  testImplementation("org.junit.jupiter:junit-jupiter")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+  testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
 }
 
 java {
