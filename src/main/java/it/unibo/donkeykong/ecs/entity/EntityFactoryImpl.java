@@ -71,6 +71,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
         .addComponent(PAULINE_POSITION)
         .addComponent(new RectangleCollider(PAULINE_COLLISION_WIDTH, PAULINE_COLLISION_HEIGHT))
         .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
+        .addComponent(new GoalComponent())
         .addComponent(
             new GraphicComponent(
                 "/sprites/pauline.png",

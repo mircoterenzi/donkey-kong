@@ -1,3 +1,9 @@
+---
+layout: default
+title: Report
+nav_order: 2
+---
+
 # Donkey Kong Rush
 
 - [Foschi Giacomo](mailto:giacomo.foschi3@studio.unibo.it)

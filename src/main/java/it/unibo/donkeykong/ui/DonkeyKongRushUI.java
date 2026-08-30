@@ -97,6 +97,24 @@ public class DonkeyKongRushUI extends Application {
   private void startGame(Stage primaryStage) {
     final World world = new WorldImpl();
 
+    final AnimationTimer gameLoop =
+        new AnimationTimer() {
+          private long lastUpdate = 0;
+
+          @Override
+          public void handle(long now) {
+            if (lastUpdate == 0) {
+              lastUpdate = now;
+              return;
+            }
+            if (now - lastUpdate >= TARGET_FPS_NANO) {
+              final float deltaTime = (now - lastUpdate) / 1_000_000_000f;
+              world.update(deltaTime);
+              lastUpdate = now;
+            }
+          }
+        };
+
     // TODO: entity generation here? Not so sure, in dedicated controller class for mvc
     final EntityFactory entityFactory = new EntityFactoryImpl(world);
     final MapFactory mapFactory = new MapFactory(entityFactory);
@@ -110,6 +128,14 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(new MovementSystem());
     world.addSystem(new BoundariesSystem());
     world.addSystem(new CollisionSystem());
+    world.addSystem(
+        new WinSystem(
+            winner -> {
+              System.out.println(
+                  "Vittoria! Il giocatore con ID " + winner.getId() + " ha salvato Pauline.");
+              gameLoop.stop();
+              primaryStage.close();
+            }));
     world.addSystem(new PhysicsSystem());
     world.addSystem(new HealthSystem());
     world.addSystem(new SpawnSystem(entityFactory));
@@ -135,18 +161,7 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(new AnimationSystem());
     world.addSystem(new RenderingSystem(canvas));
 
-    new AnimationTimer() {
-      private long lastUpdate = 0;
-
-      @Override
-      public void handle(long now) {
-        if (now - lastUpdate >= TARGET_FPS_NANO) {
-          final float deltaTime = (now - lastUpdate) / 1_000_000_000f;
-          world.update(deltaTime);
-          lastUpdate = now;
-        }
-      }
-    }.start();
+    gameLoop.start();
 
     primaryStage.setScene(scene);
     primaryStage.centerOnScreen();

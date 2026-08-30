@@ -44,7 +44,7 @@ public class PhysicsSystem implements GameSystem {
     }
     if (newX != position.x() || newY != position.y()) {
       entity.updateComponent(new PositionComponent(newX, newY));
-      if (newY <= position.y()) {
+      if (newY != position.y()) {
         resetVerticalVelocity(entity);
       }
     }
