@@ -6,8 +6,9 @@
 ### AI Disclaimer
 
 During the preparation of this work, the authors used GitHub Copilot and DeepL to assist with writing the Javadoc and to
-check the grammar of this report. After using this tool/service, the authors reviewed and edited the content as
-needed and take(s) full responsibility for the content of the final report/artifact.
+check the grammar of this report. Moreover, Copilot has been used as a review tool in some pull requests on GitHub.
+After using this tool/service, the authors reviewed and edited the content as needed and take(s) full responsibility
+for the content of the final report/artifact.
 
 ## Abstract @TODO
 
