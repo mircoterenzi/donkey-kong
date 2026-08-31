@@ -26,7 +26,9 @@ dependencies {
   implementation("io.vertx:vertx-launcher-application")
   implementation("io.vertx:vertx-web")
   testImplementation("io.vertx:vertx-junit5")
-  testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
+  testImplementation(platform("org.junit:junit-bom:$junitJupiterVersion"))
+  testImplementation("org.junit.jupiter:junit-jupiter")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
