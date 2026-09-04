@@ -5,5 +5,6 @@ public enum MessageType {
   GAME_START,
   HOST_UPDATE,
   GUEST_UPDATE,
+  GOAL_REACHED,
   GAME_OVER
 }
