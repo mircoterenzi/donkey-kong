@@ -5,8 +5,8 @@ import io.vertx.core.http.*;
 import io.vertx.core.json.JsonObject;
 
 /**
- * ClientVerticle is responsible for managing the WebSocket connection to the server.
- * It handles incoming messages and publishes them to the event bus for other components to consume.
+ * ClientVerticle is responsible for managing the WebSocket connection to the server. It handles
+ * incoming messages and publishes them to the event bus for other components to consume.
  */
 public class ClientVerticle extends AbstractVerticle {
 
@@ -14,37 +14,42 @@ public class ClientVerticle extends AbstractVerticle {
   private String myRole;
 
   /**
-   * Starts the verticle and establishes a WebSocket connection to the server.
-   * It sets up handlers for incoming messages and publishes them to the event bus.
+   * Starts the verticle and establishes a WebSocket connection to the server. It sets up handlers
+   * for incoming messages and publishes them to the event bus.
    */
   @Override
   public void start() {
     WebSocketClient client = vertx.createWebSocketClient();
 
-    WebSocketConnectOptions options = new WebSocketConnectOptions()
-      .setHost("localhost")
-      .setPort(8080)
-      .setURI("/");
+    WebSocketConnectOptions options =
+        new WebSocketConnectOptions().setHost("localhost").setPort(8080).setURI("/");
 
-    client.connect(options, res -> {
-      if(res.succeeded()) {
-        webSocket = res.result();
-        webSocket.textMessageHandler(this::handleIncomingMessage);
+    client.connect(
+        options,
+        res -> {
+          if (res.succeeded()) {
+            webSocket = res.result();
+            webSocket.textMessageHandler(this::handleIncomingMessage);
 
-        vertx.eventBus().<JsonObject>consumer("outbound.messages", msg -> {
-          if(webSocket != null && !webSocket.isClosed()) {
-            webSocket.writeTextMessage(msg.body().encode());
+            vertx
+                .eventBus()
+                .<JsonObject>consumer(
+                    "outbound.messages",
+                    msg -> {
+                      if (webSocket != null && !webSocket.isClosed()) {
+                        webSocket.writeTextMessage(msg.body().encode());
+                      }
+                    });
+
+            webSocket.closeHandler(
+                v -> {
+                  System.out.println("Disconnected from server");
+                  vertx.eventBus().publish("game.disconnected", new JsonObject());
+                });
+          } else {
+            System.out.println("Failed to connect to server: " + res.cause().getMessage());
           }
         });
-
-        webSocket.closeHandler(v -> {
-          System.out.println("Disconnected from server");
-          vertx.eventBus().publish("game.disconnected", new JsonObject());
-        });
-      } else {
-        System.out.println("Failed to connect to server: " + res.cause().getMessage());
-      }
-    });
   }
 
   private void handleIncomingMessage(String text) {
