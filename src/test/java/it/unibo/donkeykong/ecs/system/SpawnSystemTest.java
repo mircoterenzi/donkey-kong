@@ -20,7 +20,7 @@ public class SpawnSystemTest {
   @BeforeEach
   void setUp() {
     world = new WorldImpl();
-    SpawnSystem spawnSystem = new SpawnSystem(new EntityFactoryImpl(world));
+    SpawnSystem spawnSystem = new SpawnSystem(new EntityFactoryImpl(world, "HOST"));
     world.addSystem(spawnSystem);
   }
 

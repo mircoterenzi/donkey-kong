@@ -29,25 +29,35 @@ public class LobbyVerticle extends AbstractVerticle {
         .createHttpServer()
         .webSocketHandler(
             ws -> {
-              if (hostSocket == null) {
-                hostSocket = ws;
-                setupSocket(ws, "HOST");
-                sendRole(ws, "HOST");
-                System.out.println("Host connected");
-              } else if (guestSocket == null) {
-                guestSocket = ws;
-                setupSocket(ws, "GUEST");
-                sendRole(ws, "GUEST");
-                System.out.println("Guest connected, ready to start the game");
-                startGame();
-              } else {
+              if ("/spectate".equals(ws.path())) {
                 spectators.add(ws);
                 setupSocket(ws, "SPECTATOR");
                 sendRole(ws, "SPECTATOR");
                 System.out.println("Spectator connected, total spectators: " + spectators.size());
                 if (gameStarted) {
-                  JsonObject msg = new JsonObject().put("type", "GAME_START");
-                  ws.writeTextMessage(msg.encode());
+                  ws.writeTextMessage(new JsonObject().put("type", "GAME_START").encode());
+                }
+              } else {
+                if (hostSocket == null) {
+                  hostSocket = ws;
+                  setupSocket(ws, "HOST");
+                  sendRole(ws, "HOST");
+                  System.out.println("Host connected");
+                } else if (guestSocket == null) {
+                  guestSocket = ws;
+                  setupSocket(ws, "GUEST");
+                  sendRole(ws, "GUEST");
+                  System.out.println("Guest connected, ready to start the game");
+                  startGame();
+                } else {
+                  spectators.add(ws);
+                  setupSocket(ws, "SPECTATOR");
+                  sendRole(ws, "SPECTATOR");
+                  System.out.println("Spectator connected, total spectators: " + spectators.size());
+                  if (gameStarted) {
+                    JsonObject msg = new JsonObject().put("type", "GAME_START");
+                    ws.writeTextMessage(msg.encode());
+                  }
                 }
               }
             })
