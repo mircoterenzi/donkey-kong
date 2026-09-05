@@ -23,7 +23,7 @@ public class FactoryTest {
   @BeforeEach
   void setUp() {
     world = new WorldImpl();
-    entityFactory = new EntityFactoryImpl(world);
+    entityFactory = new EntityFactoryImpl(world, "HOST");
   }
 
   private <C extends Component> void assertComponentPresence(
@@ -59,6 +59,8 @@ public class FactoryTest {
         player,
         RectangleCollider.class,
         new RectangleCollider(PLAYER_COLLISION_WIDTH, PLAYER_COLLISION_HEIGHT));
+    assertComponentPresence(
+        player, NetworkComponent.class, new NetworkComponent("player-host", "HOST"));
     assertTrue(
         player.getComponent(GraphicComponent.class).isPresent(),
         "Player1 must have a GraphicComponent component");
@@ -84,6 +86,8 @@ public class FactoryTest {
     assertTrue(
         player.getComponent(GraphicComponent.class).isPresent(),
         "Player2 must have a GraphicComponent component");
+    assertComponentPresence(
+        player, NetworkComponent.class, new NetworkComponent("player-guest", "GUEST"));
     GraphicComponent actualGraphic = player.getComponent(GraphicComponent.class).get();
     assertEquals("/sprites/luigi.png", actualGraphic.path());
     assertEquals(PLAYER_WIDTH, actualGraphic.width());
@@ -147,7 +151,6 @@ public class FactoryTest {
   @Test
   void testCreateBarrel() {
     Entity barrel = entityFactory.createBarrel(BARREL_VELOCITY);
-
     assertNotNull(barrel);
     assertComponentPresence(barrel, PositionComponent.class, RIGHT_BARREL_SPAWN);
     assertComponentPresence(
@@ -158,6 +161,9 @@ public class FactoryTest {
         barrel, StateComponent.class, new StateComponent(State.MOVING, Direction.RIGHT));
     assertComponentPresence(
         barrel, CircleCollider.class, new CircleCollider(BARREL_COLLISION_RADIUS));
+    assertTrue(
+        barrel.getComponent(NetworkComponent.class).isPresent(),
+        "Barrel must have a NetworkComponent");
     assertTrue(
         barrel.getComponent(GraphicComponent.class).isPresent(),
         "Barrel must have a GraphicComponent component");
