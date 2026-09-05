@@ -78,22 +78,24 @@ public class DonkeyKongRushUI extends Application {
         .eventBus()
         .<JsonObject>consumer(
             "game.over",
-            msg -> Platform.runLater(
-                () -> {
-                  String winner = msg.body().getString("winner");
-                  String reason = msg.body().getString("reason");
-                  System.out.println("UI: game over, winner: " + winner + ", reason: " + reason);
-                  if (gameLoop != null) {
-                    gameLoop.stop();
-                  }
-                  if (clientDeploymentId != null) vertx.undeploy(clientDeploymentId);
-                  if (lobbyDeploymentId != null) vertx.undeploy(lobbyDeploymentId);
+            msg ->
+                Platform.runLater(
+                    () -> {
+                      String winner = msg.body().getString("winner");
+                      String reason = msg.body().getString("reason");
+                      System.out.println(
+                          "UI: game over, winner: " + winner + ", reason: " + reason);
+                      if (gameLoop != null) {
+                        gameLoop.stop();
+                      }
+                      if (clientDeploymentId != null) vertx.undeploy(clientDeploymentId);
+                      if (lobbyDeploymentId != null) vertx.undeploy(lobbyDeploymentId);
 
-                  clientDeploymentId = null;
-                  lobbyDeploymentId = null;
+                      clientDeploymentId = null;
+                      lobbyDeploymentId = null;
 
-                  showGameOverScreen(primaryStage, winner);
-                }));
+                      showGameOverScreen(primaryStage, winner);
+                    }));
   }
 
   private void showMainMenu(Stage primaryStage) {
