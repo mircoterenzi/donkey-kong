@@ -31,14 +31,14 @@ public class StateReceiverSystem implements GameSystem {
 
   @Override
   public void update(World world, float deltaTime) {
-    if ("GUEST".equals(myRole)) {
+    if ("GUEST".equals(myRole) || "SPECTATOR".equals(myRole)) {
       while (!hostUpdates.isEmpty()) {
         JsonObject update = hostUpdates.poll();
         applyHostUpdate(world, update);
       }
     }
 
-    if ("HOST".equals(myRole)) {
+    if ("HOST".equals(myRole) || "SPECTATOR".equals(myRole)) {
       while (!guestUpdates.isEmpty()) {
         JsonObject update = guestUpdates.poll();
         applyGuestUpdate(world, update);
