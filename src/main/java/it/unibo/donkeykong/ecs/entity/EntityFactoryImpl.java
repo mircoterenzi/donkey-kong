@@ -13,14 +13,30 @@ import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 public record EntityFactoryImpl(World world, String myRole) implements EntityFactory {
 
   private Entity buildPlayer(
-      String roleId, String roleType, PositionComponent spawnPos, GraphicComponent graphic) {
+      String roleId, String roleType, PositionComponent spawnPos, String spritePath) {
     Entity player =
         world
             .createEntity()
             .addComponent(new NetworkComponent(roleId, roleType))
             .addComponent(spawnPos)
             .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
-            .addComponent(graphic);
+            .addComponent(
+                new GraphicComponent(
+                    spritePath,
+                    PLAYER_WIDTH,
+                    PLAYER_HEIGHT,
+                    PLAYER_BORDER,
+                    PLAYER_SCALE,
+                    PLAYER_FRAME_DURATION,
+                    (state) ->
+                        switch (state) {
+                          case MOVING -> new AnimationSettings(1, 0, 2);
+                          case JUMP, FALL -> new AnimationSettings(3, 0, 1);
+                          case FAST_FALL -> new AnimationSettings(4, 0, 1);
+                          case UP, DOWN -> new AnimationSettings(5, 0, 2);
+                          case STOP_CLIMB -> new AnimationSettings(5, 0, 1);
+                          default -> new AnimationSettings(0, 0, 1);
+                        }));
     if (roleType.equals(this.myRole)) {
       player
           .addComponent(new InputComponent())
@@ -34,45 +50,12 @@ public record EntityFactoryImpl(World world, String myRole) implements EntityFac
 
   @Override
   public Entity createFirstPlayer() {
-    return buildPlayer(
-        "player-host",
-        "HOST",
-        FIRST_PLAYER_SPAWN,
-        new GraphicComponent(
-            "/sprites/mario.png",
-            PLAYER_WIDTH,
-            PLAYER_HEIGHT,
-            PLAYER_BORDER,
-            PLAYER_SCALE,
-            PLAYER_FRAME_DURATION,
-            (state) ->
-                switch (state) {
-                  case MOVING -> new AnimationSettings(1, 0, 2);
-                  case JUMP, FALL -> new AnimationSettings(3, 0, 1);
-                  case FAST_FALL -> new AnimationSettings(4, 0, 1);
-                  case UP, DOWN -> new AnimationSettings(5, 0, 2);
-                  case STOP_CLIMB -> new AnimationSettings(5, 0, 1);
-                  default -> new AnimationSettings(0, 0, 1);
-                }));
+    return buildPlayer("player-host", "HOST", FIRST_PLAYER_SPAWN, "/sprites/mario.png");
   }
 
   @Override
   public Entity createSecondPlayer() {
-    return buildPlayer(
-        "player-guest",
-        "GUEST",
-        SECOND_PLAYER_SPAWN,
-        new GraphicComponent(
-            "/sprites/luigi.png",
-            PLAYER_WIDTH,
-            PLAYER_HEIGHT,
-            PLAYER_BORDER,
-            PLAYER_SCALE,
-            PLAYER_FRAME_DURATION,
-            (state) -> {
-              if (state == State.MOVING) return new AnimationSettings(1, 0, 2);
-              return new AnimationSettings(0, 0, 1);
-            }));
+    return buildPlayer("player-guest", "GUEST", SECOND_PLAYER_SPAWN, "/sprites/luigi.png");
   }
 
   @Override
@@ -112,15 +95,12 @@ public record EntityFactoryImpl(World world, String myRole) implements EntityFac
                 (state) -> new AnimationSettings(0, 1, 4)));
   }
 
-  @Override
-  public Entity createBarrel(double velocity) {
+  private Entity buildBarrelEntity(String id, PositionComponent pos, double velocity) {
     Direction direction = velocity < 0 ? Direction.LEFT : Direction.RIGHT;
-    PositionComponent pos = velocity < 0 ? LEFT_BARREL_SPAWN : RIGHT_BARREL_SPAWN;
-    String uniqueId = java.util.UUID.randomUUID().toString();
 
     return world
         .createEntity()
-        .addComponent(new NetworkComponent(uniqueId, "BARREL"))
+        .addComponent(new NetworkComponent(id, "BARREL"))
         .addComponent(pos)
         .addComponent(new VelocityComponent(velocity, 0))
         .addComponent(new BouncinessComponent())
@@ -140,28 +120,16 @@ public record EntityFactoryImpl(World world, String myRole) implements EntityFac
   }
 
   @Override
-  public Entity createNetworkBarrel(String id, PositionComponent position, double velocity) {
-    Direction direction = velocity < 0 ? Direction.LEFT : Direction.RIGHT;
+  public Entity createBarrel(double velocity) {
+    PositionComponent pos = velocity < 0 ? LEFT_BARREL_SPAWN : RIGHT_BARREL_SPAWN;
+    String uniqueId = java.util.UUID.randomUUID().toString();
 
-    return world
-        .createEntity()
-        .addComponent(new NetworkComponent(id, "BARREL"))
-        .addComponent(position)
-        .addComponent(new VelocityComponent(velocity, 0))
-        .addComponent(new BouncinessComponent())
-        .addComponent(new GravityComponent(GRAVITY))
-        .addComponent(new StateComponent(State.MOVING, direction))
-        .addComponent(new DamageComponent(BARREL_DAMAGE))
-        .addComponent(new CircleCollider(BARREL_COLLISION_RADIUS))
-        .addComponent(
-            new GraphicComponent(
-                "/sprites/barrel.png",
-                BARREL_WIDTH,
-                BARREL_HEIGHT,
-                BARREL_BORDER,
-                BARREL_SCALE,
-                BARREL_FRAME_DURATION,
-                (state) -> new AnimationSettings(0, 0, 4)));
+    return buildBarrelEntity(uniqueId, pos, velocity);
+  }
+
+  @Override
+  public Entity createNetworkBarrel(String id, PositionComponent position, double velocity) {
+    return buildBarrelEntity(id, position, velocity);
   }
 
   @Override
