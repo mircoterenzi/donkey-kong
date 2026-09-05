@@ -16,6 +16,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
   public Entity createFirstPlayer() {
     return world
         .createEntity()
+        .addComponent(new NetworkComponent("player-host", "HOST"))
         .addComponent(FIRST_PLAYER_SPAWN)
         .addComponent(new InputComponent())
         .addComponent(new GravityComponent(GRAVITY))
@@ -46,6 +47,7 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
   public Entity createSecondPlayer() {
     return world
         .createEntity()
+        .addComponent(new NetworkComponent("player-guest", "GUEST"))
         .addComponent(SECOND_PLAYER_SPAWN)
         .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
         .addComponent(
@@ -105,8 +107,11 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
   public Entity createBarrel(double velocity) {
     Direction direction = velocity < 0 ? Direction.LEFT : Direction.RIGHT;
     PositionComponent pos = velocity < 0 ? LEFT_BARREL_SPAWN : RIGHT_BARREL_SPAWN;
+    String uniqueId = java.util.UUID.randomUUID().toString();
+
     return world
         .createEntity()
+        .addComponent(new NetworkComponent(uniqueId, "BARREL"))
         .addComponent(pos)
         .addComponent(new VelocityComponent(velocity, 0))
         .addComponent(new BouncinessComponent())
@@ -123,6 +128,31 @@ public record EntityFactoryImpl(World world) implements EntityFactory {
                 BARREL_SCALE,
                 BARREL_FRAME_DURATION,
                 (state) -> new AnimationSettings(0, 0, 4)));
+  }
+
+  @Override
+  public Entity createNetworkBarrel(String id, PositionComponent position, double velocity) {
+    Direction direction = velocity < 0 ? Direction.LEFT : Direction.RIGHT;
+
+    return world
+      .createEntity()
+      .addComponent(new NetworkComponent(id, "BARREL"))
+      .addComponent(position)
+      .addComponent(new VelocityComponent(velocity, 0))
+      .addComponent(new BouncinessComponent())
+      .addComponent(new GravityComponent(GRAVITY))
+      .addComponent(new StateComponent(State.MOVING, direction))
+      .addComponent(new DamageComponent(BARREL_DAMAGE))
+      .addComponent(new CircleCollider(BARREL_COLLISION_RADIUS))
+      .addComponent(
+        new GraphicComponent(
+          "/sprites/barrel.png",
+          BARREL_WIDTH,
+          BARREL_HEIGHT,
+          BARREL_BORDER,
+          BARREL_SCALE,
+          BARREL_FRAME_DURATION,
+          (state) -> new AnimationSettings(0, 0, 4)));
   }
 
   @Override
