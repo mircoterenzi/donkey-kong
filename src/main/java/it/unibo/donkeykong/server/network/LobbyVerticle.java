@@ -85,6 +85,10 @@ public class LobbyVerticle extends AbstractVerticle {
           } else if ("GOAL_REACHED".equals(type) && gameStarted) {
             gameStarted = false;
             broadcastGameOver("GOAL_REACHED", role);
+          } else if ("PLAYER_DIED".equals(type) && gameStarted) {
+            gameStarted = false;
+            String winner = role.equals("HOST") ? "GUEST" : "HOST";
+            broadcastGameOver("PLAYER_DIED", winner);
           }
         });
 

@@ -10,60 +10,69 @@ import it.unibo.donkeykong.ecs.entity.api.Entity;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 
 /** Implementation of the EntityFactory interface responsible for creating various game entities. */
-public record EntityFactoryImpl(World world) implements EntityFactory {
+public record EntityFactoryImpl(World world, String myRole) implements EntityFactory {
+
+  private Entity buildPlayer(
+      String roleId, String roleType, PositionComponent spawnPos, GraphicComponent graphic) {
+    Entity player =
+        world
+            .createEntity()
+            .addComponent(new NetworkComponent(roleId, roleType))
+            .addComponent(spawnPos)
+            .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
+            .addComponent(graphic);
+    if (roleType.equals(this.myRole)) {
+      player
+          .addComponent(new InputComponent())
+          .addComponent(new GravityComponent(GRAVITY))
+          .addComponent(new VelocityComponent(0, 0))
+          .addComponent(new HealthComponent(PLAYER_LIVES))
+          .addComponent(new RectangleCollider(PLAYER_COLLISION_WIDTH, PLAYER_COLLISION_HEIGHT));
+    }
+    return player;
+  }
 
   @Override
   public Entity createFirstPlayer() {
-    return world
-        .createEntity()
-        .addComponent(new NetworkComponent("player-host", "HOST"))
-        .addComponent(FIRST_PLAYER_SPAWN)
-        .addComponent(new InputComponent())
-        .addComponent(new GravityComponent(GRAVITY))
-        .addComponent(new VelocityComponent(0, 0))
-        .addComponent(new HealthComponent(PLAYER_LIVES))
-        .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
-        .addComponent(new RectangleCollider(PLAYER_COLLISION_WIDTH, PLAYER_COLLISION_HEIGHT))
-        .addComponent(
-            new GraphicComponent(
-                "/sprites/mario.png",
-                PLAYER_WIDTH,
-                PLAYER_HEIGHT,
-                PLAYER_BORDER,
-                PLAYER_SCALE,
-                PLAYER_FRAME_DURATION,
-                (state) ->
-                    switch (state) {
-                      case MOVING -> new AnimationSettings(1, 0, 2);
-                      case JUMP, FALL -> new AnimationSettings(3, 0, 1);
-                      case FAST_FALL -> new AnimationSettings(4, 0, 1);
-                      case UP, DOWN -> new AnimationSettings(5, 0, 2);
-                      case STOP_CLIMB -> new AnimationSettings(5, 0, 1);
-                      default -> new AnimationSettings(0, 0, 1);
-                    }));
+    return buildPlayer(
+        "player-host",
+        "HOST",
+        FIRST_PLAYER_SPAWN,
+        new GraphicComponent(
+            "/sprites/mario.png",
+            PLAYER_WIDTH,
+            PLAYER_HEIGHT,
+            PLAYER_BORDER,
+            PLAYER_SCALE,
+            PLAYER_FRAME_DURATION,
+            (state) ->
+                switch (state) {
+                  case MOVING -> new AnimationSettings(1, 0, 2);
+                  case JUMP, FALL -> new AnimationSettings(3, 0, 1);
+                  case FAST_FALL -> new AnimationSettings(4, 0, 1);
+                  case UP, DOWN -> new AnimationSettings(5, 0, 2);
+                  case STOP_CLIMB -> new AnimationSettings(5, 0, 1);
+                  default -> new AnimationSettings(0, 0, 1);
+                }));
   }
 
   @Override
   public Entity createSecondPlayer() {
-    return world
-        .createEntity()
-        .addComponent(new NetworkComponent("player-guest", "GUEST"))
-        .addComponent(SECOND_PLAYER_SPAWN)
-        .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
-        .addComponent(
-            new GraphicComponent(
-                "/sprites/luigi.png",
-                PLAYER_WIDTH,
-                PLAYER_HEIGHT,
-                PLAYER_BORDER,
-                PLAYER_SCALE,
-                PLAYER_FRAME_DURATION,
-                (state) -> {
-                  if (state == State.MOVING) {
-                    return new GraphicComponent.AnimationSettings(1, 0, 2);
-                  }
-                  return new GraphicComponent.AnimationSettings(0, 0, 1);
-                }));
+    return buildPlayer(
+        "player-guest",
+        "GUEST",
+        SECOND_PLAYER_SPAWN,
+        new GraphicComponent(
+            "/sprites/luigi.png",
+            PLAYER_WIDTH,
+            PLAYER_HEIGHT,
+            PLAYER_BORDER,
+            PLAYER_SCALE,
+            PLAYER_FRAME_DURATION,
+            (state) -> {
+              if (state == State.MOVING) return new AnimationSettings(1, 0, 2);
+              return new AnimationSettings(0, 0, 1);
+            }));
   }
 
   @Override
