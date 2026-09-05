@@ -33,6 +33,7 @@ public class DonkeyKongRushUI extends Application {
   private final Vertx vertx = Vertx.vertx();
 
   private String myRole;
+  private AnimationTimer gameLoop;
 
   @Override
   public void start(Stage primaryStage) {
@@ -47,7 +48,7 @@ public class DonkeyKongRushUI extends Application {
             "game.role",
             msg -> {
               this.myRole = msg.body();
-              System.out.println("UI: Ruolo salvato -> " + this.myRole);
+              System.out.println("UI: role saved " + this.myRole);
             });
 
     vertx
@@ -56,6 +57,24 @@ public class DonkeyKongRushUI extends Application {
             "game.start",
             msg -> {
               Platform.runLater(() -> startGame(primaryStage));
+              System.out.println("UI: game started");
+            });
+
+    vertx
+        .eventBus()
+        .<JsonObject>consumer(
+            "game.over",
+            msg -> {
+              Platform.runLater(
+                  () -> {
+                    String winner = msg.body().getString("winner");
+                    String reason = msg.body().getString("reason");
+                    System.out.println("UI: game over, winner: " + winner + ", reason: " + reason);
+                    if (gameLoop != null) {
+                      gameLoop.stop();
+                    }
+                    primaryStage.close();
+                  });
             });
 
     hostButton.setOnAction(
@@ -84,7 +103,7 @@ public class DonkeyKongRushUI extends Application {
   private void startGame(Stage primaryStage) {
     final World world = new WorldImpl();
 
-    final AnimationTimer gameLoop =
+    this.gameLoop =
         new AnimationTimer() {
           private long lastUpdate = 0;
 
@@ -117,9 +136,9 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(
         new WinSystem(
             winner -> {
-              System.out.println("Winner: " + winner);
-              gameLoop.stop();
-              primaryStage.close();
+              JsonObject goalMsg = new JsonObject().put("type", "GOAL_REACHED");
+              vertx.eventBus().send("outbound.messages", goalMsg);
+              System.out.println("UI: Player " + winner + " has reached the goal!");
             }));
     world.addSystem(new PhysicsSystem());
     world.addSystem(new HealthSystem());
