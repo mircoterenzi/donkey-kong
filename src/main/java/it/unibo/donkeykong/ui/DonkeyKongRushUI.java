@@ -39,8 +39,8 @@ public class DonkeyKongRushUI extends Application {
   public void start(Stage primaryStage) {
     primaryStage.setTitle(WINDOW_TITLE);
 
-    Button hostButton = new Button("Host Game");
-    Button joinButton = new Button("Join Game");
+    Button playButton = new Button("Play");
+    Button spectateButton = new Button("Spectate");
 
     vertx
         .eventBus()
@@ -77,19 +77,26 @@ public class DonkeyKongRushUI extends Application {
                   });
             });
 
-    hostButton.setOnAction(
+    playButton.setOnAction(
         e -> {
+          playButton.setDisable(true);
+          spectateButton.setDisable(true);
           vertx
               .deployVerticle(new LobbyVerticle())
-              .onSuccess(id -> vertx.deployVerticle(new ClientVerticle()));
+              .onComplete(
+                  ar -> {
+                    vertx.deployVerticle(new ClientVerticle("/play"));
+                  });
         });
 
-    joinButton.setOnAction(
+    spectateButton.setOnAction(
         e -> {
-          vertx.deployVerticle(new ClientVerticle());
+          playButton.setDisable(true);
+          spectateButton.setDisable(true);
+          vertx.deployVerticle(new ClientVerticle("/spectate"));
         });
 
-    VBox menuRoot = new VBox(20, hostButton, joinButton);
+    VBox menuRoot = new VBox(20, playButton, spectateButton);
     menuRoot.setAlignment(Pos.CENTER);
 
     Scene menuScene = new Scene(menuRoot, 400, 300);
