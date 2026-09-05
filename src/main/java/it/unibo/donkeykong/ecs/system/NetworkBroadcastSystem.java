@@ -67,8 +67,7 @@ public class NetworkBroadcastSystem implements GameSystem {
     StateComponent state = guestPlayer.get().getComponent(StateComponent.class).orElseThrow();
 
     GuestUpdateMessage msg =
-        new GuestUpdateMessage(
-            "player-guest", pos.x(), pos.y(), state.state().name(), state.direction().name());
+        new GuestUpdateMessage(pos.x(), pos.y(), state.state().name(), state.direction().name());
 
     eventBus.send("outbound.messages", JsonObject.mapFrom(msg));
   }

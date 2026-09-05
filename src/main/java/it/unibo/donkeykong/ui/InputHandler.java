@@ -5,6 +5,7 @@ import static it.unibo.donkeykong.ecs.component.InputComponent.VerticalInput.*;
 
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.InputComponent;
+import it.unibo.donkeykong.ecs.component.NetworkComponent;
 import java.util.List;
 import java.util.function.Consumer;
 import javafx.scene.input.KeyCode;
@@ -16,9 +17,11 @@ import javafx.scene.input.KeyCode;
 public class InputHandler {
   private final World world;
   private boolean leftPressed, rightPressed, upPressed, downPressed;
+  private final String myRole;
 
-  public InputHandler(final World world) {
+  public InputHandler(final World world, final String myRole) {
     this.world = world;
+    this.myRole = myRole;
   }
 
   public void handleKeyEvent(final KeyCode keyCode, final boolean isPressed) {
@@ -86,8 +89,12 @@ public class InputHandler {
   }
 
   private void applyToInput(final Consumer<InputComponent> inputLogic) {
-    world
-        .getEntitiesWithComponents(List.of(InputComponent.class))
+    world.getEntitiesWithComponents(List.of(InputComponent.class, NetworkComponent.class)).stream()
+        .filter(
+            e -> {
+              NetworkComponent net = e.getComponent(NetworkComponent.class).orElseThrow();
+              return myRole.equals(net.entityType());
+            })
         .forEach(e -> e.getComponent(InputComponent.class).ifPresent(inputLogic));
   }
 }

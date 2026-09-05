@@ -9,9 +9,15 @@ import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /** HealthSystem manages the health status of entities within the game world. */
 public class HealthSystem implements GameSystem {
+  private final Consumer<Entity> onDeathCallback;
+
+  public HealthSystem(Consumer<Entity> onDeathCallback) {
+    this.onDeathCallback = onDeathCallback;
+  }
 
   @Override
   public void update(World world, float deltaTime) {
@@ -48,6 +54,7 @@ public class HealthSystem implements GameSystem {
                     .ifPresent(position -> entity.updateComponent(RESPAWN_POSITION));
               } else {
                 world.removeEntity(entity);
+                onDeathCallback.accept(entity);
               }
               damagingEntities.forEach(world::removeEntity);
             });
