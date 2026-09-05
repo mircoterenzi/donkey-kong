@@ -3,10 +3,13 @@ package it.unibo.donkeykong.ecs.system;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import it.unibo.donkeykong.core.Constants;
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.NetworkComponent;
 import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.StateComponent;
+import it.unibo.donkeykong.ecs.entity.api.Entity;
+import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -16,10 +19,12 @@ public class StateReceiverSystem implements GameSystem {
   private final ConcurrentLinkedQueue<JsonObject> hostUpdates = new ConcurrentLinkedQueue<>();
   private final ConcurrentLinkedQueue<JsonObject> guestUpdates = new ConcurrentLinkedQueue<>();
 
+  private final EntityFactory entityFactory;
   private final String myRole;
 
-  public StateReceiverSystem(EventBus eventbus, String myRole) {
+  public StateReceiverSystem(EventBus eventbus, String myRole, EntityFactory entityFactory) {
     this.myRole = myRole;
+    this.entityFactory = entityFactory;
 
     eventbus.<JsonObject>consumer("inbound.host_update", msg -> hostUpdates.add(msg.body()));
     eventbus.<JsonObject>consumer("inbound.guest_update", msg -> guestUpdates.add(msg.body()));
@@ -107,10 +112,11 @@ public class StateReceiverSystem implements GameSystem {
         if (existingBarrel.isPresent()) {
           existingBarrel.get().updateComponent(new PositionComponent(barrelX, barrelY));
         } else {
-          // Entity newBarrel = factory.createBarrel(bX, bY);
-          // newBarrel.addComponent(new NetworkComponent(barrelId, "BARREL"));
 
-          System.out.println("Nuovo barile spawnato dall'Host! ID: " + barrelId);
+          double defaultVelocity = barrelX > Constants.WORLD_WIDTH / 2.0 ? -Constants.BARREL_VELOCITY : Constants.BARREL_VELOCITY;
+          entityFactory.createNetworkBarrel(barrelId, new PositionComponent(barrelX, barrelY), defaultVelocity);
+          System.out.println("Created new barrel with ID: " + barrelId +
+            " at position (" + barrelX + ", " + barrelY + ")");
         }
       }
     }
