@@ -121,7 +121,7 @@ public class DonkeyKongRushUI extends Application {
           }
         };
 
-    final EntityFactory entityFactory = new EntityFactoryImpl(world);
+    final EntityFactory entityFactory = new EntityFactoryImpl(world, myRole);
     final MapFactory mapFactory = new MapFactory(entityFactory);
 
     entityFactory.createFirstPlayer();
@@ -133,15 +133,14 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(new MovementSystem());
     world.addSystem(new BoundariesSystem());
     world.addSystem(new CollisionSystem());
-    world.addSystem(
-        new WinSystem(
-            winner -> {
-              JsonObject goalMsg = new JsonObject().put("type", "GOAL_REACHED");
-              vertx.eventBus().send("outbound.messages", goalMsg);
-              System.out.println("UI: Player " + winner + " has reached the goal!");
-            }));
     world.addSystem(new PhysicsSystem());
-    world.addSystem(new HealthSystem());
+    world.addSystem(
+        new HealthSystem(
+            deadEntity -> {
+              JsonObject deathMsg = new JsonObject().put("type", "PLAYER_DIED");
+              vertx.eventBus().send("outbound.messages", deathMsg);
+              System.out.println("UI: Player " + deadEntity.getId() + " has died!");
+            }));
     if ("HOST".equals(myRole)) {
       world.addSystem(new SpawnSystem(entityFactory));
     }
@@ -149,6 +148,13 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(new InputSystem());
     world.addSystem(new GravitySystem());
     world.addSystem(new StateReceiverSystem(vertx.eventBus(), myRole, entityFactory));
+    world.addSystem(
+        new WinSystem(
+            winner -> {
+              JsonObject goalMsg = new JsonObject().put("type", "GOAL_REACHED");
+              vertx.eventBus().send("outbound.messages", goalMsg);
+              System.out.println("UI: Player " + winner + " has reached the goal!");
+            }));
     world.addSystem(new EventDispatchSystem());
     world.addSystem(new NetworkBroadcastSystem(vertx.eventBus(), myRole));
 
@@ -161,7 +167,7 @@ public class DonkeyKongRushUI extends Application {
     final Pane root = new Pane(canvas);
     final Scene scene = new Scene(root, windowWidth, windowHeight);
 
-    final InputHandler inputHandler = new InputHandler(world);
+    final InputHandler inputHandler = new InputHandler(world, myRole);
     scene.setOnKeyPressed(e -> inputHandler.handleKeyEvent(e.getCode(), true));
     scene.setOnKeyReleased(e -> inputHandler.handleKeyEvent(e.getCode(), false));
 
