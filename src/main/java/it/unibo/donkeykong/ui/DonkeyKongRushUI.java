@@ -1,9 +1,8 @@
 package it.unibo.donkeykong.ui;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.net.NetClient;
-import io.vertx.core.net.NetServer;
-import io.vertx.core.parsetools.RecordParser;
+import io.vertx.core.json.JsonObject;
+import it.unibo.donkeykong.client.network.ClientVerticle;
 import it.unibo.donkeykong.core.Constants;
 import it.unibo.donkeykong.core.MapFactory;
 import it.unibo.donkeykong.core.WorldImpl;
@@ -11,8 +10,10 @@ import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.entity.EntityFactoryImpl;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.*;
+import it.unibo.donkeykong.server.network.LobbyVerticle;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
@@ -31,6 +32,8 @@ public class DonkeyKongRushUI extends Application {
   public static final String WINDOW_TITLE = "Donkey Kong: Rush";
   private final Vertx vertx = Vertx.vertx();
 
+  private String myRole;
+
   @Override
   public void start(Stage primaryStage) {
     primaryStage.setTitle(WINDOW_TITLE);
@@ -38,17 +41,33 @@ public class DonkeyKongRushUI extends Application {
     Button hostButton = new Button("Host Game");
     Button joinButton = new Button("Join Game");
 
+    vertx
+        .eventBus()
+        .<String>consumer(
+            "game.role",
+            msg -> {
+              this.myRole = msg.body();
+              System.out.println("UI: Ruolo salvato -> " + this.myRole);
+            });
+
+    vertx
+        .eventBus()
+        .<JsonObject>consumer(
+            "game.start",
+            msg -> {
+              Platform.runLater(() -> startGame(primaryStage));
+            });
+
     hostButton.setOnAction(
         e -> {
-          startServer();
-          startClient("HOST group");
-          // startGame(primaryStage); TODO: remove comment
+          vertx
+              .deployVerticle(new LobbyVerticle())
+              .onSuccess(id -> vertx.deployVerticle(new ClientVerticle()));
         });
 
     joinButton.setOnAction(
         e -> {
-          startClient("JOIN group");
-          // startGame(primaryStage);
+          vertx.deployVerticle(new ClientVerticle());
         });
 
     VBox menuRoot = new VBox(20, hostButton, joinButton);
@@ -60,38 +79,6 @@ public class DonkeyKongRushUI extends Application {
     primaryStage.show();
     primaryStage.toFront();
     primaryStage.requestFocus();
-  }
-
-  private void startServer() {
-    NetServer server = vertx.createNetServer();
-    server.connectHandler(
-        socket -> {
-          System.out.println("Client connected: " + socket.remoteAddress());
-          RecordParser parser = RecordParser.newDelimited("\n", socket);
-          parser.handler(
-              buffer -> System.out.println("Server received: " + buffer.toString().trim()));
-        });
-    server.listen(
-        1234,
-        "localhost",
-        res -> {
-          if (res.succeeded()) System.out.println("Server listening on 1234");
-        });
-  }
-
-  private void startClient(String initialCommand) {
-    NetClient client = vertx.createNetClient();
-    client.connect(
-        1234,
-        "localhost",
-        res -> {
-          if (res.succeeded()) {
-            System.out.println("Client connected.");
-            res.result().write(initialCommand + "\n");
-            RecordParser parser = RecordParser.newDelimited("\n", res.result());
-            parser.handler(buffer -> System.out.println("Client received: " + buffer.toString()));
-          }
-        });
   }
 
   private void startGame(Stage primaryStage) {
@@ -115,7 +102,6 @@ public class DonkeyKongRushUI extends Application {
           }
         };
 
-    // TODO: entity generation here? Not so sure, in dedicated controller class for mvc
     final EntityFactory entityFactory = new EntityFactoryImpl(world);
     final MapFactory mapFactory = new MapFactory(entityFactory);
 
@@ -131,18 +117,21 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(
         new WinSystem(
             winner -> {
-              System.out.println(
-                  "Vittoria! Il giocatore con ID " + winner.getId() + " ha salvato Pauline.");
+              System.out.println("Winner: " + winner);
               gameLoop.stop();
               primaryStage.close();
             }));
     world.addSystem(new PhysicsSystem());
     world.addSystem(new HealthSystem());
-    world.addSystem(new SpawnSystem(entityFactory));
+    if ("HOST".equals(myRole)) {
+      world.addSystem(new SpawnSystem(entityFactory));
+    }
     world.addSystem(new ClimbingSystem());
     world.addSystem(new InputSystem());
     world.addSystem(new GravitySystem());
+    world.addSystem(new StateReceiverSystem(vertx.eventBus(), myRole, entityFactory));
     world.addSystem(new EventDispatchSystem());
+    world.addSystem(new NetworkBroadcastSystem(vertx.eventBus(), myRole));
 
     final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
     final Rectangle2D screen = Screen.getPrimary().getVisualBounds();
@@ -154,7 +143,6 @@ public class DonkeyKongRushUI extends Application {
     final Scene scene = new Scene(root, windowWidth, windowHeight);
 
     final InputHandler inputHandler = new InputHandler(world);
-    // TODO: move input handling where game main scene is created
     scene.setOnKeyPressed(e -> inputHandler.handleKeyEvent(e.getCode(), true));
     scene.setOnKeyReleased(e -> inputHandler.handleKeyEvent(e.getCode(), false));
 
