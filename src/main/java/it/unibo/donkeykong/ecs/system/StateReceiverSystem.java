@@ -8,7 +8,6 @@ import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.NetworkComponent;
 import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.StateComponent;
-import it.unibo.donkeykong.ecs.entity.api.Entity;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.List;
@@ -113,10 +112,20 @@ public class StateReceiverSystem implements GameSystem {
           existingBarrel.get().updateComponent(new PositionComponent(barrelX, barrelY));
         } else {
 
-          double defaultVelocity = barrelX > Constants.WORLD_WIDTH / 2.0 ? -Constants.BARREL_VELOCITY : Constants.BARREL_VELOCITY;
-          entityFactory.createNetworkBarrel(barrelId, new PositionComponent(barrelX, barrelY), defaultVelocity);
-          System.out.println("Created new barrel with ID: " + barrelId +
-            " at position (" + barrelX + ", " + barrelY + ")");
+          double defaultVelocity =
+              barrelX > Constants.WORLD_WIDTH / 2.0
+                  ? -Constants.BARREL_VELOCITY
+                  : Constants.BARREL_VELOCITY;
+          entityFactory.createNetworkBarrel(
+              barrelId, new PositionComponent(barrelX, barrelY), defaultVelocity);
+          System.out.println(
+              "Created new barrel with ID: "
+                  + barrelId
+                  + " at position ("
+                  + barrelX
+                  + ", "
+                  + barrelY
+                  + ")");
         }
       }
     }
