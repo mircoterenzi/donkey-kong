@@ -130,10 +130,17 @@ public class DonkeyKongRushUI extends Application {
     entityFactory.createPauline();
     mapFactory.generateMap();
 
+    world.addSystem(new StateReceiverSystem(vertx.eventBus(), myRole, entityFactory));
+    world.addSystem(new InputSystem());
+    if ("HOST".equals(myRole)) {
+      world.addSystem(new SpawnSystem(entityFactory));
+    }
+    world.addSystem(new ClimbingSystem());
+    world.addSystem(new GravitySystem());
     world.addSystem(new MovementSystem());
     world.addSystem(new BoundariesSystem());
-    world.addSystem(new CollisionSystem());
     world.addSystem(new PhysicsSystem());
+    world.addSystem(new CollisionSystem());
     world.addSystem(
         new HealthSystem(
             deadEntity -> {
@@ -141,13 +148,6 @@ public class DonkeyKongRushUI extends Application {
               vertx.eventBus().send("outbound.messages", deathMsg);
               System.out.println("UI: Player " + deadEntity.getId() + " has died!");
             }));
-    if ("HOST".equals(myRole)) {
-      world.addSystem(new SpawnSystem(entityFactory));
-    }
-    world.addSystem(new ClimbingSystem());
-    world.addSystem(new InputSystem());
-    world.addSystem(new GravitySystem());
-    world.addSystem(new StateReceiverSystem(vertx.eventBus(), myRole, entityFactory));
     world.addSystem(
         new WinSystem(
             winner -> {
@@ -155,6 +155,7 @@ public class DonkeyKongRushUI extends Application {
               vertx.eventBus().send("outbound.messages", goalMsg);
               System.out.println("UI: Player " + winner + " has reached the goal!");
             }));
+
     world.addSystem(new EventDispatchSystem());
     world.addSystem(new NetworkBroadcastSystem(vertx.eventBus(), myRole));
 
