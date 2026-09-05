@@ -19,6 +19,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
@@ -30,18 +31,31 @@ public class DonkeyKongRushUI extends Application {
   private static final long TARGET_FPS_NANO = 1_000_000_000L / 60;
 
   public static final String WINDOW_TITLE = "Donkey Kong: Rush";
+
   private final Vertx vertx = Vertx.vertx();
 
   private String myRole;
   private AnimationTimer gameLoop;
 
+  private String lobbyDeploymentId;
+  private String clientDeploymentId;
+  private boolean isEventBusSetup = false;
+
   @Override
   public void start(Stage primaryStage) {
     primaryStage.setTitle(WINDOW_TITLE);
 
-    Button playButton = new Button("Play");
-    Button spectateButton = new Button("Spectate");
+    primaryStage.setOnCloseRequest(e -> shutdownApp());
 
+    if (!isEventBusSetup) {
+      setupNetworkListeners(primaryStage);
+      isEventBusSetup = true;
+    }
+
+    showMainMenu(primaryStage);
+  }
+
+  private void setupNetworkListeners(Stage primaryStage) {
     vertx
         .eventBus()
         .<String>consumer(
@@ -64,18 +78,27 @@ public class DonkeyKongRushUI extends Application {
         .eventBus()
         .<JsonObject>consumer(
             "game.over",
-            msg -> {
-              Platform.runLater(
-                  () -> {
-                    String winner = msg.body().getString("winner");
-                    String reason = msg.body().getString("reason");
-                    System.out.println("UI: game over, winner: " + winner + ", reason: " + reason);
-                    if (gameLoop != null) {
-                      gameLoop.stop();
-                    }
-                    primaryStage.close();
-                  });
-            });
+            msg -> Platform.runLater(
+                () -> {
+                  String winner = msg.body().getString("winner");
+                  String reason = msg.body().getString("reason");
+                  System.out.println("UI: game over, winner: " + winner + ", reason: " + reason);
+                  if (gameLoop != null) {
+                    gameLoop.stop();
+                  }
+                  if (clientDeploymentId != null) vertx.undeploy(clientDeploymentId);
+                  if (lobbyDeploymentId != null) vertx.undeploy(lobbyDeploymentId);
+
+                  clientDeploymentId = null;
+                  lobbyDeploymentId = null;
+
+                  showGameOverScreen(primaryStage, winner);
+                }));
+  }
+
+  private void showMainMenu(Stage primaryStage) {
+    Button playButton = new Button("Play");
+    Button spectateButton = new Button("Spectate");
 
     playButton.setOnAction(
         e -> {
@@ -85,7 +108,14 @@ public class DonkeyKongRushUI extends Application {
               .deployVerticle(new LobbyVerticle())
               .onComplete(
                   ar -> {
-                    vertx.deployVerticle(new ClientVerticle("/play"));
+                    if (ar.succeeded()) lobbyDeploymentId = ar.result();
+
+                    vertx
+                        .deployVerticle(new ClientVerticle("/play"))
+                        .onComplete(
+                            ar2 -> {
+                              if (ar2.succeeded()) clientDeploymentId = ar2.result();
+                            });
                   });
         });
 
@@ -93,7 +123,12 @@ public class DonkeyKongRushUI extends Application {
         e -> {
           playButton.setDisable(true);
           spectateButton.setDisable(true);
-          vertx.deployVerticle(new ClientVerticle("/spectate"));
+          vertx
+              .deployVerticle(new ClientVerticle("/spectate"))
+              .onComplete(
+                  ar -> {
+                    if (ar.succeeded()) clientDeploymentId = ar.result();
+                  });
         });
 
     VBox menuRoot = new VBox(20, playButton, spectateButton);
@@ -103,8 +138,52 @@ public class DonkeyKongRushUI extends Application {
     primaryStage.setScene(menuScene);
     primaryStage.setResizable(false);
     primaryStage.show();
-    primaryStage.toFront();
-    primaryStage.requestFocus();
+    primaryStage.centerOnScreen();
+  }
+
+  private void showGameOverScreen(Stage primaryStage, String winner) {
+    String resultText;
+    if ("SPECTATOR".equals(myRole)) {
+      resultText = "Game over, winner: " + winner;
+    } else if (winner.equals(myRole)) {
+      resultText = "You win!";
+    } else {
+      resultText = "You lost!";
+    }
+
+    VBox root = getRoot(primaryStage, resultText);
+
+    Scene gameOverScene = new Scene(root, 400, 300);
+    primaryStage.setScene(gameOverScene);
+    primaryStage.centerOnScreen();
+  }
+
+  private VBox getRoot(Stage primaryStage, String resultText) {
+    Label titleLabel = new Label(resultText);
+    titleLabel.setStyle("-fx-font-size: 32px; -fx-font-weight: bold;");
+
+    Button lobbyButton = new Button("Back to Lobby");
+    lobbyButton.setOnAction(e -> showMainMenu(primaryStage));
+
+    Button exitButton = new Button("Exit Game");
+    exitButton.setOnAction(e -> shutdownApp());
+
+    VBox root = new VBox(20, titleLabel, lobbyButton, exitButton);
+    root.setAlignment(Pos.CENTER);
+    return root;
+  }
+
+  private void shutdownApp() {
+    if (gameLoop != null) {
+      gameLoop.stop();
+    }
+    vertx
+        .close()
+        .onComplete(
+            v -> {
+              Platform.exit();
+              System.exit(0);
+            });
   }
 
   private void startGame(Stage primaryStage) {
@@ -137,17 +216,10 @@ public class DonkeyKongRushUI extends Application {
     entityFactory.createPauline();
     mapFactory.generateMap();
 
-    world.addSystem(new StateReceiverSystem(vertx.eventBus(), myRole, entityFactory));
-    world.addSystem(new InputSystem());
-    if ("HOST".equals(myRole)) {
-      world.addSystem(new SpawnSystem(entityFactory));
-    }
-    world.addSystem(new ClimbingSystem());
-    world.addSystem(new GravitySystem());
     world.addSystem(new MovementSystem());
     world.addSystem(new BoundariesSystem());
-    world.addSystem(new PhysicsSystem());
     world.addSystem(new CollisionSystem());
+    world.addSystem(new PhysicsSystem());
     world.addSystem(
         new HealthSystem(
             deadEntity -> {
@@ -155,6 +227,13 @@ public class DonkeyKongRushUI extends Application {
               vertx.eventBus().send("outbound.messages", deathMsg);
               System.out.println("UI: Player " + deadEntity.getId() + " has died!");
             }));
+    if ("HOST".equals(myRole)) {
+      world.addSystem(new SpawnSystem(entityFactory));
+    }
+    world.addSystem(new ClimbingSystem());
+    world.addSystem(new InputSystem());
+    world.addSystem(new GravitySystem());
+    world.addSystem(new StateReceiverSystem(vertx.eventBus(), myRole, entityFactory));
     world.addSystem(
         new WinSystem(
             winner -> {
@@ -162,7 +241,6 @@ public class DonkeyKongRushUI extends Application {
               vertx.eventBus().send("outbound.messages", goalMsg);
               System.out.println("UI: Player " + winner + " has reached the goal!");
             }));
-
     world.addSystem(new EventDispatchSystem());
     world.addSystem(new NetworkBroadcastSystem(vertx.eventBus(), myRole));
 
