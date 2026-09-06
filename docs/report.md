@@ -4,7 +4,7 @@ title: Report
 nav_order: 2
 ---
 
-# Donkey Kong Rush
+# Donkey Kong: Rush
 
 - [Foschi Giacomo](mailto:giacomo.foschi3@studio.unibo.it)
 - [Terenzi Mirco](mailto:mirco.terenzi@studio.unibo.it)
@@ -16,32 +16,47 @@ check the grammar of this report. Moreover, Copilot has been used as a review to
 After using this tool/service, the authors reviewed and edited the content as needed and take(s) full responsibility
 for the content of the final report/artifact.
 
-## Abstract @TODO
+## Abstract
 
-Brief description of the project, its goals, and its achievements.
+This report presents the "Donkey Kong: Rush" project, realized for the "Distributed System" course at the University of
+Bologna. The project involves the development of a 2D multiplayer platform video game inspired by the
+classic [Donkey Kong](https://en.wikipedia.org/wiki/Donkey_Kong_(1981_video_game)). The system is designed around an
+Entity-Component-System (ECS) architecture written in Java, utilizing JavaFX for rendering. The main focus of the
+project is the implementation of smooth multiplayer gameplay. The solution combines the Host's authority over the
+deterministic environment with a reactive handling of local inputs, guaranteeing an experience free of blocking lag for
+the players.
 
-## Concept
+## 1. Concept
 
-Distributed Donkey Kong is a real-time multiplayer game in which two players compete against each other to complete
-a platforming level, drawing inspiration from the classic arcade
-game [Donkey Kong (1981)](https://en.wikipedia.org/wiki/Donkey_Kong_(1981_video_game)). The developed product is a
-desktop application that enables users to connect online and play against each other in real time. Players race to reach
-the top of the level while avoiding obstacles, and the first player to do so is declared the winner.
+"Donkey Kong: Rush" is a desktop application featuring a graphical user interface (GUI). Specifically, it is a 2D
+multiplayer platform video game, which takes inspiration from the
+original [Donkey Kong](https://en.wikipedia.org/wiki/Donkey_Kong_(1981_video_game)) arcade game.
 
-### Use case collection
+### Use case description
 
-Users are geographically distributed and connect via a personal computer (PC, Mac or Linux). They interact with the
-system via the GUI during setup or keyboard controls during the game. A game session is expected to last under two
-minutes, during which time there will be continuous, high-frequency interaction as users send input commands to control
-their characters in real time.
+The software provides a competitive multiplayer platforming experience. Users are located on separate desktop machines
+connected over the same local area network. Thus, distribution is a fundamental requirement for this project to enable a
+seamless multiplayer experience, as it allows players on physically separate machines across a network to connect,
+interact, and share the same virtual space.
 
-As the game does not require any persistent data, only temporary data for the duration of the match, the system does not
-need to store any user data on a server or database. However, a large amount of data will be exchanged between players
-during a game session, including information on player positions, updates on the game state, and input commands.
+Interaction is continuous and in real-time during an active game session. The system captures inputs and exchanges state
+updates across the network multiple times per second to maintain synchronization.
 
-The system will comprise three main roles: host, client and spectator. The host is the player who creates the game
-session, while the client is the player who joins it. Spectators are users who can watch the game session without
-participating.
+Players interact with the system via the GUI during setup or keyboard controls during the game. The game controls
+consist of standard keybindings for movement (left/right, climbing ladders) and jumping.
+
+The system does not require persistent, long-term data storage. All necessary data represents the state of the ongoing
+match (such as player and barrel coordinates) and is kept strictly in RAM.
+
+The game relies on multiple user roles:
+
+- **Host (Player)**: Actively plays the game, processes their own local input, and acts as the local server. It
+  possesses authority over the game environment (e.g., generating barrels) and broadcasts the world state to all
+  connected clients.
+- **Guest (Player)**: Actively plays the game by processing their own input locally while simultaneously receiving
+  continuous updates from the Host regarding the rest of the world state.
+- **Spectator**: A purely passive role that does not generate game input, but solely receives updates from the players
+  to feed its local rendering system, allowing another user to watch the match in real-time.
 
 ## Requirements
 
