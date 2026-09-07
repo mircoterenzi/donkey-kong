@@ -10,13 +10,16 @@ import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.StateComponent;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.api.GameSystem;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class StateReceiverSystem implements GameSystem {
 
   private final ConcurrentLinkedQueue<JsonObject> hostUpdates = new ConcurrentLinkedQueue<>();
   private final ConcurrentLinkedQueue<JsonObject> guestUpdates = new ConcurrentLinkedQueue<>();
+  private final ConcurrentLinkedQueue<String> destroyedEntities = new ConcurrentLinkedQueue<>();
 
   private final EntityFactory entityFactory;
   private final String myRole;
@@ -27,10 +30,23 @@ public class StateReceiverSystem implements GameSystem {
 
     eventbus.<JsonObject>consumer("inbound.host_update", msg -> hostUpdates.add(msg.body()));
     eventbus.<JsonObject>consumer("inbound.guest_update", msg -> guestUpdates.add(msg.body()));
+    eventbus.<JsonObject>consumer(
+        "inbound.entity_destroyed", msg -> destroyedEntities.add(msg.body().getString("id")));
   }
 
   @Override
   public void update(World world, float deltaTime) {
+    while (!destroyedEntities.isEmpty()) {
+      String idToDestroy = destroyedEntities.poll();
+      world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
+          .filter(
+              e -> {
+                NetworkComponent net = e.getComponent(NetworkComponent.class).orElseThrow();
+                return idToDestroy.equals(net.networkId());
+              })
+          .forEach(world::removeEntity);
+    }
+
     if ("GUEST".equals(myRole) || "SPECTATOR".equals(myRole)) {
       while (!hostUpdates.isEmpty()) {
         JsonObject update = hostUpdates.poll();
@@ -92,10 +108,13 @@ public class StateReceiverSystem implements GameSystem {
             });
 
     JsonArray barrels = update.getJsonArray("barrels");
+    Set<String> activeBarrelIds = new HashSet<>();
+
     if (barrels != null) {
       for (int i = 0; i < barrels.size(); i++) {
         JsonObject barrel = barrels.getJsonObject(i);
         String barrelId = barrel.getString("id");
+        activeBarrelIds.add(barrelId);
         double barrelX = barrel.getDouble("x");
         double barrelY = barrel.getDouble("y");
 
@@ -128,6 +147,17 @@ public class StateReceiverSystem implements GameSystem {
                   + ")");
         }
       }
+    }
+
+    if ("GUEST".equals(myRole) || "SPECTATOR".equals(myRole)) {
+      world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
+          .filter(
+              e -> {
+                NetworkComponent net = e.getComponent(NetworkComponent.class).orElseThrow();
+                return "BARREL".equals(net.entityType())
+                    && !activeBarrelIds.contains(net.networkId());
+              })
+          .forEach(world::removeEntity);
     }
   }
 }

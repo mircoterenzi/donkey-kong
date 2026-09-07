@@ -24,7 +24,7 @@ public class HealthSystemTest {
   @BeforeEach
   void setUp() {
     world = new WorldImpl();
-    world.addSystem(new HealthSystem(deadEntity -> {}));
+    world.addSystem(new HealthSystem(deadEntity -> {}, destroyedEntity -> {}));
   }
 
   private HealthComponent getHealthComponent(Entity entity) {

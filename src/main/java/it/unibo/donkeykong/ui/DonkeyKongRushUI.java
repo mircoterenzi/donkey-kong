@@ -7,6 +7,7 @@ import it.unibo.donkeykong.core.Constants;
 import it.unibo.donkeykong.core.MapFactory;
 import it.unibo.donkeykong.core.WorldImpl;
 import it.unibo.donkeykong.core.api.World;
+import it.unibo.donkeykong.ecs.component.NetworkComponent;
 import it.unibo.donkeykong.ecs.entity.EntityFactoryImpl;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.*;
@@ -228,6 +229,18 @@ public class DonkeyKongRushUI extends Application {
               JsonObject deathMsg = new JsonObject().put("type", "PLAYER_DIED");
               vertx.eventBus().send("outbound.messages", deathMsg);
               System.out.println("UI: Player " + deadEntity.getId() + " has died!");
+            },
+            destroyedEntity -> {
+              destroyedEntity
+                  .getComponent(NetworkComponent.class)
+                  .ifPresent(
+                      net -> {
+                        JsonObject msg =
+                            new JsonObject()
+                                .put("type", "ENTITY_DESTROYED")
+                                .put("id", net.networkId());
+                        vertx.eventBus().send("outbound.messages", msg);
+                      });
             }));
     if ("HOST".equals(myRole)) {
       world.addSystem(new SpawnSystem(entityFactory));
