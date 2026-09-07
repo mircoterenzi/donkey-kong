@@ -32,7 +32,7 @@ the players.
 multiplayer platform video game, which takes inspiration from the
 original [Donkey Kong](https://en.wikipedia.org/wiki/Donkey_Kong_(1981_video_game)) arcade game.
 
-### Use case description
+### 1.1 Use case description
 
 The software provides a competitive multiplayer platforming experience. Users are located on separate desktop machines
 connected over the same local area network. Thus, distribution is a fundamental requirement for this project to enable a
@@ -58,34 +58,78 @@ The game relies on multiple user roles:
 - **Spectator**: A purely passive role that does not generate game input, but solely receives updates from the players
   to feed its local rendering system, allowing another user to watch the match in real-time.
 
-## Requirements
+### 2. Requirements Elicitation and Analysis
 
-### Glossary
+##### Glossary
 
-| Term   | Definition                                                                                          |
-|:-------|:----------------------------------------------------------------------------------------------------|
-| Barrel | A dynamic obstacle that deals damage when a player comes into contact with it.                      |
-| Ladder | A climbable object in the game level that enables players to move vertically regardless of gravity. |
+| Term          | Definition                                                                                                                                                                    |
+|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Host**      | A player who actively plays the game, processes local input, acts as the authoritative entity for game-world generation (e.g., barrels), and broadcasts the state to clients. |
+| **Guest**     | A player who actively plays the game, processes local input, and receives continuous world state updates from the Host.                                                       |
+| **Spectator** | A passive user who does not generate input but receives real-time updates to render and watch the match.                                                                      |
+| **Lobby**     | The pre-game networking state where users connect and are assigned their respective roles (Host, Guest, or Spectator) before the match begins.                                |
+| **Entity**    | Any distinct object in the game world.                                                                                                                                        |
+| **Barrel**    | A dynamic entity that deals damage when a player comes into contact with it.                                                                                                  |
+| **Ladder**    | A climbable entity in the game level that enables players to move vertically regardless of gravity.                                                                           |
 
-### Functional requirements
+##### Functional Requirements
 
-| ID  | Requirement                                                                                                                                                    | Acceptance criteria                                                                                                                                                                                                                              |
-|:----|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| FR1 | The system must enable users to start a multiplayer session either by hosting or by connecting to an active game via a network address.                        | A player successfully connects to the host's IP address and the game starts for both users.                                                                                                                                                      |
-| FR2 | The system must enable real-time, simultaneous control of two competing players (e.g., horizontal movement, jumping and climbing ladders).                     | Both players can move and jump independently and climb the same ladder simultaneously without colliding.                                                                                                                                         |
-| FR3 | The system must allow additional users to join an active session as spectators, providing them with a view, but preventing any interactive input.              | A spectator can view the game in real-time but cannot send any movement or action commands to the host.                                                                                                                                          |
-| FR4 | As long as the host remains online, the system must allow a disconnected player to attempt to rejoin the active session.                                       | If the player disconnects and immediately reconnects, they are placed back into the game in the place where he left.                                                                                                                             |
-| FR5 | The system must spawn and manage barrels, determining if a player contacts a barrel registering a lost life. If a player loses all lives, they are eliminated. | Barrels spawn at the top, roll down ladders, fall from platforms, and cause damage when colliding with a player. Upon collision with a barrel, the player's life count is reduced, and they are prevented from moving if their lives reach zero. |
-| FR6 | The system must track each player's progress, announce the winner when they complete a level, notify all connected users of the outcome, and end the session.  | When a player reaches the goal, the host broadcasts the final result, and the application returns all users to the main menu.                                                                                                                    |
-| FR7 | The system must apply the same gravity model consistently to all players and dynamic entities, except when climbing ladders.                                   | A player walking off a platform will consistently fall until they land on another surface.                                                                                                                                                       |
+| Description                                                                                                                                     | Acceptance Criterion                                                                                                                              |
+|-------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| The system must allow users to join a lobby and automatically assign them a role (Host, Guest, or Spectator) based on join order or preference. | A user successfully connects to the server and receives a distinct role assignment (Host, Guest, or Spectator) before the game starts.            |
+| The system must allow active players to move horizontally (left/right), jump, and climb ladders.                                                | Pressing the designated keys updates the player's position appropriately on the screen according to game physics (gravity, collision).            |
+| The system must synchronize the game state (entities positions, and lives) between all connected clients in real time.                          | When the Host moves or a barrel spawns, the Guest and Spectators see the updated positions on their screens without noticeable desynchronization. |
+| The system must detect collisions between players and damaging entities (e.g., barrels), deducting a life upon impact.                          | When a player's character intersects with a barrel, the player's life count decreases by 1, and the character respawns at the starting position.  |
+| The system must declare a winner if a player reaches the goal (Pauline) or declare a loser if a player's lives reach zero.                      | The game transitions to a "Game Over" screen displaying the correct winner or loser when the goal is touched or 3 lives are lost.                 ||
 
-### Non-functional requirements
+##### Non-Functional Requirements
 
-| ID   | Requirement                                                                                                                                           | Acceptance criteria                                                                                                                        |
-|:-----|:------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------|
-| NFR1 | The system must minimize the visual delay (input lag) between a player pressing a control key and the character beginning the action on their screen. | The visual delay between pressing a control key and the start of the character's movement must be below 50ms.                              |
-| NFR2 | The system must enforce state consistency across all players, ensuring that the Host resolves and prevents critical discrepancies.                    | In a test scenario where network delay causes conflicting results, the host's determination of the winner is accepted by the other player. |
-| NFR3 | The application must maintain a consistent and fully functional game experience regardless of the host operating system (Windows, macOS, or Linux).   | The game successfully builds and runs on all three target operating systems.                                                               |
+These requirements define the behavioral aspects and quality attributes of the system.
+
+| Description                                                                                  | Acceptance Criterion                                                                                                                                                                                                                                                                      |
+|----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| The game must update and render at a consistent frame rate to ensure smooth gameplay.        | The local game loop executes consistently at the target of 60 Frames-Per-Second (FPS).                                                                                                                                                                                                    |
+| State updates must be transmitted rapidly to prevent visual stuttering or unfair advantages. | State update payloads are serialized, transmitted over the local network, and deserialized by the receiving client in under 33 milliseconds (roughly 2 frames).                                                                                                                           |
+| The system must ensure automatic recovery from disconnections for non-Host users.            | If a Guest or Spectator loses their network connection and subsequently reconnects to the server while the match is still active, the system automatically restores their role and resumes sending them real-time game state updates without requiring a full lobby reset.                |
+| Code must be modular and documented to make extensions and changes easy.                     | Modularity is enforced by strictly decoupling data structures from execution logic, avoiding deep and rigid inheritance trees. Maintainability is verified by the presence of comprehensive Javadoc comments on all core API interfaces, ensuring new features can be integrated rapidly. |
+
+### 2.1 Relevant Distributed System Features
+
+* **Performance, concurrency, and communication efficiency:** Real-time games require extremely strict throughput and
+  response times. The system must process player inputs, update physics, and broadcast network messages concurrently
+  without blocking the main application thread. High communication efficiency is paramount to ensure state updates are
+  delivered within the 33ms latency threshold to maintain a fair 60 FPS gameplay experience.
+
+* **Evolvability and maintainability:** To ensure long-term maintainability and ease of updates, the system's
+  architecture must strictly decouple game state data from execution logic. The design must allow new game mechanics or
+  virtual objects to be added modularly, actively avoiding rigid, monolithic class hierarchies.
+
+* **Fault tolerance, dependability, and availability:** While data integrity for long-term storage is irrelevant since
+  all match state is kept in volatile memory, the system must gracefully handle network faults. If a player's connection
+  drops, the central server must detect the failure and immediately broadcast a game-over message, resetting the lobby
+  to prevent deadlocks and ensure continued availability for future matches.
+
+* **Resource sharing:** The active game world acts as a synchronized shared resource. The Host is responsible for
+  managing authoritative game mechanics and synchronizing this shared state with the Guest and Spectators via continuous
+  network message broadcasts.
+
+* **Transparency:** The system provides basic *location transparency*; clients seamlessly connect to the lobby without
+  needing to know the physical network topology of the other players. However, *failure transparency* is intentionally
+  absent; if a connection drops, the failure is explicitly exposed to the remaining users via the game over UI.
+
+* **Scalability:** The game is explicitly bounded to a small, finite number of simultaneous connections (one Host, one
+  Guest, and passive Spectators) on a local area network. It is not expected to scale horizontally to thousands of users
+  or handle massive data growth over time.
+
+* **Security and trust:** As a local LAN game without persistent user accounts or sensitive data storage, there is no
+  need for cryptographic schemes, data encryption, or complex authentication mechanisms.
+
+* **Openness and interoperability:** The project is a closed ecosystem. While it utilizes standardized text formats for
+  message passing, it is not required to interact with external third-party systems or heterogeneous technological
+  components.
+
+* **Economy and costs:** Developed as an academic project running on local hardware, there are no cloud deployment
+  budgets, operational costs, or strict economic constraints driving the architecture.
 
 ## Design
 
