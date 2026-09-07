@@ -14,9 +14,11 @@ import java.util.function.Consumer;
 /** HealthSystem manages the health status of entities within the game world. */
 public class HealthSystem implements GameSystem {
   private final Consumer<Entity> onDeathCallback;
+  private final Consumer<Entity> onEntityDestoyed;
 
-  public HealthSystem(Consumer<Entity> onDeathCallback) {
+  public HealthSystem(Consumer<Entity> onDeathCallback, Consumer<Entity> onEntityDestoyed) {
     this.onDeathCallback = onDeathCallback;
+    this.onEntityDestoyed = onEntityDestoyed;
   }
 
   @Override
@@ -56,7 +58,11 @@ public class HealthSystem implements GameSystem {
                 world.removeEntity(entity);
                 onDeathCallback.accept(entity);
               }
-              damagingEntities.forEach(world::removeEntity);
+              damagingEntities.forEach(
+                  e -> {
+                    onEntityDestoyed.accept(e);
+                    world.removeEntity(e);
+                  });
             });
   }
 }

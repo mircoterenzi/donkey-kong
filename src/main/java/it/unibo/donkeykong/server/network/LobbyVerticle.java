@@ -99,6 +99,13 @@ public class LobbyVerticle extends AbstractVerticle {
             gameStarted = false;
             String winner = role.equals("HOST") ? "GUEST" : "HOST";
             broadcastGameOver("PLAYER_DIED", winner);
+          } else if ("ENTITY_DESTROYED".equals(type) && gameStarted) {
+            if ("HOST".equals(role) && guestSocket != null) {
+              guestSocket.writeTextMessage(text);
+            } else if ("GUEST".equals(role) && hostSocket != null) {
+              hostSocket.writeTextMessage(text);
+            }
+            broadcastToSpectators(text);
           }
         });
 

@@ -89,6 +89,10 @@ public class ClientVerticle extends AbstractVerticle {
         System.out.println("Game Over! Winner: " + winner + " | Reason: " + reason);
         vertx.eventBus().publish("game.over", message);
       }
+      case "ENTITY_DESTROYED" -> {
+        vertx.eventBus().publish("inbound.entity_destroyed", message);
+        System.out.println("Entity destroyed: " + message.encode());
+      }
       default -> System.out.println("Impossible to handle message of type: " + type);
     }
   }
