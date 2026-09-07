@@ -3,6 +3,7 @@ package it.unibo.donkeykong.ecs.system;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import it.unibo.donkeykong.core.api.World;
+import it.unibo.donkeykong.ecs.component.HealthComponent;
 import it.unibo.donkeykong.ecs.component.NetworkComponent;
 import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.StateComponent;
@@ -39,6 +40,7 @@ public class NetworkBroadcastSystem implements GameSystem {
 
     PositionComponent pos = hostPlayer.get().getComponent(PositionComponent.class).orElseThrow();
     StateComponent state = hostPlayer.get().getComponent(StateComponent.class).orElseThrow();
+    int lives = hostPlayer.get().getComponent(HealthComponent.class).orElseThrow().livesCount();
 
     List<BarrelData> barrelDataList = new ArrayList<>();
     world
@@ -54,7 +56,12 @@ public class NetworkBroadcastSystem implements GameSystem {
 
     HostUpdateMessage msg =
         new HostUpdateMessage(
-            pos.x(), pos.y(), state.state().name(), state.direction().name(), barrelDataList);
+            pos.x(),
+            pos.y(),
+            state.state().name(),
+            state.direction().name(),
+            lives,
+            barrelDataList);
 
     eventBus.send("outbound.messages", JsonObject.mapFrom(msg));
   }
@@ -65,9 +72,11 @@ public class NetworkBroadcastSystem implements GameSystem {
 
     PositionComponent pos = guestPlayer.get().getComponent(PositionComponent.class).orElseThrow();
     StateComponent state = guestPlayer.get().getComponent(StateComponent.class).orElseThrow();
+    int lives = guestPlayer.get().getComponent(HealthComponent.class).orElseThrow().livesCount();
 
     GuestUpdateMessage msg =
-        new GuestUpdateMessage(pos.x(), pos.y(), state.state().name(), state.direction().name());
+        new GuestUpdateMessage(
+            pos.x(), pos.y(), state.state().name(), state.direction().name(), lives);
 
     eventBus.send("outbound.messages", JsonObject.mapFrom(msg));
   }
