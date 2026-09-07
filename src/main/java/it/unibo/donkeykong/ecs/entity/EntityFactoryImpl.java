@@ -20,6 +20,7 @@ public record EntityFactoryImpl(World world, String myRole) implements EntityFac
             .addComponent(new NetworkComponent(roleId, roleType))
             .addComponent(spawnPos)
             .addComponent(new StateComponent(State.IDLE, Direction.RIGHT))
+            .addComponent(new HealthComponent(PLAYER_LIVES))
             .addComponent(
                 new GraphicComponent(
                     spritePath,
@@ -42,7 +43,6 @@ public record EntityFactoryImpl(World world, String myRole) implements EntityFac
           .addComponent(new InputComponent())
           .addComponent(new GravityComponent(GRAVITY))
           .addComponent(new VelocityComponent(0, 0))
-          .addComponent(new HealthComponent(PLAYER_LIVES))
           .addComponent(new RectangleCollider(PLAYER_COLLISION_WIDTH, PLAYER_COLLISION_HEIGHT));
     }
     return player;

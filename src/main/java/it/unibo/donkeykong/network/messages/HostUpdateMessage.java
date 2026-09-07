@@ -8,13 +8,15 @@ public record HostUpdateMessage(
     double playerY,
     String playerState,
     String playerDirection,
+    int lives,
     List<BarrelData> barrels) {
   public HostUpdateMessage(
       double playerX,
       double playerY,
       String playerState,
       String playerDirection,
+      int lives,
       List<BarrelData> barrels) {
-    this(MessageType.HOST_UPDATE, playerX, playerY, playerState, playerDirection, barrels);
+    this(MessageType.HOST_UPDATE, playerX, playerY, playerState, playerDirection, lives, barrels);
   }
 }

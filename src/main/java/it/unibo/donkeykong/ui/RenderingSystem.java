@@ -13,6 +13,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 public class RenderingSystem implements GameSystem {
 
@@ -149,6 +151,28 @@ public class RenderingSystem implements GameSystem {
                     drawFallbackShapeBasedOnCollision(renderPositionX, renderPositionY, collider));
       }
     }
+    context.restore();
+
+    context.save();
+    context.setFill(Color.WHITE);
+    context.setFont(Font.font("Courier New", FontWeight.BOLD, 20));
+
+    int marioLives = 3;
+    int luigiLives = 3;
+
+    for (Entity e :
+        world.getEntitiesWithComponents(List.of(NetworkComponent.class, HealthComponent.class))) {
+      NetworkComponent net = e.getComponent(NetworkComponent.class).orElseThrow();
+      HealthComponent health = e.getComponent(HealthComponent.class).orElseThrow();
+      if ("HOST".equals(net.entityType())) {
+        marioLives = health.livesCount();
+      } else if ("GUEST".equals(net.entityType())) {
+        luigiLives = health.livesCount();
+      }
+    }
+
+    context.fillText("Mario lives: " + marioLives, 30, 40);
+    context.fillText("Luigi lives: " + luigiLives, 30, 70);
     context.restore();
   }
 }

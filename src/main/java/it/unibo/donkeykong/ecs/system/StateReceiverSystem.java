@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import it.unibo.donkeykong.core.Constants;
 import it.unibo.donkeykong.core.api.World;
+import it.unibo.donkeykong.ecs.component.HealthComponent;
 import it.unibo.donkeykong.ecs.component.NetworkComponent;
 import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.StateComponent;
@@ -67,6 +68,7 @@ public class StateReceiverSystem implements GameSystem {
     double y = update.getDouble("playerY");
     String state = update.getString("playerState");
     String direction = update.getString("playerDirection");
+    Integer lives = update.getInteger("playerLives");
 
     world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
         .filter(
@@ -82,6 +84,7 @@ public class StateReceiverSystem implements GameSystem {
                   new StateComponent(
                       StateComponent.State.valueOf(state),
                       StateComponent.Direction.valueOf(direction)));
+              guestEntity.updateComponent(new HealthComponent(lives));
             });
   }
 
@@ -90,6 +93,7 @@ public class StateReceiverSystem implements GameSystem {
     double y = update.getDouble("playerY");
     String state = update.getString("playerState");
     String direction = update.getString("playerDirection");
+    Integer lives = update.getInteger("playerLives");
 
     world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
         .filter(
@@ -105,6 +109,7 @@ public class StateReceiverSystem implements GameSystem {
                   new StateComponent(
                       StateComponent.State.valueOf(state),
                       StateComponent.Direction.valueOf(direction)));
+              hostEntity.updateComponent(new HealthComponent(lives));
             });
 
     JsonArray barrels = update.getJsonArray("barrels");
