@@ -68,7 +68,7 @@ public class StateReceiverSystem implements GameSystem {
     double y = update.getDouble("playerY");
     String state = update.getString("playerState");
     String direction = update.getString("playerDirection");
-    Integer lives = update.getInteger("playerLives");
+    Integer lives = update.getInteger("lives");
 
     world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
         .filter(
@@ -93,7 +93,7 @@ public class StateReceiverSystem implements GameSystem {
     double y = update.getDouble("playerY");
     String state = update.getString("playerState");
     String direction = update.getString("playerDirection");
-    Integer lives = update.getInteger("playerLives");
+    Integer lives = update.getInteger("lives");
 
     world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
         .filter(
