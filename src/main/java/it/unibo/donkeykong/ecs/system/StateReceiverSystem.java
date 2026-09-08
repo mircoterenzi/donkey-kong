@@ -20,25 +20,33 @@ public class StateReceiverSystem implements GameSystem {
   private final ConcurrentLinkedQueue<String> destroyedEntities = new ConcurrentLinkedQueue<>();
 
   private volatile boolean processGuestDisconnect = false;
+  private volatile boolean processGuestReconnect = false;
+  private volatile JsonObject restoreStateDate = null;
+  private boolean isGuestDisconnected = false;
+  private final EventBus eventBus;
   private final EntityFactory entityFactory;
   private final String myRole;
 
   public StateReceiverSystem(EventBus eventbus, String myRole, EntityFactory entityFactory) {
     this.myRole = myRole;
     this.entityFactory = entityFactory;
+    this.eventBus = eventbus;
 
     eventbus.<JsonObject>consumer("inbound.host_update", msg -> hostUpdates.add(msg.body()));
     eventbus.<JsonObject>consumer("inbound.guest_update", msg -> guestUpdates.add(msg.body()));
     eventbus.<JsonObject>consumer(
         "inbound.entity_destroyed", msg -> destroyedEntities.add(msg.body().getString("id")));
+    eventbus.<JsonObject>consumer("inbound.restore_state", msg -> restoreStateDate = msg.body());
+    eventbus.<JsonObject>consumer("inbound.guest_reconnected", msg -> processGuestReconnect = true);
     eventbus.<JsonObject>consumer(
-        "inobund.guest_disconnected", msg -> processGuestDisconnect = true);
+        "inbound.guest_disconnected", msg -> processGuestDisconnect = true);
   }
 
   @Override
   public void update(World world, float deltaTime) {
     if (processGuestDisconnect) {
       processGuestDisconnect = false;
+      isGuestDisconnected = true;
 
       if ("HOST".equals(myRole) || "SPECTATOR".equals(myRole)) {
         world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
@@ -56,6 +64,57 @@ public class StateReceiverSystem implements GameSystem {
                           StateComponent.State.IDLE, StateComponent.Direction.RIGHT));
                 });
       }
+    }
+
+    if (processGuestReconnect) {
+      processGuestReconnect = false;
+      isGuestDisconnected = false;
+
+      if ("HOST".equals(myRole)) {
+        world
+            .getEntitiesWithComponents(
+                List.of(NetworkComponent.class, PositionComponent.class, HealthComponent.class))
+            .stream()
+            .filter(
+                e ->
+                    "GUEST"
+                        .equals(e.getComponent(NetworkComponent.class).orElseThrow().entityType()))
+            .findFirst()
+            .ifPresent(
+                guestEntity -> {
+                  double x = guestEntity.getComponent(PositionComponent.class).orElseThrow().x();
+                  double y = guestEntity.getComponent(PositionComponent.class).orElseThrow().y();
+                  int lives =
+                      guestEntity.getComponent(HealthComponent.class).orElseThrow().livesCount();
+
+                  JsonObject restoreMsg =
+                      new JsonObject()
+                          .put("type", "RESTORE_STATE")
+                          .put("playerX", x)
+                          .put("playerY", y)
+                          .put("lives", lives);
+                  eventBus.send("outbound.messages", restoreMsg);
+                });
+      }
+    }
+
+    if (restoreStateDate != null) {
+      if ("GUEST".equals(myRole)) {
+        final JsonObject data = restoreStateDate;
+        world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
+            .filter(
+                e ->
+                    "GUEST"
+                        .equals(e.getComponent(NetworkComponent.class).orElseThrow().entityType()))
+            .findFirst()
+            .ifPresent(
+                guestEntity -> {
+                  guestEntity.updateComponent(
+                      new PositionComponent(data.getDouble("playerX"), data.getDouble("playerY")));
+                  guestEntity.updateComponent(new HealthComponent(data.getInteger("lives")));
+                });
+      }
+      restoreStateDate = null;
     }
 
     while (!destroyedEntities.isEmpty()) {
@@ -85,6 +144,9 @@ public class StateReceiverSystem implements GameSystem {
   }
 
   private void applyGuestUpdate(World world, JsonObject update) {
+    if (isGuestDisconnected) {
+      return;
+    }
     double x = update.getDouble("playerX");
     double y = update.getDouble("playerY");
     String state = update.getString("playerState");
