@@ -5,10 +5,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import it.unibo.donkeykong.core.Constants;
 import it.unibo.donkeykong.core.api.World;
-import it.unibo.donkeykong.ecs.component.HealthComponent;
-import it.unibo.donkeykong.ecs.component.NetworkComponent;
-import it.unibo.donkeykong.ecs.component.PositionComponent;
-import it.unibo.donkeykong.ecs.component.StateComponent;
+import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.api.GameSystem;
 import java.util.HashSet;
@@ -22,6 +19,7 @@ public class StateReceiverSystem implements GameSystem {
   private final ConcurrentLinkedQueue<JsonObject> guestUpdates = new ConcurrentLinkedQueue<>();
   private final ConcurrentLinkedQueue<String> destroyedEntities = new ConcurrentLinkedQueue<>();
 
+  private volatile boolean processGuestDisconnect = false;
   private final EntityFactory entityFactory;
   private final String myRole;
 
@@ -33,10 +31,33 @@ public class StateReceiverSystem implements GameSystem {
     eventbus.<JsonObject>consumer("inbound.guest_update", msg -> guestUpdates.add(msg.body()));
     eventbus.<JsonObject>consumer(
         "inbound.entity_destroyed", msg -> destroyedEntities.add(msg.body().getString("id")));
+    eventbus.<JsonObject>consumer(
+        "inobund.guest_disconnected", msg -> processGuestDisconnect = true);
   }
 
   @Override
   public void update(World world, float deltaTime) {
+    if (processGuestDisconnect) {
+      processGuestDisconnect = false;
+
+      if ("HOST".equals(myRole) || "SPECTATOR".equals(myRole)) {
+        world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
+            .filter(
+                e -> {
+                  NetworkComponent net = e.getComponent(NetworkComponent.class).orElseThrow();
+                  return "GUEST".equals(net.entityType());
+                })
+            .findFirst()
+            .ifPresent(
+                guestEntity -> {
+                  guestEntity.updateComponent(new VelocityComponent(0, 0));
+                  guestEntity.updateComponent(
+                      new StateComponent(
+                          StateComponent.State.IDLE, StateComponent.Direction.RIGHT));
+                });
+      }
+    }
+
     while (!destroyedEntities.isEmpty()) {
       String idToDestroy = destroyedEntities.poll();
       world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()

@@ -1,4 +1,4 @@
-package it.unibo.donkeykong.server.network;
+package it.unibo.donkeykong.network.server;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.ServerWebSocket;
@@ -17,6 +17,7 @@ public class LobbyVerticle extends AbstractVerticle {
   private ServerWebSocket guestSocket;
   private final List<ServerWebSocket> spectators = new ArrayList<>();
   private boolean gameStarted = false;
+  private long guestReconnectTimerId = -1;
 
   /**
    * Starts the LobbyVerticle by creating an HTTP server that listens for WebSocket connections,
@@ -47,8 +48,22 @@ public class LobbyVerticle extends AbstractVerticle {
                   guestSocket = ws;
                   setupSocket(ws, "GUEST");
                   sendRole(ws, "GUEST");
-                  System.out.println("Guest connected, ready to start the game");
-                  startGame();
+                  if (!gameStarted) {
+                    System.out.println("Guest connected, ready to start the game");
+                    startGame();
+                  } else {
+                    System.out.println("Guest reconnected");
+                    if (guestReconnectTimerId != -1) {
+                      vertx.cancelTimer(guestReconnectTimerId);
+                      guestReconnectTimerId = -1;
+                    }
+
+                    ws.writeTextMessage(new JsonObject().put("type", "GAME_START").encode());
+
+                    JsonObject msg = new JsonObject().put("type", "GUST_RECONNECTED");
+                    if (hostSocket != null) hostSocket.writeTextMessage(msg.encode());
+                    broadcastToSpectators(msg.encode());
+                  }
                 } else {
                   spectators.add(ws);
                   setupSocket(ws, "SPECTATOR");
@@ -112,10 +127,28 @@ public class LobbyVerticle extends AbstractVerticle {
     ws.closeHandler(
         v -> {
           if (gameStarted) {
-            gameStarted = false;
-            String winner = role.equals("HOST") ? "GUEST" : "HOST";
-            System.out.println("Player " + role + " disconnected, game over. Winner: " + winner);
-            broadcastGameOver("DISCONNECTED", winner);
+            if ("GUEST".equals(role)) {
+              System.out.println("Guest disconnected, starting 30 seconds timer for reconnection");
+              guestSocket = null;
+
+              JsonObject msg = new JsonObject().put("type", "GUEST_DISCONNECTED");
+              if (hostSocket != null) hostSocket.writeTextMessage(msg.encode());
+              broadcastToSpectators(msg.encode());
+
+              guestReconnectTimerId =
+                  vertx.setTimer(
+                      30000,
+                      id -> {
+                        System.out.println(
+                            "Guest did not reconnect in time, game over. Winner: HOST");
+                        gameStarted = false;
+                        broadcastGameOver("GUEST_TIMEOUT", "HOST");
+                      });
+            } else if ("HOST".equals(role)) {
+              gameStarted = false;
+              System.out.println("Host disconnected, game over. Winner: GUEST");
+              broadcastGameOver("HOST_DISCONNECTED", "GUEST");
+            }
           }
         });
   }

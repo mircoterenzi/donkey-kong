@@ -4,6 +4,7 @@ import static it.unibo.donkeykong.core.Constants.*;
 import static it.unibo.donkeykong.ecs.component.StateComponent.Direction.*;
 import static it.unibo.donkeykong.ecs.component.StateComponent.State.*;
 
+import it.unibo.donkeykong.core.Constants;
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.component.InputComponent.*;
@@ -17,8 +18,18 @@ import java.util.Optional;
 
 /** System that processes player input and updates entity velocities accordingly. */
 public class InputSystem implements GameSystem {
+  private final long startTime;
+
+  public InputSystem(long startTime) {
+    this.startTime = startTime;
+  }
+
   @Override
   public void update(World world, float deltaTime) {
+    if (System.currentTimeMillis() - this.startTime < Constants.INPUT_DELAY) {
+      return;
+    }
+
     world
         .getEntitiesWithComponents(List.of(InputComponent.class))
         .forEach(
