@@ -58,11 +58,19 @@ public class LobbyVerticle extends AbstractVerticle {
                       guestReconnectTimerId = -1;
                     }
 
-                    ws.writeTextMessage(new JsonObject().put("type", "GAME_START").encode());
+                    ws.writeTextMessage(
+                        new JsonObject()
+                            .put("type", "GAME_START")
+                            .put("isReconnect", true)
+                            .encode());
 
-                    JsonObject msg = new JsonObject().put("type", "GUST_RECONNECTED");
-                    if (hostSocket != null) hostSocket.writeTextMessage(msg.encode());
-                    broadcastToSpectators(msg.encode());
+                    vertx.setTimer(
+                        500,
+                        id -> {
+                          JsonObject msg = new JsonObject().put("type", "GUEST_RECONNECTED");
+                          if (hostSocket != null) hostSocket.writeTextMessage(msg.encode());
+                          broadcastToSpectators(msg.encode());
+                        });
                   }
                 } else {
                   spectators.add(ws);
@@ -121,6 +129,10 @@ public class LobbyVerticle extends AbstractVerticle {
               hostSocket.writeTextMessage(text);
             }
             broadcastToSpectators(text);
+          } else if ("RESTORE_STATE".equals(type) && gameStarted) {
+            if ("HOST".equals(role) && guestSocket != null) {
+              guestSocket.writeTextMessage(text);
+            }
           }
         });
 
