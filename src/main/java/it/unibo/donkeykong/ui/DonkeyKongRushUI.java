@@ -107,6 +107,8 @@ public class DonkeyKongRushUI extends Application {
             msg ->
                 Platform.runLater(
                     () -> {
+                      if (clientDeploymentId == null) return;
+
                       System.out.println("UI: disconnected from server");
                       if (gameLoop != null) {
                         gameLoop.stop();
