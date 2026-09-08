@@ -1,4 +1,4 @@
-package it.unibo.donkeykong.client.network;
+package it.unibo.donkeykong.network.client;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.*;
@@ -92,6 +92,13 @@ public class ClientVerticle extends AbstractVerticle {
       case "ENTITY_DESTROYED" -> {
         vertx.eventBus().publish("inbound.entity_destroyed", message);
         System.out.println("Entity destroyed: " + message.encode());
+      }
+      case "GUEST_DISCONNECTED" -> {
+        vertx.eventBus().publish("inbound.guest_disconnected", message);
+        System.out.println("Guest disconnected: " + message.encode());
+      }
+      case "GUEST_RECONNECTED" -> {
+        System.out.println("Guest reconnected: " + message.encode());
       }
       default -> System.out.println("Impossible to handle message of type: " + type);
     }
