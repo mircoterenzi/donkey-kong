@@ -24,8 +24,9 @@ public class RenderingSystem implements GameSystem {
   private final double scaleY;
   private final Image backgroundImage;
   private final Map<String, Image> sourceImageCache = new HashMap<>();
+  private final long startTime;
 
-  public RenderingSystem(final Canvas canvas) {
+  public RenderingSystem(final Canvas canvas, final long startTime) {
     this.context = canvas.getGraphicsContext2D();
     this.context.setImageSmoothing(false);
     this.assetCache = new HashMap<>();
@@ -34,6 +35,7 @@ public class RenderingSystem implements GameSystem {
     this.backgroundImage =
         new Image(
             Objects.requireNonNull(getClass().getResourceAsStream("/images/world-background.png")));
+    this.startTime = startTime;
   }
 
   private void sliceSpriteSheetFrames(
@@ -174,5 +176,20 @@ public class RenderingSystem implements GameSystem {
     context.fillText("Mario lives: " + marioLives, 30, 40);
     context.fillText("Luigi lives: " + luigiLives, 30, 70);
     context.restore();
+
+    long elapsed = System.currentTimeMillis() - this.startTime;
+    if (elapsed < 4000) {
+      context.save();
+      context.setFill(Color.WHITE);
+      context.setFont(Font.font("Courier New", FontWeight.BOLD, 120));
+      String text =
+          elapsed < Constants.INPUT_DELAY ? String.valueOf(3 - (elapsed / 1000)) : "START!";
+      double xOffset = elapsed < 3000 ? 40 : 250;
+      context.fillText(
+          text,
+          (context.getCanvas().getWidth() / 2) - xOffset,
+          context.getCanvas().getHeight() / 2);
+      context.restore();
+    }
   }
 }

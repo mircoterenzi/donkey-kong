@@ -24,9 +24,10 @@ public class InputSystemTest {
 
   @BeforeEach
   void setUp() {
+    long startTime = System.currentTimeMillis() - 4000;
     world = new WorldImpl();
     world.addSystem(new ClimbingSystem());
-    world.addSystem(new InputSystem());
+    world.addSystem(new InputSystem(startTime));
 
     playerInput = new InputComponent();
     initialVelocity = new VelocityComponent(0.0, 0.0);

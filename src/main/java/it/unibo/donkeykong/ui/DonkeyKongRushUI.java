@@ -2,7 +2,6 @@ package it.unibo.donkeykong.ui;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import it.unibo.donkeykong.client.network.ClientVerticle;
 import it.unibo.donkeykong.core.Constants;
 import it.unibo.donkeykong.core.MapFactory;
 import it.unibo.donkeykong.core.WorldImpl;
@@ -11,7 +10,9 @@ import it.unibo.donkeykong.ecs.component.NetworkComponent;
 import it.unibo.donkeykong.ecs.entity.EntityFactoryImpl;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.*;
-import it.unibo.donkeykong.server.network.LobbyVerticle;
+import it.unibo.donkeykong.network.client.ClientVerticle;
+import it.unibo.donkeykong.network.server.LobbyVerticle;
+import java.awt.*;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -96,6 +97,26 @@ public class DonkeyKongRushUI extends Application {
                       lobbyDeploymentId = null;
 
                       showGameOverScreen(primaryStage, winner);
+                    }));
+
+    vertx
+        .eventBus()
+        .<JsonObject>consumer(
+            "game.disconnected",
+            msg ->
+                Platform.runLater(
+                    () -> {
+                      System.out.println("UI: disconnected from server");
+                      if (gameLoop != null) {
+                        gameLoop.stop();
+                      }
+
+                      if (clientDeploymentId != null) vertx.undeploy(clientDeploymentId);
+                      if (lobbyDeploymentId != null) vertx.undeploy(lobbyDeploymentId);
+                      clientDeploymentId = null;
+                      lobbyDeploymentId = null;
+
+                      showGameOverScreen(primaryStage, "GUEST");
                     }));
   }
 
@@ -191,6 +212,7 @@ public class DonkeyKongRushUI extends Application {
 
   private void startGame(Stage primaryStage) {
     final World world = new WorldImpl();
+    long gameStartTime = System.currentTimeMillis();
 
     this.gameLoop =
         new AnimationTimer() {
@@ -246,7 +268,7 @@ public class DonkeyKongRushUI extends Application {
       world.addSystem(new SpawnSystem(entityFactory));
     }
     world.addSystem(new ClimbingSystem());
-    world.addSystem(new InputSystem());
+    world.addSystem(new InputSystem(gameStartTime));
     world.addSystem(new GravitySystem());
     world.addSystem(new StateReceiverSystem(vertx.eventBus(), myRole, entityFactory));
     world.addSystem(
@@ -273,7 +295,7 @@ public class DonkeyKongRushUI extends Application {
     scene.setOnKeyReleased(e -> inputHandler.handleKeyEvent(e.getCode(), false));
 
     world.addSystem(new AnimationSystem());
-    world.addSystem(new RenderingSystem(canvas));
+    world.addSystem(new RenderingSystem(canvas, gameStartTime));
 
     gameLoop.start();
 
