@@ -72,8 +72,9 @@ public class DonkeyKongRushUI extends Application {
         .<JsonObject>consumer(
             "game.start",
             msg -> {
-              Platform.runLater(() -> startGame(primaryStage));
-              System.out.println("UI: game started");
+              boolean isReconnect = msg.body().getBoolean("isReconnect", false);
+              Platform.runLater(() -> startGame(primaryStage, isReconnect));
+              System.out.println(isReconnect ? "UI: game reconnected" : "UI: game started");
             });
 
     vertx
@@ -210,9 +211,10 @@ public class DonkeyKongRushUI extends Application {
             });
   }
 
-  private void startGame(Stage primaryStage) {
+  private void startGame(Stage primaryStage, boolean isReconnect) {
     final World world = new WorldImpl();
-    long gameStartTime = System.currentTimeMillis();
+    long gameStartTime =
+        isReconnect ? System.currentTimeMillis() - 4000 : System.currentTimeMillis();
 
     this.gameLoop =
         new AnimationTimer() {

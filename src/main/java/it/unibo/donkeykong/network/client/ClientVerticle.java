@@ -68,7 +68,7 @@ public class ClientVerticle extends AbstractVerticle {
         System.out.println("Assigned role: " + myRole);
       }
       case "GAME_START" -> {
-        vertx.eventBus().publish("game.start", new JsonObject());
+        vertx.eventBus().publish("game.start", message);
         System.out.println("Game started");
       }
       case "HOST_UPDATE" -> {
@@ -98,7 +98,12 @@ public class ClientVerticle extends AbstractVerticle {
         System.out.println("Guest disconnected: " + message.encode());
       }
       case "GUEST_RECONNECTED" -> {
+        vertx.eventBus().publish("inbound.guest_reconnected", message);
         System.out.println("Guest reconnected: " + message.encode());
+      }
+      case "RESTORE_STATE" -> {
+        System.out.println("Received restore state message: " + message.encode());
+        vertx.eventBus().publish("inbound.restore_state", message);
       }
       default -> System.out.println("Impossible to handle message of type: " + type);
     }
