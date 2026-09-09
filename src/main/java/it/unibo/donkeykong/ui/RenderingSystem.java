@@ -184,16 +184,19 @@ public class RenderingSystem implements GameSystem {
       context.setStroke(Color.web("#CC0000"));
       context.setLineWidth(4);
 
-      Font arcadeFont = Font.loadFont(getClass().getResourceAsStream("/fonts/PressStart2P.ttf"), 120);
+      Font arcadeFont =
+          Font.loadFont(getClass().getResourceAsStream("/fonts/PressStart2P.ttf"), 120);
       if (arcadeFont != null) {
         context.setFont(arcadeFont);
       } else {
         context.setFont(Font.font("Consolas", FontWeight.BOLD, 120));
       }
 
-      String text = elapsed < Constants.INPUT_DELAY ? String.valueOf(3 - (elapsed / 1000)) : "START!";
-      double xOffset = elapsed < 3000 ? 40 : 250;
-      double renderX = (context.getCanvas().getWidth() / 2) - xOffset;
+      String text =
+          elapsed < Constants.INPUT_DELAY ? String.valueOf(3 - (elapsed / 1000)) : "START";
+      context.setTextAlign(javafx.scene.text.TextAlignment.CENTER);
+      context.setTextBaseline(javafx.geometry.VPos.CENTER);
+      double renderX = context.getCanvas().getWidth() / 2;
       double renderY = context.getCanvas().getHeight() / 2;
 
       context.strokeText(text, renderX, renderY);
