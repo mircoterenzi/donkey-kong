@@ -11,11 +11,13 @@ import io.vertx.core.json.JsonObject;
 public class ClientVerticle extends AbstractVerticle {
 
   private final String uri;
+  private final String hostIp;
   private WebSocket webSocket;
   private String myRole;
 
-  public ClientVerticle(String uri) {
+  public ClientVerticle(String uri, String hostIp) {
     this.uri = uri;
+    this.hostIp = hostIp;
   }
 
   /**
@@ -27,7 +29,7 @@ public class ClientVerticle extends AbstractVerticle {
     WebSocketClient client = vertx.createWebSocketClient();
 
     WebSocketConnectOptions options =
-        new WebSocketConnectOptions().setHost("localhost").setPort(8080).setURI(uri);
+        new WebSocketConnectOptions().setHost(hostIp).setPort(8080).setURI(uri);
 
     client.connect(
         options,

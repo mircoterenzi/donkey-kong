@@ -127,10 +127,17 @@ public class DonkeyKongRushUI extends Application {
     Button playButton = new Button("Play");
     Button spectateButton = new Button("Spectate");
 
+    javafx.scene.control.TextField ipField = new javafx.scene.control.TextField("localhost");
+    ipField.setPromptText("Inserisci l'IP dell'Host (es. 192.168.1.55)");
+    ipField.setMaxWidth(200);
+
     playButton.setOnAction(
         e -> {
           playButton.setDisable(true);
           spectateButton.setDisable(true);
+          ipField.setDisable(true);
+
+          String targetIp = ipField.getText().trim();
           vertx
               .deployVerticle(new LobbyVerticle())
               .onComplete(
@@ -138,7 +145,7 @@ public class DonkeyKongRushUI extends Application {
                     if (ar.succeeded()) lobbyDeploymentId = ar.result();
 
                     vertx
-                        .deployVerticle(new ClientVerticle("/play"))
+                        .deployVerticle(new ClientVerticle("/play", targetIp))
                         .onComplete(
                             ar2 -> {
                               if (ar2.succeeded()) clientDeploymentId = ar2.result();
@@ -150,15 +157,18 @@ public class DonkeyKongRushUI extends Application {
         e -> {
           playButton.setDisable(true);
           spectateButton.setDisable(true);
+          ipField.setDisable(true);
+
+          String targetIp = ipField.getText().trim();
           vertx
-              .deployVerticle(new ClientVerticle("/spectate"))
+              .deployVerticle(new ClientVerticle("/spectate", targetIp))
               .onComplete(
                   ar -> {
                     if (ar.succeeded()) clientDeploymentId = ar.result();
                   });
         });
 
-    VBox menuRoot = new VBox(20, playButton, spectateButton);
+    VBox menuRoot = new VBox(20, ipField, playButton, spectateButton);
     menuRoot.setAlignment(Pos.CENTER);
 
     Scene menuScene = new Scene(menuRoot, 400, 300);
