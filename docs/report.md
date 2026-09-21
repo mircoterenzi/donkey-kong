@@ -144,36 +144,44 @@ user. A decentralized peer-to-peer alternative, where each user operates an inte
 rejected due to high implementation complexity and network latency overhead. Its sole advantage, mitigating the single
 point of failure if a central leader goes offline, did not justify the operational trade-offs.
 
-### Infrastructure
+## 3 Design
 
-- are there _infrastructural components_ that need to be introduced? _how many_?
-  * e.g. _clients_, _servers_, _load balancers_, _caches_, _databases_, _message brokers_, _queues_, _workers_,
-    _proxies_, _firewalls_, _CDNs_, _etc._
+This section details the architectural and structural decisions made to fulfill the system's requirements.
 
-- how do components  _distribute_ over the network? _where_?
-  * e.g. do servers / brokers / databases / etc. sit on the same machine? on the same network? on the same datacenter?
-    on the same continent?
+### 3.1 Architecture
 
-- how do components _find_ each other?
-  * how to _name_ components?
-  * e.g. DNS, _service discovery_, _load balancing_, _etc._
+The project follows the Model-View-Controller (MVC) and Entity-Component-System (ECS) architectural patterns. The MVC
+pattern is used to separate the User Interface (UI) from the game logic, while the ECS pattern is used to manage the
+game entities and their behaviors.
 
-> Component diagrams are welcome here
+Regarding its distributed nature, the system utilizes a centralized **Client-Server architecture** heavily reliant on an
+Event-Driven model. The server acts as a central authoritative game lobby and message relay, while the clients maintain
+local instances of the game. This design minimizes peer-to-peer connection issues and provides a single source of truth
+for matchmaking, role assignment, and fault management.
 
-- Each player, or spectator, of the game is a client and $N$ clients may join a game session. However, there is a single
-  server per game, located on the host's machine.
-- Data is not stored persistently, but rather exchanged in real-time between the server and clients, with the game state
-  being replicated on each of the $N$ clients.
-- A publish-subscribe pattern is used to both broadcast game state updates from the server to all clients and to send
-  inputs from clients to the server. This means that each component (clients and server) are both publishers and
-  subscribers
-- Mutual trust is assumed between the host and the clients, thus, no authentication or authorization mechanisms are
-  implemented.
+### 3.2 Infrastructure
 
-To guarantee a smooth and responsive gaming experience, the game loop is performed on each client. However, since the
-server is the authoritative source of truth, it is responsible for resolving any discrepancies in the game state and
-periodically broadcasting alignment messages to the clients. This ensures that all clients have a consistent view of
-the game state, even in the presence of network latency or packet loss.
+To support the game's multiplayer requirements, the infrastructure relies on a centralized star topology where all
+network traffic flows through the main server.
+
+* **Infrastructural Components:**
+  * **Game Server (`LobbyVerticle`):** A single server component responsible for accepting connections, storing the
+    active socket states (one `hostSocket`, one `guestSocket`, and a list of `spectators`), and brokering messages.
+  * **Clients (`ClientVerticle`):** Instances running on the players' local machines that establish a `WebSocketClient`
+    connection to the server.
+* **Network Distribution:**
+  * The server is deployed on a machine accessible to all players, acting as the central node. It exposes its services
+    over a single TCP port, listening on port 8080.
+  * Clients are distributed edge nodes that do not communicate directly with one another. When the Host acts and
+    generates a `HostUpdateMessage`, it sends the data (including player coordinates, state, lives, and barrel data) to
+    the server, which then mirrors this data to the Guest and all Spectators.
+* **Component Discovery and Addressing:**
+  * Clients discover and connect to the server using a predetermined IP address (`hostIp`) and port (`8080`), configured
+    upon client initialization.
+  * Role-based addressing is handled via endpoint paths and connection order. Standard players connect to the root path,
+    where the server automatically assigns the `HOST` role to the first connection and the `GUEST` role to the second.
+    Observers use a distinct discovery mechanism by connecting to the specific URI path `/spectate`, which routes them
+    directly into the server's `spectators` pool.
 
 ### Modelling
 
