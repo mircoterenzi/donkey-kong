@@ -183,6 +183,35 @@ network traffic flows through the main server.
     Observers use a distinct discovery mechanism by connecting to the specific URI path `/spectate`, which routes them
     directly into the server's `spectators` pool.
 
+```mermaid
+flowchart TB
+  subgraph "Server Node (Port 8080)"
+    Lobby[LobbyVerticle]
+  end
+
+  subgraph "Host Machine"
+    HostClient[ClientVerticle]
+    HostECS[ECS World]
+    HostClient <-->|Vert.x EventBus| HostECS
+  end
+
+  subgraph "Guest Machine"
+    GuestClient[ClientVerticle]
+    GuestECS[ECS World]
+    GuestClient <-->|Vert.x EventBus| GuestECS
+  end
+
+  subgraph "Spectator Machine(s)"
+    SpecClient[ClientVerticle]
+    SpecECS[ECS World - Render Only]
+    SpecClient <-->|Vert.x EventBus| SpecECS
+  end
+
+  HostClient <-->|WebSocket| Lobby
+  GuestClient <-->|WebSocket| Lobby
+  SpecClient <-->|WebSocket| Lobby
+```
+
 ### 3.3 Modelling
 
 - **Domain Entities:** In "Donkey Kong: Rush", the primary domain entities are the `World` (the container of the game state), the `Player` (representing either the Host or Guest avatars), the `Barrel` (dynamic obstacles), and static elements like `Ladder` and `Platform`.
@@ -193,17 +222,76 @@ network traffic flows through the main server.
 - **Messages Exchanged:** The system relies primarily on state-update messages rather than pure command messages. Instead of sending discrete inputs (e.g., "Player moved left"), clients exchange high-frequency serialized snapshots of their entities (e.g., "Player X is at coordinate Y with state MOVING").
 - **System State:** The distributed state encompasses the positional coordinates, state machines (e.g., jumping, falling, idle), facing directions, and remaining lives of the connected players, alongside the active network IDs and positional coordinates of all dynamic barrels in the arena.
 
-> Class diagram are welcome here
+```mermaid
+classDiagram
+    class World {
+        <<interface>>
+        +createEntity() Entity
+        +addSystem(GameSystem)
+        +update(deltaTime)
+    }
+    class Entity {
+        <<interface>>
+        +addComponent(Component)
+        +getComponent(Class)
+    }
+    class GameSystem {
+        <<interface>>
+        +update(World, deltaTime)
+    }
+    class Component {
+        <<interface>>
+    }
 
-### Interaction
+    class NetworkComponent {
+        +String networkId
+        +String entityType
+    }
+    class PositionComponent {
+        +double x
+        +double y
+    }
+
+    World "1" *-- "*" Entity : manages
+    World "1" *-- "*" GameSystem : runs
+    Entity "1" *-- "*" Component : contains
+    Component <|-- NetworkComponent
+    Component <|-- PositionComponent
+    GameSystem <|-- StateReceiverSystem
+    GameSystem <|-- NetworkBroadcastSystem
+```
+
+### 3.4 Interaction
 
 - **Communication Channels:** Components communicate bidirectionally using a persistent `WebSocket` connection. The `ClientVerticle` pushes messages onto the local Vert.x `EventBus`, which are then transmitted over the network to the `LobbyVerticle`. The Server broadcasts these messages back to the appropriate endpoints (either to the opposing player or to all Spectators).
 - **Timing and Frequency:** Interaction is continuous. State update messages (`HostUpdateMessage` and `GuestUpdateMessage`) are fired iteratively during the `GameLoop` (running at a target of 60 frames per second). Event-triggered messages (like `ENTITY_DESTROYED`) are communicated asynchronously only when a specific collision resolves locally.
 - **Interaction Patterns:** The system enacts a **Publish-Subscribe / Broadcast pattern** mediated by the Server. The Host publishes the state of the authoritative world, to which Guests and Spectators are inherently subscribed. Concurrently, it implements a **Client-Server RPC-like pattern** for matchmaking, where the client explicitly requests a connection and waits for the server to reply with a `ROLE_ASSIGNMENT`.
 
-> Sequence diagrams are welcome here
+```mermaid
+sequenceDiagram
+  participant HC as Host Client
+  participant L as Lobby Server
+  participant GC as Guest Client
 
-### Behaviour
+  HC->>L: Connect (ws://ip:8080/)
+  L-->>HC: ROLE_ASSIGNMENT (HOST)
+  GC->>L: Connect (ws://ip:8080/)
+  L-->>GC: ROLE_ASSIGNMENT (GUEST)
+
+  L->>HC: GAME_START
+  L->>GC: GAME_START
+
+  rect rgb(200, 220, 240)
+    loop Game Loop (60 FPS)
+        HC->>L: HOST_UPDATE (Pos, State, Barrels)
+        L->>GC: HOST_UPDATE (Broadcast)
+        GC->>L: GUEST_UPDATE (Pos, State)
+        L->>HC: GUEST_UPDATE (Broadcast)
+    end
+  end
+```
+
+### 3.5 Behaviour
 
 - **Individual Component Behavior:**
   - The **Host Client** is highly stateful and authoritative. It responds to local keyboard events by updating its own physics and spawning barrels on an internal timer (`SpawnSystem`). It then blindly pushes this definitive state outwards.
@@ -211,103 +299,107 @@ network traffic flows through the main server.
   - The **Spectator Client** is passive and purely reactive. It does not update the `World` based on elapsed time (`deltaTime`), but strictly overwrites entity positions based on incoming network messages to render the current frame.
 - **State Updating Mechanism:** The state is updated continuously via the ECS architecture. During each frame of the `AnimationTimer`, the `WorldImpl.update()` method iterates through all active `GameSystem`s (e.g., `MovementSystem`, `PhysicsSystem`). The `StateReceiverSystem` is explicitly in charge of capturing incoming network updates from the Vert.x `EventBus` and applying those external coordinate changes to the local entities before the next render cycle.
 
-> State diagrams are welcome here
+```mermaid
+stateDiagram-v2
+  [*] --> WAITING_HOST: Server Start
+  WAITING_HOST --> WAITING_GUEST: Host Connects
+  WAITING_GUEST --> GAME_STARTED: Guest Connects
 
-### Data and Consistency Issues
+  GAME_STARTED --> GUEST_DISCONNECTED: Guest Drops
+  GUEST_DISCONNECTED --> GAME_STARTED: Guest Reconnects (< 30s)
 
-- Is there any data that needs to be stored?
-  * _what_ data? _where_? _why_?
+  GUEST_DISCONNECTED --> GAME_OVER: Timeout (30s)
+  GAME_STARTED --> GAME_OVER: Player Dies / Goal Reached / Host Drops
 
-- how should _persistent data_ be __stored__?
-  * e.g. relations, documents, key-value, graph, etc.
-  * why?
+  GAME_OVER --> [*]: Lobby Reset (Connections Closed)
+```
 
-- Which components perform queries on the database?
-  * _when_? _which_ queries? _why_?
-  * concurrent read? concurrent write? why?
+### 3.6 Data and Consistency Issues
 
-- Is there any data that needs to be shared between components?
-  * _why_? _what_ data?
+- **Transient Storage:** The system does not utilize persistent data storage (e.g., SQL, NoSQL, or key-value databases). All data generated during a session—such as entity coordinates, physical velocities, and life counts—represents the active, ephemeral game state. This data is stored exclusively in volatile memory (RAM) within the `WorldImpl` instance of each client. This architecture strictly reflects the session-based arcade nature of the game, which deliberately lacks user accounts, persistent leaderboards, or save files.
+- **Database Queries:** As there is no persistent storage layer, there are no database queries, concurrent database reads/writes, or transactional locks to manage.
+- **Shared Data:** The physical state of the game world is highly shared among all distributed components. The Host actively shares the coordinates of its avatar and all dynamic environmental entities (barrels). The Guest shares its local avatar's coordinates. Spectators share no data but receive all shared state.
+- **Consistency Model:** The game relies on a **continuous state-replication** model rather than strict transactional consensus. The Host is the definitive source of truth for the game environment, while the Guest acts as the source of truth for its own movement. Consistency is maintained through high-frequency network broadcasts (running at the target 60 FPS). In the event of network latency, a client's local `MovementSystem` will predictively extrapolate entity positions. However, incoming network messages will forcefully correct and overwrite these local predictions with the authoritative coordinates, ensuring eventual consistency without the overhead of distributed locks.
 
-### Fault-Tolerance
+### 3.7 Fault-Tolerance
 
-- Is there any form of data __replication__ / federation / sharing?
-  * _why_? _how_ does it work?
+- **Data Replication and Sharing:** The system's architecture inherently relies on a continuous state-replication mechanism to maintain synchronization across the network. The ephemeral game state (encapsulated within the ECS `World` instance) is actively replicated across all connected nodes rather than federated. The Host serves as the definitive source of truth, replicating the state of dynamic entities (such as barrels) and its own avatar to both the Guest and Spectators. Simultaneously, the Guest shares its local avatar's coordinates, which are replicated back to the Host. Spectators maintain a read-only replicated state, ensuring their local simulation mirrors the active game without interfering with it.
+- **Heart-beating, Timeout, and Retry Mechanism:** To handle transient network instability (e.g., temporary Wi-Fi drops on a local area network), the central `LobbyVerticle` implements a dedicated timeout and retry mechanism specifically tailored for the Guest connection. If the Guest's WebSocket closes unexpectedly while the game is active, the server does not immediately terminate the match. Instead, it pauses active event broadcasting for that node and initiates a 30-second timer (`guestReconnectTimerId`). If the Guest successfully reconnects within this 30-second window, the server transmits a specific payload (`isReconnect: true`), and the Host replies with a `RESTORE_STATE` message containing the exact coordinates and lives count of the Guest just before the drop, seamlessly resuming the game. If the timeout expires without a successful reconnection, the server declares a `GUEST_TIMEOUT` and resolves the match in favor of the Host.
+- **Error Handling and Component Failure:** The system relies on event-driven error handling to prevent deadlocks and ghost sessions:
+  - **Host Failure:** Since the Host holds the authoritative state of the game world, a sudden disconnection of the Host's socket is unrecoverable. The server detects the closure, immediately broadcasts a `GAME_OVER` message (with the reason `HOST_DISCONNECTED`) to the Guest and Spectators, and flushes the lobby state, reopening port connections for a brand-new match.
+  - **Spectator Failure:** The system enforces strict isolation for passive observers. If a Spectator disconnects or crashes, the server simply evicts their socket from the internal `spectators` array. This failure is completely transparent to the active players and does not impact the game loop or the server's stability.
 
-- Is there any __heart-beating__, __timeout__, __retry mechanism__?
-  * _why_? _among_ which components? _how_ does it work?
+### 3.8 Availability
 
-- Is there any form of __error handling__?
-  * _what_ happens when a component fails? _why_? _how_?
+- **Caching Mechanism:** Traditional distributed data caching (e.g., Memcached or Redis) is not utilized because the game state is highly volatile, changing every 16 milliseconds to maintain a 60 FPS target. However, at the local client level, a strict asset caching mechanism is implemented within the `RenderingSystem`. Visual resources are loaded and sliced into sprite sheet frames only once upon initialization and stored in local memory (`assetCache` and `sourceImageCache`). This prevents continuous disk I/O operations and memory reallocation during the intensive rendering loop, ensuring the client remains highly responsive and visually available.
+- **Load Balancing:** Load balancing is neither implemented nor required for this specific architecture. The system's scope is strictly bounded to a local area network supporting a single active game session per server instance (hardcoded to one Host, one Guest, and a passive array of Spectators). If the system were to be scaled for a wider internet deployment (e.g., a matchmaking hub hosting hundreds of concurrent Donkey Kong arenas), a reverse proxy (like Nginx) or a dedicated matchmaking service would be necessary to dynamically balance incoming WebSocket connections across multiple horizontally scaled `LobbyVerticle` worker nodes.
+- **Network Partitioning:** In the context of the CAP theorem, the system deliberately prioritizes **Consistency (C)** over **Availability (A)** during a network partition. If a partition isolates the Guest from the Server, local gameplay cannot proceed independently, as a desynchronized competitive platformer would result in unfair and invalid states (e.g., a player passing through a barrel on their screen, but being hit on the opponent's screen). The server handles the partition by enforcing a hard pause on state updates via the aforementioned 30-second fault-tolerance window. If the partition cannot be resolved within this timeframe, the server destroys the active game session to become available again for new, healthy connections.
 
-### Availability
+### 3.9 Security
 
-- Is there any __caching__ mechanism?
-  * _where_? _why_?
+- **Authentication:** The system does not implement formal authentication mechanisms such as OAuth 2.0, JWT (JSON Web Tokens), or session cookies. Given the academic, local LAN scope of the project and the intentional absence of persistent user accounts or leaderboards, clients are implicitly trusted simply by successfully establishing a TCP/WebSocket connection to the server's IP address.
+- **Authorization:** While formal authentication is absent, a rudimentary form of Role-Based Access Control (RBAC) is enforced by the `LobbyVerticle` through connection routing and temporal ordering. Access rights are rigidly determined by the URI path utilized during the initial handshake:
+  - **HOST Role:** Assigned to the first WebSocket connecting to the root `/play` endpoint. This role is granted the highest authorization, including the rights to dictate global game state, spawn barrels, and trigger game-over conditions.
+  - **GUEST Role:** Assigned to the second WebSocket connecting to the `/play` endpoint. This role is strictly authorized to broadcast updates regarding its own specific entity (the Guest player avatar) and cannot manipulate the environment. Any attempt by a Guest to spawn a barrel would be ignored by the server's routing logic.
+  - **SPECTATOR Role:** Assigned to any WebSocket connecting to the `/spectate` endpoint. This role is granted strictly read-only access. The server pushes updates to these clients but does not listen to or process any state-update messages originating from them.
+- **Cryptographic Schemas:** No cryptographic schemas, token verification, or in-transit data encryption protocols are employed. Messages are serialized as plaintext JSON and transmitted over standard, unencrypted WebSockets (`ws://` rather than `wss://`). This is a deliberate architectural trade-off: the game processes no sensitive personal data (PII), financial records, or credentials. Consequently, prioritizing raw throughput and minimal latency over encryption overhead is the optimal choice for a local, real-time multiplayer application.
 
-- Is there any form of __load balancing__?
-  * _where_? _why_?
+## 4 Implementation
 
-- In case of __network partitioning__, how does the system behave?
-  * _why_? _how_?
+This chapter details the specific technology-dependent choices made to realize the architectural design, focusing on network protocols, data serialization, and the frameworks exploited.
 
-### Security
+- **Network Protocols:** The system utilizes **WebSockets (WS) over TCP** for all network communication. While standard HTTP is strictly request-response, WebSockets provide a persistent, full-duplex communication channel. This is absolutely critical for a real-time multiplayer game running at 60 FPS, as the server needs to push state updates continuously to all clients without waiting for explicit requests. While UDP is traditionally used for fast-paced games to avoid TCP's head-of-line blocking, WebSockets were chosen because they provide guaranteed, ordered delivery out-of-the-box, drastically simplifying the implementation for a local area network (LAN) environment where packet loss is negligible.
+- **In-transit Data Representation:** All data exchanged over the network is serialized and represented in **JSON (JavaScript Object Notation)**. The payloads are formatted as simple stringified JSON objects containing key-value pairs for coordinates, entity states, and active identifiers (e.g., `{"type": "HOST_UPDATE", "playerX": 10.5, "lives": 3}`). While binary formats like Protocol Buffers (gRPC) would offer smaller payload sizes and faster serialization, JSON was selected for its native integration with the networking framework, its human-readability which greatly sped up debugging, and its sufficient performance over a local network.
+- **Database Queries:** As extensively discussed in the Design section, the system does not utilize any persistent storage. Consequently, there are no SQL or NoSQL databases queried, and the application relies entirely on volatile memory (RAM) to manage the game state during runtime.
+- **Authentication and Authorization:** The implementation does not utilize standardized authentication protocols (such as OAuth 2.0 or JWT) nor formal authorization frameworks (like ABAC). The system implements a custom, lightweight Role-Based Access Control (RBAC) enforced programmatically by the server based solely on the WebSocket connection endpoint (`/play` vs `/spectate`) and the chronological order of connections.
 
-- Is there any form of __authentication__?
-  * _where_? _why_?
+### 4.1 Technological Details
 
-- Is there any form of __authorization__?
-  * which sort of _access control_?
-  * which sorts of users / _roles_? which _access rights_?
+The project relies on a specific technology stack to achieve its concurrency and rendering goals:
 
-- Are __cryptographic schemas__ being used?
-  * e.g. token verification,
-  * e.g. data encryption, etc.
+- **Java (JDK 21+):** The entire application is written in Java, taking advantage of modern language features. In particular, Java `record` classes are extensively exploited to define immutable ECS Components (e.g., `PositionComponent`, `VelocityComponent`), ensuring thread safety and reducing boilerplate code.
+- **Eclipse Vert.x:** This is the core framework used for networking and concurrency. Vert.x is built on a non-blocking, event-driven architecture (using the Reactor pattern), which allows it to handle multiple concurrent WebSocket connections with minimal thread overhead.
+  - The `LobbyVerticle` acts as the HTTP/WebSocket server.
+  - The `ClientVerticle` manages the client-side WebSocket.
+  - The internal **Vert.x EventBus** is heavily exploited to decouple the network layer from the game logic layer. Incoming network messages are pushed to the EventBus, where the ECS `StateReceiverSystem` consumes them asynchronously, preventing network operations from blocking the main game loop.
+- **JavaFX:** Used exclusively for the client-side graphical user interface (GUI) and rendering. The game does not use traditional JavaFX UI controls for the gameplay; instead, it utilizes a raw `Canvas` and a `GraphicsContext` to manually draw and clear sprite sheets frame-by-frame. The core game loop is driven by a JavaFX `AnimationTimer`, which fires the ECS `World.update(deltaTime)` method to process physics and render the graphics concurrently at a targeted 60 FPS.
+- **Custom ECS Engine:** Rather than relying on a heavy third-party game engine (like LibGDX), the project implements a custom Entity-Component-System from scratch. This allows for total control over the modularity of the code, separating pure data (`Component`) from execution logic (`GameSystem`), making the implementation of network state synchronization straightforward and predictable.
 
----
-<!-- Riparti da qui  -->
+## 5 Validation
 
-## Implementation
+To ensure the reliability, correctness, and performance of the distributed game, the system was subjected to a rigorous testing phase, divided into automated testing for core logic and manual acceptance testing for gameplay feel and GUI responsiveness.
 
-- which __network protocols__ to use?
-  * e.g. UDP, TCP, HTTP, WebSockets, gRPC, XMPP, AMQP, MQTT, etc.
-- how should _in-transit data_ be __represented__?
-  * e.g. JSON, XML, YAML, Protocol Buffers, etc.
-- how should _databases_ be __queried__?
-  * e.g. SQL, NoSQL, etc.
-- how should components be _authenticated_?
-  * e.g. OAuth, JWT, etc.
-- how should components be _authorized_?
-  * e.g. RBAC, ABAC, etc.
+### 5.1 Automatic Testing
 
-### Technological details
+Automated testing was implemented using JUnit 5 and managed via the Gradle build tool. The tests are executed automatically within a Continuous Integration (CI) pipeline using GitHub Actions (`ci.yml` and `pr-checks.yml`), ensuring that every pull request is validated before being merged. Tests can be run locally by executing `./gradlew test` via the command line interface.
 
-- any particular _framework_ / _technology_ being exploited goes here
+- **Unit Testing:**
+  Individual components, specifically the pure execution logic within the ECS architecture, were strictly unit-tested in isolation.
+  - **Rationale:** To verify that game physics, entity interactions, and boundary limitations work deterministically without spinning up the network or the graphical interface.
+  - **Implementation:** Tests such as `PhysicsSystemTest`, `GravitySystemTest`, and `MovementSystemTest` initialize a mock `World`, inject entities with specific `Component` sets, manually invoke the system's `update(deltaTime)` method, and assert the resulting state. For example, `BoundariesSystemTest` acts as a corner-case test by placing an entity outside the screen coordinates and asserting that the system clamps its position back within the allowed arena.
+  - **Requirements Tested:** Verifies the functional requirements related to horizontal movement, jumping, and collision detection.
 
-## Validation
+- **Integration Testing:**
+  Communication and interaction among components, particularly the network layer, were tested using integration tests.
+  - **Rationale:** To verify that the Vert.x components correctly bind to ports, handle WebSocket handshakes, route messages through the EventBus, and correctly manage the state machine of the multiplayer lobby.
+  - **Implementation:** The `LobbyVerticleTest` and `ClientVerticleTest` utilize `VertxTestContext` to deploy the server and client verticles in a sandboxed, asynchronous test environment. These tests simulate the connection of multiple clients to verify the automatic role assignment (e.g., ensuring the first connection becomes the Host and the second becomes the Guest). Furthermore, `EndGameScenariosTest` and `WinSystemTest` simulate the integration between the collision logic and the network broadcast, asserting that terminal states trigger the correct game-over messages.
+  - **Corner Cases Tested:** The tests specifically validate error handling and network partitions, such as simulating a client disconnection to ensure the server gracefully resets or starts the 30-second fault-tolerance timer.
 
-### Automatic Testing
+- **End-to-End (E2E) Testing:**
+  Fully automated End-to-End testing—spinning up the production server, launching multiple headless JavaFX client instances, simulating network latency, and injecting programmatic keyboard inputs—was deemed out of scope due to the extreme brittleness of automated GUI testing for real-time games. E2E validation was instead covered through manual acceptance testing.
 
-- how were individual components **_unit_-test**ed?
-- how was communication, interaction, and/or integration among components tested?
-- how to **_end-to-end_-test** the system?
-  * e.g. production vs. test environment
+### 5.2 Acceptance Test
 
-- for each test specify:
-  * rationale of individual tests
-  * how were the test automated
-  * how to run them
-  * which requirement they are testing, if any
+Manual testing was a critical phase of the validation process, conducted in a production-like local area network (LAN) environment with multiple physical machines.
 
-> recall that _deployment_ __automation__ is commonly used to _test_ the system in _production-like_ environment
+- **What was tested:**
+  - **UI/UX Flow:** The transition from the Main Menu to the active game, and finally to the Game Over screen.
+  - **Network Synchronization:** The visual coherence of the game state between the Host, Guest, and Spectator screens. This involved verifying that barrel spawns and player movements did not suffer from "rubber-banding" or visual desynchronization.
+  - **Gameplay Feel:** The responsiveness of the keyboard inputs (jump height, movement speed) and the consistency of the 60 FPS rendering loop.
+  - **Fault Recovery:** Physically disconnecting the Wi-Fi on the Guest machine to verify that the game paused, the 30-second timer started on the server, and the state was correctly restored upon reconnection.
 
-> recall to test corner cases (crashes, errors, etc.)
-
-### Acceptance test
-
-- did you perform any _manual_ testing?
-  * what did you test?
-  * why wasn't it automatic?
+- **Why wasn't it automatic?**
+  While the mathematical determinism of the physics engine and the routing logic of the network were easily covered by automated unit and integration tests, subjective quality metrics cannot be automatically asserted. The "smoothness" of the JavaFX Canvas rendering, the tactile responsiveness of the controls, and the human perception of network latency require manual observation. Furthermore, automating the disconnection of physical network adapters across distributed machines to test the fault-tolerance window would require a highly complex and fragile infrastructure that exceeds the academic scope of this project.
 
 ## Release
 
