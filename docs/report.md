@@ -401,25 +401,26 @@ Manual testing was a critical phase of the validation process, conducted in a pr
 - **Why wasn't it automatic?**
   While the mathematical determinism of the physics engine and the routing logic of the network were easily covered by automated unit and integration tests, subjective quality metrics cannot be automatically asserted. The "smoothness" of the JavaFX Canvas rendering, the tactile responsiveness of the controls, and the human perception of network latency require manual observation. Furthermore, automating the disconnection of physical network adapters across distributed machines to test the fault-tolerance window would require a highly complex and fragile infrastructure that exceeds the academic scope of this project.
 
-## Release
+## 6 Deployment
 
-- how where components organized into _inter-dependant modules_ or just a single monolith?
-  * provide a _dependency graph_ if possible
+This section outlines the process required to deploy and run "Donkey Kong: Rush" on a local machine. The deployment strategy focuses on simplicity, leveraging the Gradle build automation tool to manage dependencies and execution without requiring complex manual configurations.
 
-- were modules distributed as a _single archive_ or _multiple ones_?
-  * why?
+### Prerequisites
 
-- how were archive versioned?
+Before deploying the software, the target machine must meet the following software requirements:
+- **Java Development Kit (JDK):** Version 21 or higher must be installed.
+- **Environment Variables:** The `JAVA_HOME` environment variable must be correctly configured and pointing to the JDK 21 installation path.
+- **Operating System:** A desktop operating system with a graphical windowing environment (Windows, macOS, or a Linux distribution with X11/Wayland).
+- **Network:** An active Local Area Network (LAN) connection if multiplayer capabilities are to be utilized.
 
-- were archive _released_ onto some archive repository (e.g. Maven, PyPI, npm, etc.)?
-  * how to _install_ them?
+### Installation and Execution from Scratch
 
-## Deployment
+The software does not require a traditional installer wizard. It is deployed and executed directly from the source code using the included Gradle Wrapper.
 
-- should one install your software from scratch, how to do it?
-  * provide instructions
-  * provide expected outcomes
-
+1. **Obtain the Source Code:** Clone the repository using Git or extract the provided project archive.
+   ```bash
+   git clone <repository_url>
+   cd donkey-kong-feat-multiplayer
 ## User Guide
 
 - how to use your software?
