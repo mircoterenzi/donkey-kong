@@ -14,7 +14,7 @@ group = "it.unibo"
 repositories { mavenCentral() }
 
 val vertxVersion = "4.5.34"
-val junitJupiterVersion = "5.9.1"
+val junitJupiterVersion = "5.14.4"
 
 val mainVerticleName = "it.unibo.donkeykong.MainVerticle"
 val launcherClassName = "io.vertx.launcher.application.VertxApplication"
