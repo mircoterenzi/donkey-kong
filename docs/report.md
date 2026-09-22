@@ -421,12 +421,58 @@ The software does not require a traditional installer wizard. It is deployed and
    ```bash
    git clone <repository_url>
    cd donkey-kong-feat-multiplayer
-## User Guide
+   ```
+2. **Execute the Application:** Run the application using the Gradle Wrapper. This ensures that the exact required version of Gradle is used, eliminating the need for the user to install Gradle manually.
+ - On Linux / macOS:
+   ```bash
+   ./gradlew run
+   ```
+ - On Windows:
+   ```bash
+   gradlew.bat run
+   ```
+#### Expected Outcomes:
+Upon executing the run command, the Gradle Wrapper will automatically download all required third-party dependencies (e.g., Eclipse Vert.x, JavaFX modules, Netty), compile the ECS engine and network logic, and finally launch the DonkeyKongRushUI JavaFX application. The user will be presented with the Main Menu graphical interface, confirming a successful deployment.
 
-- how to use your software?
-  * provide instructions
-  * provide expected outcomes
-  * provide screenshots if possible
+### Configuration Files and Environment Variables
+The system is designed to be "plug-and-play" and does not rely on external configuration files (e.g., `.env`, `.yaml`, or `.properties` files). All network configurations, such as the target IP address for the Lobby Server, are intentionally exposed directly through the graphical user interface. This choice maximizes user accessibility, allowing players to establish connections dynamically without modifying text files before deployment.
+
+### Containerization Strategy
+While modern distributed systems frequently rely on containerization tools like Docker or Kubernetes, "Donkey Kong: Rush" explicitly avoids this deployment model for the following reasons:
+1. **GUI Constraints**: Containerizing desktop applications with hardware-accelerated GUIs (JavaFX) requires highly complex X11 socket forwarding or virtual framebuffers (VNC) mapped to the host machine. This significantly degrades rendering performance and frustrates the user experience.
+2. **Embedded Server Logic**: The central server (LobbyVerticle) is not a standalone microservice that needs isolated scaling. It is automatically deployed by the Host's instance of the application at runtime.
+3. **Distribution Format**: For production distribution beyond the source code, the deployment pipeline is configured to package the application into a single executable "Fat JAR" containing all dependencies, allowing users to run the game with a simple java -jar donkeykong.jar command, achieving total portability across operating systems without container overhead.
+
+## 7 User Guide
+This section provides a step-by-step guide on how to interact with the "Donkey Kong: Rush" application.
+
+### Launching the Game
+Upon executing the application via Gradle (`./gradlew run`), the user is greeted by the **Main Menu** window. This graphical interface provides text fields and buttons to establish network connections.
+
+> *(Placeholder: Insert Screenshot of the Main Menu here)*
+
+### How to Play
+
+**1. Hosting a Game (Player 1)**
+- **Instructions:** To start a new game session, simply launch the application and click the **"Play"** button. If no other server is running on the local network port, your instance will automatically initialize the `LobbyVerticle` server and connect your client as the Host.
+- **Expected Outcome:** The game window will transition to the active arena. You will control Mario (Player 1) and have authority over the game state (including barrel generation). The game will wait for a Guest to connect.
+
+**2. Joining a Game (Player 2)**
+- **Instructions:** Ensure another player has already hosted a game on the same local network. On the Main Menu, locate the text input field, enter the Host's local IP address (e.g., `192.168.1.55`), and click the **"Play"** button.
+- **Expected Outcome:** You will connect to the existing lobby and be assigned the Guest role. The match will immediately start, and you will control Luigi (Player 2).
+
+**3. Spectating a Game**
+- **Instructions:** Enter the Host's IP address in the text field and click the **"Spectate"** button.
+- **Expected Outcome:** You will be connected as a passive observer. You will see the active match rendered in real-time, but you will not have an avatar to control.
+
+### Gameplay Controls
+Once the game has started, active players (Host and Guest) can interact with the environment using the following keyboard bindings:
+- **Movement:** `Left Arrow` / `A` to move left, `Right Arrow` / `D` to move right.
+- **Climbing:** `Up Arrow` / `W` to climb up ladders, `Down Arrow` / `S` to climb down.
+- **Jumping:** `Spacebar` to jump over obstacles and gaps.
+
+**Game Objective:**
+Navigate your avatar from the bottom of the screen to the top to rescue Pauline. Avoid the rolling barrels spawned by Donkey Kong. If you collide with a barrel, you will lose a life and respawn at the bottom. The game ends when a player reaches Pauline (Win) or loses all 3 lives (Lose), triggering the Game Over screen.
 
 ## Self-evaluation
 
@@ -434,3 +480,19 @@ The software does not require a traditional installer wizard. It is deployed and
 - Each member must self-evaluate their work, listing the strengths and weaknesses of the product
 - Each member must describe their role within the group as objectively as possible.
   It should be noted that each student is only responsible for their own section
+
+## 9 Future Works
+
+While the current implementation successfully fulfills the core requirements of a distributed, real-time multiplayer platformer, several avenues for improvement and architectural expansion remain.
+
+### Client-Side Prediction and Interpolation
+Currently, the Guest and Spectator clients act as "dumb terminals" for external entities, strictly overwriting their local entity coordinates with the incoming network snapshots from the Host. On a high-latency network, this could lead to visual stuttering or "rubber-banding." A primary future improvement would be implementing **Entity Interpolation** (smoothing the visual transition between the last known network state and the current one) and **Client-Side Prediction** (allowing the Guest to predict the physics of barrels locally, correcting them only if the server's authoritative state deviates significantly).
+
+### Scalability and Cloud Matchmaking
+The system relies on users manually sharing LAN IP addresses and hosting the `LobbyVerticle` on their personal machines. To scale this into a production-grade application, the `LobbyVerticle` could be decoupled and deployed as a standalone microservice on a cloud provider (e.g., AWS or Google Cloud) using Docker and Kubernetes. Furthermore, introducing a **Matchmaking Service** would eliminate the need for manual IP entry, automatically pairing available clients into isolated game instances dynamically orchestrated by the cloud provider.
+
+### Security Enhancements (WSS and Tokens)
+Currently, the system uses unencrypted WebSockets (`ws://`) and implicitly trusts connections based on routing order. A critical future extension would involve upgrading the infrastructure to utilize **WebSocket Secure (`wss://`)** by provisioning TLS certificates. Additionally, implementing a lightweight authentication system using **JSON Web Tokens (JWT)** would prevent malicious users from spoofing the `/play` endpoint on public networks, ensuring that only authenticated users can claim the Host or Guest roles.
+
+### Dynamic Level Progression
+From a gameplay perspective, the game currently features a single, hardcoded map generated upon startup via the `MapFactory`. Future iterations could introduce dynamic map loading (e.g., parsing JSON or Tiled map formats). This would require extending the network protocol to broadcast a `LEVEL_LOAD` message, ensuring that all distributed clients load and synchronize the same level assets before the `GAME_START` event is triggered.
