@@ -183,34 +183,7 @@ network traffic flows through the main server.
     Observers use a distinct discovery mechanism by connecting to the specific URI path `/spectate`, which routes them
     directly into the server's `spectators` pool.
 
-```mermaid
-flowchart TB
-  subgraph "Server Node (Port 8080)"
-    Lobby[LobbyVerticle]
-  end
-
-  subgraph "Host Machine"
-    HostClient[ClientVerticle]
-    HostECS[ECS World]
-    HostClient <-->|Vert.x EventBus| HostECS
-  end
-
-  subgraph "Guest Machine"
-    GuestClient[ClientVerticle]
-    GuestECS[ECS World]
-    GuestClient <-->|Vert.x EventBus| GuestECS
-  end
-
-  subgraph "Spectator Machine(s)"
-    SpecClient[ClientVerticle]
-    SpecECS[ECS World - Render Only]
-    SpecClient <-->|Vert.x EventBus| SpecECS
-  end
-
-  HostClient <-->|WebSocket| Lobby
-  GuestClient <-->|WebSocket| Lobby
-  SpecClient <-->|WebSocket| Lobby
-```
+![Component Diagram](./images/component_diagram.png)
 
 ### 3.3 Modelling
 
@@ -222,44 +195,7 @@ flowchart TB
 - **Messages Exchanged:** The system relies primarily on state-update messages rather than pure command messages. Instead of sending discrete inputs (e.g., "Player moved left"), clients exchange high-frequency serialized snapshots of their entities (e.g., "Player X is at coordinate Y with state MOVING").
 - **System State:** The distributed state encompasses the positional coordinates, state machines (e.g., jumping, falling, idle), facing directions, and remaining lives of the connected players, alongside the active network IDs and positional coordinates of all dynamic barrels in the arena.
 
-```mermaid
-classDiagram
-    class World {
-        <<interface>>
-        +createEntity() Entity
-        +addSystem(GameSystem)
-        +update(deltaTime)
-    }
-    class Entity {
-        <<interface>>
-        +addComponent(Component)
-        +getComponent(Class)
-    }
-    class GameSystem {
-        <<interface>>
-        +update(World, deltaTime)
-    }
-    class Component {
-        <<interface>>
-    }
-
-    class NetworkComponent {
-        +String networkId
-        +String entityType
-    }
-    class PositionComponent {
-        +double x
-        +double y
-    }
-
-    World "1" *-- "*" Entity : manages
-    World "1" *-- "*" GameSystem : runs
-    Entity "1" *-- "*" Component : contains
-    Component <|-- NetworkComponent
-    Component <|-- PositionComponent
-    GameSystem <|-- StateReceiverSystem
-    GameSystem <|-- NetworkBroadcastSystem
-```
+![Class Diagram](./images/class_diagram.png)
 
 ### 3.4 Interaction
 
@@ -267,29 +203,7 @@ classDiagram
 - **Timing and Frequency:** Interaction is continuous. State update messages (`HostUpdateMessage` and `GuestUpdateMessage`) are fired iteratively during the `GameLoop` (running at a target of 60 frames per second). Event-triggered messages (like `ENTITY_DESTROYED`) are communicated asynchronously only when a specific collision resolves locally.
 - **Interaction Patterns:** The system enacts a **Publish-Subscribe / Broadcast pattern** mediated by the Server. The Host publishes the state of the authoritative world, to which Guests and Spectators are inherently subscribed. Concurrently, it implements a **Client-Server RPC-like pattern** for matchmaking, where the client explicitly requests a connection and waits for the server to reply with a `ROLE_ASSIGNMENT`.
 
-```mermaid
-sequenceDiagram
-  participant HC as Host Client
-  participant L as Lobby Server
-  participant GC as Guest Client
-
-  HC->>L: Connect (ws://ip:8080/)
-  L-->>HC: ROLE_ASSIGNMENT (HOST)
-  GC->>L: Connect (ws://ip:8080/)
-  L-->>GC: ROLE_ASSIGNMENT (GUEST)
-
-  L->>HC: GAME_START
-  L->>GC: GAME_START
-
-  rect rgb(200, 220, 240)
-    loop Game Loop (60 FPS)
-        HC->>L: HOST_UPDATE (Pos, State, Barrels)
-        L->>GC: HOST_UPDATE (Broadcast)
-        GC->>L: GUEST_UPDATE (Pos, State)
-        L->>HC: GUEST_UPDATE (Broadcast)
-    end
-  end
-```
+![Sequence Diagram](./images/sequence_diagram.png)
 
 ### 3.5 Behaviour
 
@@ -299,20 +213,7 @@ sequenceDiagram
   - The **Spectator Client** is passive and purely reactive. It does not update the `World` based on elapsed time (`deltaTime`), but strictly overwrites entity positions based on incoming network messages to render the current frame.
 - **State Updating Mechanism:** The state is updated continuously via the ECS architecture. During each frame of the `AnimationTimer`, the `WorldImpl.update()` method iterates through all active `GameSystem`s (e.g., `MovementSystem`, `PhysicsSystem`). The `StateReceiverSystem` is explicitly in charge of capturing incoming network updates from the Vert.x `EventBus` and applying those external coordinate changes to the local entities before the next render cycle.
 
-```mermaid
-stateDiagram-v2
-  [*] --> WAITING_HOST: Server Start
-  WAITING_HOST --> WAITING_GUEST: Host Connects
-  WAITING_GUEST --> GAME_STARTED: Guest Connects
-
-  GAME_STARTED --> GUEST_DISCONNECTED: Guest Drops
-  GUEST_DISCONNECTED --> GAME_STARTED: Guest Reconnects (< 30s)
-
-  GUEST_DISCONNECTED --> GAME_OVER: Timeout (30s)
-  GAME_STARTED --> GAME_OVER: Player Dies / Goal Reached / Host Drops
-
-  GAME_OVER --> [*]: Lobby Reset (Connections Closed)
-```
+![State Diagram](./images/state_diagram.png)
 
 ### 3.6 Data and Consistency Issues
 
