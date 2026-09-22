@@ -183,39 +183,33 @@ network traffic flows through the main server.
     Observers use a distinct discovery mechanism by connecting to the specific URI path `/spectate`, which routes them
     directly into the server's `spectators` pool.
 
-### Modelling
+### 3.3 Modelling
 
-- which __domain entities__ are there?
-  * e.g. _users_, _products_, _orders_, _etc._
-
-- how do _domain entities_ __map to__ _infrastructural components_?
-  * e.g. state of a video game on central server, while inputs/representations on clients
-  * e.g. where to store messages in an IM app? for how long?
-
-- which __domain events__ are there?
-  * e.g. _user registered_, _product added to cart_, _order placed_, _etc._
-
-- which sorts of __messages__ are exchanged?
-  * e.g. _commands_, _events_, _queries_, _etc._
-
-- what information does the __state__ of the system comprehend
-  * e.g. _users' data_, _products' data_, _orders' data_, _etc._
+- **Domain Entities:** In "Donkey Kong: Rush", the primary domain entities are the `World` (the container of the game state), the `Player` (representing either the Host or Guest avatars), the `Barrel` (dynamic obstacles), and static elements like `Ladder` and `Platform`.
+- **Mapping to Infrastructural Components:** The system employs a replicated state model rather than a pure thin-client approach. Both the `LobbyVerticle` (Server) and the `ClientVerticle` (Clients) maintain representations of the game state.
+  - The Server acts as a stateless message broker; it does not simulate physics but relies on the Host's computational authority.
+  - The Clients hold the actual state of the game within their local `WorldImpl` instance, processing physics and rendering the GUI. The Host generates authoritative data (e.g., barrel spawns) and maps this to the Server via events.
+- **Domain Events:** Core events include `GAME_START` (which initializes the simulation on all nodes), `HOST_UPDATE` (transmitting the Host's position and global entity data), `GUEST_UPDATE` (transmitting the Guest's position), and terminal events like `GOAL_REACHED`, `PLAYER_DIED`, or `GUEST_DISCONNECTED`.
+- **Messages Exchanged:** The system relies primarily on state-update messages rather than pure command messages. Instead of sending discrete inputs (e.g., "Player moved left"), clients exchange high-frequency serialized snapshots of their entities (e.g., "Player X is at coordinate Y with state MOVING").
+- **System State:** The distributed state encompasses the positional coordinates, state machines (e.g., jumping, falling, idle), facing directions, and remaining lives of the connected players, alongside the active network IDs and positional coordinates of all dynamic barrels in the arena.
 
 > Class diagram are welcome here
 
 ### Interaction
 
-- how do components _communicate_? _when_? _what_?
-- _which_ __interaction patterns__ do they enact?
+- **Communication Channels:** Components communicate bidirectionally using a persistent `WebSocket` connection. The `ClientVerticle` pushes messages onto the local Vert.x `EventBus`, which are then transmitted over the network to the `LobbyVerticle`. The Server broadcasts these messages back to the appropriate endpoints (either to the opposing player or to all Spectators).
+- **Timing and Frequency:** Interaction is continuous. State update messages (`HostUpdateMessage` and `GuestUpdateMessage`) are fired iteratively during the `GameLoop` (running at a target of 60 frames per second). Event-triggered messages (like `ENTITY_DESTROYED`) are communicated asynchronously only when a specific collision resolves locally.
+- **Interaction Patterns:** The system enacts a **Publish-Subscribe / Broadcast pattern** mediated by the Server. The Host publishes the state of the authoritative world, to which Guests and Spectators are inherently subscribed. Concurrently, it implements a **Client-Server RPC-like pattern** for matchmaking, where the client explicitly requests a connection and waits for the server to reply with a `ROLE_ASSIGNMENT`.
 
 > Sequence diagrams are welcome here
 
 ### Behaviour
 
-- how does _each_ component __behave__ individually (e.g. in _response_ to _events_ or messages)?
-  * some components may be _stateful_, others _stateless_
-
-- which components are in charge of updating the __state__ of the system? _when_? _how_?
+- **Individual Component Behavior:**
+  - The **Host Client** is highly stateful and authoritative. It responds to local keyboard events by updating its own physics and spawning barrels on an internal timer (`SpawnSystem`). It then blindly pushes this definitive state outwards.
+  - The **Guest Client** is stateful but semi-authoritative. It computes its own player physics independently in response to local keyboard events, but acts purely reactively regarding barrels, spawning or removing them locally only when instructed by a `HOST_UPDATE` message via the `StateReceiverSystem`.
+  - The **Spectator Client** is passive and purely reactive. It does not update the `World` based on elapsed time (`deltaTime`), but strictly overwrites entity positions based on incoming network messages to render the current frame.
+- **State Updating Mechanism:** The state is updated continuously via the ECS architecture. During each frame of the `AnimationTimer`, the `WorldImpl.update()` method iterates through all active `GameSystem`s (e.g., `MovementSystem`, `PhysicsSystem`). The `StateReceiverSystem` is explicitly in charge of capturing incoming network updates from the Vert.x `EventBus` and applying those external coordinate changes to the local entities before the next render cycle.
 
 > State diagrams are welcome here
 
