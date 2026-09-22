@@ -449,8 +449,6 @@ This section provides a step-by-step guide on how to interact with the "Donkey K
 ### Launching the Game
 Upon executing the application via Gradle (`./gradlew run`), the user is greeted by the **Main Menu** window. This graphical interface provides text fields and buttons to establish network connections.
 
-> *(Placeholder: Insert Screenshot of the Main Menu here)*
-
 ### How to Play
 
 **1. Hosting a Game (Player 1)**
@@ -465,6 +463,8 @@ Upon executing the application via Gradle (`./gradlew run`), the user is greeted
 - **Instructions:** Enter the Host's IP address in the text field and click the **"Spectate"** button.
 - **Expected Outcome:** You will be connected as a passive observer. You will see the active match rendered in real-time, but you will not have an avatar to control.
 
+![Main Menu UI](images/main_menu.png)
+
 ### Gameplay Controls
 Once the game has started, active players (Host and Guest) can interact with the environment using the following keyboard bindings:
 - **Movement:** `Left Arrow` / `A` to move left, `Right Arrow` / `D` to move right.
@@ -473,6 +473,8 @@ Once the game has started, active players (Host and Guest) can interact with the
 
 **Game Objective:**
 Navigate your avatar from the bottom of the screen to the top to rescue Pauline. Avoid the rolling barrels spawned by Donkey Kong. If you collide with a barrel, you will lose a life and respawn at the bottom. The game ends when a player reaches Pauline (Win) or loses all 3 lives (Lose), triggering the Game Over screen.
+
+![Active Gameplay Arena](images/gameplay.png)
 
 ## Self-evaluation
 
