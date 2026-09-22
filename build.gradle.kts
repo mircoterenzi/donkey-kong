@@ -13,7 +13,7 @@ group = "it.unibo"
 
 repositories { mavenCentral() }
 
-val vertxVersion = "4.5.32"
+val vertxVersion = "4.5.34"
 val junitJupiterVersion = "5.9.1"
 
 val mainVerticleName = "it.unibo.donkeykong.MainVerticle"
