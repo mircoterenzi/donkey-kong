@@ -1,6 +1,8 @@
 package it.unibo.donkeykong.network.server;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.datagram.DatagramSocket;
+import io.vertx.core.datagram.DatagramSocketOptions;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
 import java.util.*;
@@ -18,6 +20,8 @@ public class LobbyVerticle extends AbstractVerticle {
   private final List<ServerWebSocket> spectators = new ArrayList<>();
   private boolean gameStarted = false;
   private long guestReconnectTimerId = -1;
+  private final String lobbyId = UUID.randomUUID().toString();
+  private DatagramSocket udpSocket;
 
   /**
    * Starts the LobbyVerticle by creating an HTTP server that listens for WebSocket connections,
@@ -26,6 +30,58 @@ public class LobbyVerticle extends AbstractVerticle {
    */
   @Override
   public void start() {
+    udpSocket = vertx.createDatagramSocket(new DatagramSocketOptions().setBroadcast(true));
+    udpSocket.listen(
+        8081,
+        "0.0.0.0",
+        res -> {
+          if (res.succeeded()) {
+            udpSocket.handler(
+                packet -> {
+                  JsonObject msg = new JsonObject(packet.data().toString());
+                  String type = msg.getString("type");
+
+                  if ("DISCOVER".equals(type)) {
+                    // Risponde alle richieste di discovery con unicast
+                    JsonObject reply =
+                        new JsonObject()
+                            .put("type", "LOBBY")
+                            .put("wsPort", 8080)
+                            .put("lobbyId", lobbyId)
+                            .put("guestSlotFree", guestSocket == null)
+                            .put("gameStarted", gameStarted);
+                    udpSocket.send(
+                        reply.encode(), packet.sender().port(), packet.sender().host(), r -> {});
+                  } else if ("LOBBY".equals(type)) {
+                    // Gestione Split-Brain: ricezione di un'altra lobby
+                    if (guestSocket == null && !gameStarted) {
+                      String otherId = msg.getString("lobbyId");
+                      // Se l'altra lobby è libera ed ha un UUID minore, questa lobby si chiude
+                      if (msg.getBoolean("guestSlotFree", false)
+                          && otherId.compareTo(lobbyId) < 0) {
+                        System.out.println(
+                            "Split-brain: trovata lobby prioritaria. Cedo il ruolo di host.");
+                        vertx.eventBus().publish("lobby.yield", packet.sender().host());
+                        resetLobby();
+                        vertx.undeploy(context.deploymentID());
+                      }
+                    }
+                  }
+                });
+
+            // Routine autonoma per la risoluzione split-brain quando la lobby attende giocatori
+            vertx.setPeriodic(
+                2000,
+                id -> {
+                  if (guestSocket == null && !gameStarted) {
+                    it.unibo.donkeykong.network.discovery.DiscoveryClient.broadcast(udpSocket);
+                  }
+                });
+          } else {
+            System.out.println(
+                "Impossibile avviare il server UDP per la discovery: " + res.cause());
+          }
+        });
     vertx
         .createHttpServer()
         .webSocketHandler(
@@ -214,5 +270,12 @@ public class LobbyVerticle extends AbstractVerticle {
     guestSocket = null;
     gameStarted = false;
     System.out.println("Lobby correctly reset, waiting for new connections");
+  }
+
+  @Override
+  public void stop() {
+    if (udpSocket != null) {
+      udpSocket.close();
+    }
   }
 }
