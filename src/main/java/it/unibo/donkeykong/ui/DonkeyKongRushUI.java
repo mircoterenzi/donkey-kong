@@ -11,6 +11,7 @@ import it.unibo.donkeykong.ecs.entity.EntityFactoryImpl;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.*;
 import it.unibo.donkeykong.network.client.ClientVerticle;
+import it.unibo.donkeykong.network.discovery.DiscoveryClient;
 import it.unibo.donkeykong.network.server.LobbyVerticle;
 import java.awt.*;
 import javafx.animation.AnimationTimer;
@@ -121,54 +122,113 @@ public class DonkeyKongRushUI extends Application {
 
                       showGameOverScreen(primaryStage, "GUEST");
                     }));
+
+    vertx
+        .eventBus()
+        .<String>consumer(
+            "lobby.yield",
+            msg -> {
+              String newHostIp = msg.body();
+              System.out.println(
+                  "UI: Split-brain rilevato. Cedo il ruolo e mi connetto a " + newHostIp);
+              Platform.runLater(
+                  () -> {
+                    if (clientDeploymentId != null) {
+                      vertx.undeploy(clientDeploymentId);
+                    }
+                    lobbyDeploymentId = null;
+
+                    // Riconnessione automatica come Guest
+                    vertx
+                        .deployVerticle(new ClientVerticle("/play", newHostIp))
+                        .onComplete(
+                            ar -> {
+                              if (ar.succeeded()) clientDeploymentId = ar.result();
+                            });
+                  });
+            });
   }
 
   private void showMainMenu(Stage primaryStage) {
     Button playButton = new Button("Play");
     Button spectateButton = new Button("Spectate");
-
-    javafx.scene.control.TextField ipField = new javafx.scene.control.TextField("localhost");
-    ipField.setPromptText("Inserisci l'IP dell'Host (es. 192.168.1.55)");
-    ipField.setMaxWidth(200);
+    Label statusLabel = new Label();
+    statusLabel.setStyle("-fx-text-fill: #555555; -fx-font-style: italic;");
 
     playButton.setOnAction(
         e -> {
           playButton.setDisable(true);
           spectateButton.setDisable(true);
-          ipField.setDisable(true);
+          statusLabel.setText("Ricerca di una partita in corso...");
 
-          String targetIp = ipField.getText().trim();
-          vertx
-              .deployVerticle(new LobbyVerticle())
+          DiscoveryClient discovery = new DiscoveryClient(vertx);
+          discovery
+              .discoverPlay()
               .onComplete(
-                  ar -> {
-                    if (ar.succeeded()) lobbyDeploymentId = ar.result();
-
-                    vertx
-                        .deployVerticle(new ClientVerticle("/play", targetIp))
-                        .onComplete(
-                            ar2 -> {
-                              if (ar2.succeeded()) clientDeploymentId = ar2.result();
-                            });
-                  });
+                  ar ->
+                      Platform.runLater(
+                          () -> {
+                            if (ar.succeeded()) {
+                              String targetIp = ar.result();
+                              statusLabel.setText("Lobby trovata! Connessione...");
+                              vertx
+                                  .deployVerticle(new ClientVerticle("/play", targetIp))
+                                  .onComplete(
+                                      res -> {
+                                        if (res.succeeded()) clientDeploymentId = res.result();
+                                      });
+                            } else {
+                              statusLabel.setText("Nessuna partita trovata. Avvio come Host...");
+                              vertx
+                                  .deployVerticle(new LobbyVerticle())
+                                  .onComplete(
+                                      resLobby -> {
+                                        if (resLobby.succeeded())
+                                          lobbyDeploymentId = resLobby.result();
+                                        vertx
+                                            .deployVerticle(
+                                                new ClientVerticle("/play", "127.0.0.1"))
+                                            .onComplete(
+                                                resClient -> {
+                                                  if (resClient.succeeded())
+                                                    clientDeploymentId = resClient.result();
+                                                });
+                                      });
+                            }
+                          }));
         });
 
     spectateButton.setOnAction(
         e -> {
           playButton.setDisable(true);
           spectateButton.setDisable(true);
-          ipField.setDisable(true);
+          statusLabel.setText("Ricerca di una partita da osservare...");
 
-          String targetIp = ipField.getText().trim();
-          vertx
-              .deployVerticle(new ClientVerticle("/spectate", targetIp))
+          DiscoveryClient discovery = new DiscoveryClient(vertx);
+          discovery
+              .discoverSpectate()
               .onComplete(
-                  ar -> {
-                    if (ar.succeeded()) clientDeploymentId = ar.result();
-                  });
+                  ar ->
+                      Platform.runLater(
+                          () -> {
+                            if (ar.succeeded()) {
+                              String targetIp = ar.result();
+                              statusLabel.setText("Partita trovata! Accesso in corso...");
+                              vertx
+                                  .deployVerticle(new ClientVerticle("/spectate", targetIp))
+                                  .onComplete(
+                                      res -> {
+                                        if (res.succeeded()) clientDeploymentId = res.result();
+                                      });
+                            } else {
+                              statusLabel.setText("Errore durante la ricerca.");
+                              playButton.setDisable(false);
+                              spectateButton.setDisable(false);
+                            }
+                          }));
         });
 
-    VBox menuRoot = new VBox(20, ipField, playButton, spectateButton);
+    VBox menuRoot = new VBox(20, playButton, spectateButton, statusLabel);
     menuRoot.setAlignment(Pos.CENTER);
 
     Scene menuScene = new Scene(menuRoot, 400, 300);
@@ -266,18 +326,17 @@ public class DonkeyKongRushUI extends Application {
               vertx.eventBus().send("outbound.messages", deathMsg);
               System.out.println("UI: Player " + deadEntity.getId() + " has died!");
             },
-            destroyedEntity -> {
-              destroyedEntity
-                  .getComponent(NetworkComponent.class)
-                  .ifPresent(
-                      net -> {
-                        JsonObject msg =
-                            new JsonObject()
-                                .put("type", "ENTITY_DESTROYED")
-                                .put("id", net.networkId());
-                        vertx.eventBus().send("outbound.messages", msg);
-                      });
-            }));
+            destroyedEntity ->
+                destroyedEntity
+                    .getComponent(NetworkComponent.class)
+                    .ifPresent(
+                        net -> {
+                          JsonObject msg =
+                              new JsonObject()
+                                  .put("type", "ENTITY_DESTROYED")
+                                  .put("id", net.networkId());
+                          vertx.eventBus().send("outbound.messages", msg);
+                        })));
     if ("HOST".equals(myRole)) {
       world.addSystem(new SpawnSystem(entityFactory));
     }
