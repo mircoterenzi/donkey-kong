@@ -42,7 +42,6 @@ public class LobbyVerticle extends AbstractVerticle {
                   String type = msg.getString("type");
 
                   if ("DISCOVER".equals(type)) {
-                    // Risponde alle richieste di discovery con unicast
                     JsonObject reply =
                         new JsonObject()
                             .put("type", "LOBBY")
@@ -53,10 +52,8 @@ public class LobbyVerticle extends AbstractVerticle {
                     udpSocket.send(
                         reply.encode(), packet.sender().port(), packet.sender().host(), r -> {});
                   } else if ("LOBBY".equals(type)) {
-                    // Gestione Split-Brain: ricezione di un'altra lobby
                     if (guestSocket == null && !gameStarted) {
                       String otherId = msg.getString("lobbyId");
-                      // Se l'altra lobby è libera ed ha un UUID minore, questa lobby si chiude
                       if (msg.getBoolean("guestSlotFree", false)
                           && otherId.compareTo(lobbyId) < 0) {
                         System.out.println(
@@ -69,7 +66,6 @@ public class LobbyVerticle extends AbstractVerticle {
                   }
                 });
 
-            // Routine autonoma per la risoluzione split-brain quando la lobby attende giocatori
             vertx.setPeriodic(
                 2000,
                 id -> {
