@@ -27,7 +27,7 @@ public class DiscoveryClient {
     Promise<String> promise = Promise.promise();
     DatagramSocket socket =
         vertx.createDatagramSocket(new DatagramSocketOptions().setBroadcast(true));
-    String[] foundIp = new String[1]; // Memorizza la prima lobby valida trovata
+    String[] foundIp = new String[1];
 
     socket.handler(
         packet -> {

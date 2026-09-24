@@ -49,10 +49,14 @@ public class ClientVerticle extends AbstractVerticle {
                     });
 
             webSocket.closeHandler(
-              v -> {
-                System.out.println("Disconnected from server");
-                vertx.eventBus().publish("game.disconnected", new JsonObject().put("deploymentId", deploymentID()));
-              });
+                v -> {
+                  System.out.println("Disconnected from server");
+                  vertx
+                      .eventBus()
+                      .publish(
+                          "game.disconnected",
+                          new JsonObject().put("deploymentId", deploymentID()));
+                });
           } else {
             System.out.println("Failed to connect to server: " + res.cause().getMessage());
           }
