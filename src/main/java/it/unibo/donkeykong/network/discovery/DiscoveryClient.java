@@ -73,18 +73,33 @@ public class DiscoveryClient {
           }
         });
 
+    broadcast(socket);
+
     vertx.setPeriodic(
         2000,
-        id -> {
-          if (!promise.future().isComplete()) {
-            System.out.println("Searching for games…");
-            broadcast(socket);
-          } else {
-            vertx.cancelTimer(id);
+        new io.vertx.core.Handler<>() {
+          int attempts = 0;
+          final int MAX_ATTEMPTS = 5;
+
+          @Override
+          public void handle(Long id) {
+            if (promise.future().isComplete()) {
+              vertx.cancelTimer(id);
+              return;
+            }
+
+            if (attempts >= MAX_ATTEMPTS) {
+              vertx.cancelTimer(id);
+              socket.close();
+              promise.fail("Timeout: nessuna partita trovata.");
+            } else {
+              System.out.println("Searching for games…");
+              broadcast(socket);
+              attempts++;
+            }
           }
         });
 
-    broadcast(socket); // Invia immediatamente la prima richiesta
     return promise.future();
   }
 

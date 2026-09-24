@@ -43,6 +43,7 @@ public class DonkeyKongRushUI extends Application {
   private String lobbyDeploymentId;
   private String clientDeploymentId;
   private boolean isEventBusSetup = false;
+  private boolean isYielding = false;
 
   @Override
   public void start(Stage primaryStage) {
@@ -102,51 +103,57 @@ public class DonkeyKongRushUI extends Application {
                     }));
 
     vertx
-        .eventBus()
-        .<JsonObject>consumer(
-            "game.disconnected",
-            msg ->
-                Platform.runLater(
-                    () -> {
-                      if (clientDeploymentId == null) return;
+      .eventBus()
+      .<String>consumer(
+        "lobby.yield",
+        msg -> {
+          String newHostIp = msg.body();
+          System.out.println("UI: Split-brain rilevato. Cedo il ruolo e mi connetto a " + newHostIp);
+          Platform.runLater(() -> {
+            String oldClient = clientDeploymentId;
+            lobbyDeploymentId = null;
+            clientDeploymentId = null;
 
-                      System.out.println("UI: disconnected from server");
-                      if (gameLoop != null) {
-                        gameLoop.stop();
-                      }
+            if (oldClient != null) {
+              vertx.undeploy(oldClient);
+            }
 
-                      if (clientDeploymentId != null) vertx.undeploy(clientDeploymentId);
-                      if (lobbyDeploymentId != null) vertx.undeploy(lobbyDeploymentId);
-                      clientDeploymentId = null;
-                      lobbyDeploymentId = null;
-
-                      showGameOverScreen(primaryStage, "GUEST");
-                    }));
+            vertx
+              .deployVerticle(new ClientVerticle("/play", newHostIp))
+              .onComplete(ar -> {
+                if (ar.succeeded()) clientDeploymentId = ar.result();
+              });
+          });
+        });
 
     vertx
-        .eventBus()
-        .<String>consumer(
-            "lobby.yield",
-            msg -> {
-              String newHostIp = msg.body();
-              System.out.println(
-                  "UI: Split-brain rilevato. Cedo il ruolo e mi connetto a " + newHostIp);
-              Platform.runLater(
-                  () -> {
-                    if (clientDeploymentId != null) {
-                      vertx.undeploy(clientDeploymentId);
-                    }
-                    lobbyDeploymentId = null;
+      .eventBus()
+      .<JsonObject>consumer(
+        "game.disconnected",
+        msg ->
+          Platform.runLater(
+            () -> {
+              String disconnectedId = msg.body().getString("deploymentId");
 
-                    // Riconnessione automatica come Guest
-                    vertx
-                        .deployVerticle(new ClientVerticle("/play", newHostIp))
-                        .onComplete(
-                            ar -> {
-                              if (ar.succeeded()) clientDeploymentId = ar.result();
-                            });
-                  });
-            });
+              if (disconnectedId != null && !disconnectedId.equals(clientDeploymentId)) {
+                System.out.println("UI: Disconnessione ignorata (riferita a un vecchio client obsoleto).");
+                return;
+              }
+
+              if (clientDeploymentId == null) return;
+
+              System.out.println("UI: disconnected from server");
+              if (gameLoop != null) {
+                gameLoop.stop();
+              }
+
+              if (clientDeploymentId != null) vertx.undeploy(clientDeploymentId);
+              if (lobbyDeploymentId != null) vertx.undeploy(lobbyDeploymentId);
+              clientDeploymentId = null;
+              lobbyDeploymentId = null;
+
+              showGameOverScreen(primaryStage, "GUEST");
+            }));
   }
 
   private void showMainMenu(Stage primaryStage) {
