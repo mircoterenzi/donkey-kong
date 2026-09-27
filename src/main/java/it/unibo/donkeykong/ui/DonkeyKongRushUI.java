@@ -224,7 +224,7 @@ public class DonkeyKongRushUI extends Application {
     if ("NONE".equals(winner)) {
       resultText = "Connection lost. Game over.";
     } else if ("SPECTATOR".equals(myRole)) {
-      resultText = "Game over, winner: " + winner;
+      resultText = "Game over, winner: " + ("HOST".equals(winner) ? "Mario" : "Luigi");
     } else if (winner.equals(myRole)) {
       resultText = "You win!";
     } else {
