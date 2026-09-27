@@ -1,4 +1,4 @@
-package it.unibo.donkeykong.network.messages;
+package it.unibo.donkeykong.network.protocol;
 
 public record RoleMessage(MessageType type, Role role) {
   public RoleMessage(Role role) {

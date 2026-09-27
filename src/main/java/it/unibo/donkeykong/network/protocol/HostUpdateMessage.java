@@ -1,4 +1,4 @@
-package it.unibo.donkeykong.network.messages;
+package it.unibo.donkeykong.network.protocol;
 
 import java.util.List;
 

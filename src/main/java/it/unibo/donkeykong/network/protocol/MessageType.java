@@ -1,4 +1,4 @@
-package it.unibo.donkeykong.network.messages;
+package it.unibo.donkeykong.network.protocol;
 
 public enum MessageType {
   ROLE_ASSIGNMENT,
