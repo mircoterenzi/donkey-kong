@@ -5,6 +5,8 @@ import io.vertx.core.datagram.DatagramSocket;
 import io.vertx.core.datagram.DatagramSocketOptions;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
+import it.unibo.donkeykong.network.protocol.MessageType;
+import it.unibo.donkeykong.network.protocol.Net;
 import java.util.*;
 
 /**
@@ -32,7 +34,7 @@ public class LobbyVerticle extends AbstractVerticle {
   public void start() {
     udpSocket = vertx.createDatagramSocket(new DatagramSocketOptions().setBroadcast(true));
     udpSocket.listen(
-        8081,
+        Net.DISCOVERY_PORT,
         "0.0.0.0",
         res -> {
           if (res.succeeded()) {
@@ -141,10 +143,10 @@ public class LobbyVerticle extends AbstractVerticle {
               }
             })
         .listen(
-            8080,
+            Net.WS_PORT,
             http -> {
               if (http.succeeded()) {
-                System.out.println("Lobby server started on port 8080");
+                System.out.println("Lobby server started on port " + Net.WS_PORT);
               } else {
                 System.out.println("Failed to start lobby server: " + http.cause());
               }
@@ -164,29 +166,29 @@ public class LobbyVerticle extends AbstractVerticle {
         text -> {
           try {
             JsonObject message = new JsonObject(text);
-            String type = message.getString("type");
+            MessageType type = MessageType.valueOf(message.getString("type"));
 
-            if ("HOST_UPDATE".equals(type) && guestSocket != null) {
+            if (type == MessageType.HOST_UPDATE && guestSocket != null) {
               guestSocket.writeTextMessage(text);
               broadcastToSpectators(text);
-            } else if ("GUEST_UPDATE".equals(type) && hostSocket != null) {
+            } else if (type == MessageType.GUEST_UPDATE && hostSocket != null) {
               hostSocket.writeTextMessage(text);
               broadcastToSpectators(text);
-            } else if ("GOAL_REACHED".equals(type) && gameStarted) {
+            } else if (type == MessageType.GOAL_REACHED && gameStarted) {
               gameStarted = false;
               broadcastGameOver("GOAL_REACHED", role);
-            } else if ("PLAYER_DIED".equals(type) && gameStarted) {
+            } else if (type == MessageType.PLAYER_DIED && gameStarted) {
               gameStarted = false;
               String winner = role.equals("HOST") ? "GUEST" : "HOST";
               broadcastGameOver("PLAYER_DIED", winner);
-            } else if ("ENTITY_DESTROYED".equals(type) && gameStarted) {
+            } else if (type == MessageType.ENTITY_DESTROYED && gameStarted) {
               if ("HOST".equals(role) && guestSocket != null) {
                 guestSocket.writeTextMessage(text);
               } else if ("GUEST".equals(role) && hostSocket != null) {
                 hostSocket.writeTextMessage(text);
               }
               broadcastToSpectators(text);
-            } else if ("RESTORE_STATE".equals(type) && gameStarted) {
+            } else if (type == MessageType.RESTORE_STATE && gameStarted) {
               if ("HOST".equals(role) && guestSocket != null) {
                 guestSocket.writeTextMessage(text);
               }

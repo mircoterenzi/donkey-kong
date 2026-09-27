@@ -2,13 +2,16 @@ package it.unibo.donkeykong.ecs.system;
 
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import it.unibo.donkeykong.core.Constants;
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.api.GameSystem;
+import it.unibo.donkeykong.network.protocol.GuestUpdateMessage;
+import it.unibo.donkeykong.network.protocol.HostUpdateMessage;
+import it.unibo.donkeykong.network.protocol.MessageType;
+import it.unibo.donkeykong.network.protocol.Net;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,21 +38,24 @@ public class StateReceiverSystem implements GameSystem {
     this.eventBus = eventbus;
 
     consumers.add(
-        eventbus.<JsonObject>consumer("inbound.host_update", msg -> hostUpdates.add(msg.body())));
-    consumers.add(
-        eventbus.<JsonObject>consumer("inbound.guest_update", msg -> guestUpdates.add(msg.body())));
+        eventbus.<JsonObject>consumer(
+            Net.inbound(MessageType.HOST_UPDATE), msg -> hostUpdates.add(msg.body())));
     consumers.add(
         eventbus.<JsonObject>consumer(
-            "inbound.entity_destroyed", msg -> destroyedEntities.add(msg.body().getString("id"))));
+            Net.inbound(MessageType.GUEST_UPDATE), msg -> guestUpdates.add(msg.body())));
     consumers.add(
         eventbus.<JsonObject>consumer(
-            "inbound.restore_state", msg -> restoreStateDate = msg.body()));
+            Net.inbound(MessageType.ENTITY_DESTROYED),
+            msg -> destroyedEntities.add(msg.body().getString("id"))));
     consumers.add(
         eventbus.<JsonObject>consumer(
-            "inbound.guest_reconnected", msg -> processGuestReconnect = true));
+            Net.inbound(MessageType.RESTORE_STATE), msg -> restoreStateDate = msg.body()));
     consumers.add(
         eventbus.<JsonObject>consumer(
-            "inbound.guest_disconnected", msg -> processGuestDisconnect = true));
+            Net.inbound(MessageType.GUEST_RECONNECTED), msg -> processGuestReconnect = true));
+    consumers.add(
+        eventbus.<JsonObject>consumer(
+            Net.inbound(MessageType.GUEST_DISCONNECTED), msg -> processGuestDisconnect = true));
   }
 
   @Override
@@ -154,14 +160,13 @@ public class StateReceiverSystem implements GameSystem {
   }
 
   private void applyGuestUpdate(World world, JsonObject update) {
-    if (isGuestDisconnected) {
-      return;
-    }
-    double x = update.getDouble("playerX");
-    double y = update.getDouble("playerY");
-    String state = update.getString("playerState");
-    String direction = update.getString("playerDirection");
-    Integer lives = update.getInteger("lives");
+    if (isGuestDisconnected) return;
+    GuestUpdateMessage msg = update.mapTo(GuestUpdateMessage.class);
+    double x = msg.playerX();
+    double y = msg.playerY();
+    String state = msg.playerState();
+    String direction = msg.playerDirection();
+    int lives = msg.lives();
 
     world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
         .filter(
@@ -182,11 +187,13 @@ public class StateReceiverSystem implements GameSystem {
   }
 
   private void applyHostUpdate(World world, JsonObject update) {
-    double x = update.getDouble("playerX");
-    double y = update.getDouble("playerY");
-    String state = update.getString("playerState");
-    String direction = update.getString("playerDirection");
-    Integer lives = update.getInteger("lives");
+    HostUpdateMessage msg = update.mapTo(HostUpdateMessage.class);
+
+    double x = msg.playerX();
+    double y = msg.playerY();
+    String state = msg.playerState();
+    String direction = msg.playerDirection();
+    int lives = msg.lives();
 
     world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()
         .filter(
@@ -205,16 +212,14 @@ public class StateReceiverSystem implements GameSystem {
               hostEntity.updateComponent(new HealthComponent(lives));
             });
 
-    JsonArray barrels = update.getJsonArray("barrels");
+    List<it.unibo.donkeykong.network.protocol.BarrelData> barrels = msg.barrels();
     Set<String> activeBarrelIds = new HashSet<>();
-
     if (barrels != null) {
-      for (int i = 0; i < barrels.size(); i++) {
-        JsonObject barrel = barrels.getJsonObject(i);
-        String barrelId = barrel.getString("id");
+      for (it.unibo.donkeykong.network.protocol.BarrelData barrel : barrels) {
+        String barrelId = barrel.id();
         activeBarrelIds.add(barrelId);
-        double barrelX = barrel.getDouble("x");
-        double barrelY = barrel.getDouble("y");
+        double barrelX = barrel.x();
+        double barrelY = barrel.y();
 
         var existingBarrel =
             world.getEntitiesWithComponents(List.of(NetworkComponent.class)).stream()

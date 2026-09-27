@@ -12,6 +12,7 @@ import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.*;
 import it.unibo.donkeykong.network.client.ClientVerticle;
 import it.unibo.donkeykong.network.discovery.DiscoveryClient;
+import it.unibo.donkeykong.network.protocol.Net;
 import it.unibo.donkeykong.network.server.LobbyVerticle;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -303,9 +304,7 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(
         new HealthSystem(
             deadEntity ->
-                vertx
-                    .eventBus()
-                    .send("outbound.messages", new JsonObject().put("type", "PLAYER_DIED")),
+                vertx.eventBus().send(Net.OUTBOUND, new JsonObject().put("type", "PLAYER_DIED")),
             destroyedEntity ->
                 destroyedEntity
                     .getComponent(NetworkComponent.class)
@@ -315,7 +314,7 @@ public class DonkeyKongRushUI extends Application {
                               new JsonObject()
                                   .put("type", "ENTITY_DESTROYED")
                                   .put("id", net.networkId());
-                          vertx.eventBus().send("outbound.messages", msg);
+                          vertx.eventBus().send(Net.OUTBOUND, msg);
                         })));
     if ("HOST".equals(myRole)) {
       world.addSystem(new SpawnSystem(entityFactory));
@@ -329,7 +328,7 @@ public class DonkeyKongRushUI extends Application {
         new WinSystem(
             winner -> {
               JsonObject goalMsg = new JsonObject().put("type", "GOAL_REACHED");
-              vertx.eventBus().send("outbound.messages", goalMsg);
+              vertx.eventBus().send(Net.OUTBOUND, goalMsg);
             }));
     world.addSystem(new EventDispatchSystem());
     world.addSystem(new NetworkBroadcastSystem(vertx.eventBus(), myRole));

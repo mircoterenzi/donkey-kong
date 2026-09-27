@@ -3,5 +3,9 @@ package it.unibo.donkeykong.network.protocol;
 public enum Role {
   HOST,
   GUEST,
-  SPECTATOR
+  SPECTATOR;
+
+  public Role opponent() {
+    return this == HOST ? GUEST : HOST;
+  }
 }

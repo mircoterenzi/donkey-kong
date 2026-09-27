@@ -7,6 +7,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.datagram.DatagramSocket;
 import io.vertx.core.datagram.DatagramSocketOptions;
 import io.vertx.core.json.JsonObject;
+import it.unibo.donkeykong.network.protocol.Net;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
@@ -17,7 +18,6 @@ import java.util.Random;
 public class DiscoveryClient {
   private final Vertx vertx;
   private final Random random = new Random();
-  private static final int DISCOVERY_PORT = 8081;
 
   public DiscoveryClient(Vertx vertx) {
     this.vertx = vertx;
@@ -114,7 +114,7 @@ public class DiscoveryClient {
         for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
           InetAddress broadcastAddress = ia.getBroadcast();
           if (broadcastAddress != null) {
-            socket.send(buffer, DISCOVERY_PORT, broadcastAddress.getHostAddress(), res -> {});
+            socket.send(buffer, Net.DISCOVERY_PORT, broadcastAddress.getHostAddress(), res -> {});
           }
         }
       }
