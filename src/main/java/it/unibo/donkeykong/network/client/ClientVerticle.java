@@ -64,54 +64,55 @@ public class ClientVerticle extends AbstractVerticle {
   }
 
   private void handleIncomingMessage(String text) {
-    JsonObject message = new JsonObject(text);
-    String type = message.getString("type");
+    try {
+      JsonObject message = new JsonObject(text);
+      String type = message.getString("type");
 
-    switch (type) {
-      case "ROLE_ASSIGNMENT" -> {
-        myRole = message.getString("role");
-        vertx.eventBus().publish("game.role", myRole);
-        System.out.println("Assigned role: " + myRole);
-      }
-      case "GAME_START" -> {
-        vertx.eventBus().publish("game.start", message);
-        System.out.println("Game started");
-      }
-      case "HOST_UPDATE" -> {
-        if (!"HOST".equals(myRole)) {
-          vertx.eventBus().publish("inbound.host_update", message);
-          System.out.println("Received host update: " + message.encode());
+      switch (type) {
+        case "ROLE_ASSIGNMENT" -> {
+          myRole = message.getString("role");
+          vertx.eventBus().publish("game.role", myRole);
+          System.out.println("Assigned role: " + myRole);
         }
-      }
-      case "GUEST_UPDATE" -> {
-        if (!"GUEST".equals(myRole)) {
-          vertx.eventBus().publish("inbound.guest_update", message);
-          System.out.println("Received guest update: " + message.encode());
+        case "GAME_START" -> {
+          vertx.eventBus().publish("game.start", message);
+          System.out.println("Game started");
         }
+        case "HOST_UPDATE" -> {
+          if (!"HOST".equals(myRole)) {
+            vertx.eventBus().publish("inbound.host_update", message);
+          }
+        }
+        case "GUEST_UPDATE" -> {
+          if (!"GUEST".equals(myRole)) {
+            vertx.eventBus().publish("inbound.guest_update", message);
+          }
+        }
+        case "GAME_OVER" -> {
+          System.out.println(
+              "Game Over! Winner: "
+                  + message.getString("winner")
+                  + " | Reason: "
+                  + message.getString("reason"));
+          vertx.eventBus().publish("game.over", message);
+        }
+        case "ENTITY_DESTROYED" -> vertx.eventBus().publish("inbound.entity_destroyed", message);
+        case "GUEST_DISCONNECTED" -> {
+          vertx.eventBus().publish("inbound.guest_disconnected", message);
+          System.out.println("Guest disconnected");
+        }
+        case "GUEST_RECONNECTED" -> {
+          vertx.eventBus().publish("inbound.guest_reconnected", message);
+          System.out.println("Guest reconnected");
+        }
+        case "RESTORE_STATE" -> {
+          System.out.println("Received restore state message");
+          vertx.eventBus().publish("inbound.restore_state", message);
+        }
+        default -> System.out.println("Impossible to handle message of type: " + type);
       }
-      case "GAME_OVER" -> {
-        String winner = message.getString("winner");
-        String reason = message.getString("reason");
-        System.out.println("Game Over! Winner: " + winner + " | Reason: " + reason);
-        vertx.eventBus().publish("game.over", message);
-      }
-      case "ENTITY_DESTROYED" -> {
-        vertx.eventBus().publish("inbound.entity_destroyed", message);
-        System.out.println("Entity destroyed: " + message.encode());
-      }
-      case "GUEST_DISCONNECTED" -> {
-        vertx.eventBus().publish("inbound.guest_disconnected", message);
-        System.out.println("Guest disconnected: " + message.encode());
-      }
-      case "GUEST_RECONNECTED" -> {
-        vertx.eventBus().publish("inbound.guest_reconnected", message);
-        System.out.println("Guest reconnected: " + message.encode());
-      }
-      case "RESTORE_STATE" -> {
-        System.out.println("Received restore state message: " + message.encode());
-        vertx.eventBus().publish("inbound.restore_state", message);
-      }
-      default -> System.out.println("Impossible to handle message of type: " + type);
+    } catch (io.vertx.core.json.DecodeException e) {
+      System.err.println("Scartato messaggio WS malformato.");
     }
   }
 }

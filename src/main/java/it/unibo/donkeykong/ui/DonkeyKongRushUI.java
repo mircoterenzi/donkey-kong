@@ -13,7 +13,6 @@ import it.unibo.donkeykong.ecs.system.*;
 import it.unibo.donkeykong.network.client.ClientVerticle;
 import it.unibo.donkeykong.network.discovery.DiscoveryClient;
 import it.unibo.donkeykong.network.server.LobbyVerticle;
-import java.awt.*;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -36,13 +35,12 @@ public class DonkeyKongRushUI extends Application {
   public static final String WINDOW_TITLE = "Donkey Kong: Rush";
 
   private final Vertx vertx = Vertx.vertx();
-
-  private String myRole;
+  private volatile String myRole;
+  private volatile String lobbyDeploymentId;
+  private volatile String clientDeploymentId;
   private AnimationTimer gameLoop;
-
-  private String lobbyDeploymentId;
-  private String clientDeploymentId;
   private boolean isEventBusSetup = false;
+  private StateReceiverSystem stateReceiverSystem;
 
   @Override
   public void start(Stage primaryStage) {
@@ -59,24 +57,15 @@ public class DonkeyKongRushUI extends Application {
   }
 
   private void setupNetworkListeners(Stage primaryStage) {
-    vertx
-        .eventBus()
-        .<String>consumer(
-            "game.role",
-            msg -> {
-              this.myRole = msg.body();
-              System.out.println("UI: role saved " + this.myRole);
-            });
+    vertx.eventBus().<String>consumer("game.role", msg -> this.myRole = msg.body());
 
     vertx
         .eventBus()
         .<JsonObject>consumer(
             "game.start",
-            msg -> {
-              boolean isReconnect = msg.body().getBoolean("isReconnect", false);
-              Platform.runLater(() -> startGame(primaryStage, isReconnect));
-              System.out.println(isReconnect ? "UI: game reconnected" : "UI: game started");
-            });
+            msg ->
+                Platform.runLater(
+                    () -> startGame(primaryStage, msg.body().getBoolean("isReconnect", false))));
 
     vertx
         .eventBus()
@@ -85,48 +74,39 @@ public class DonkeyKongRushUI extends Application {
             msg ->
                 Platform.runLater(
                     () -> {
-                      String winner = msg.body().getString("winner");
-                      String reason = msg.body().getString("reason");
-                      System.out.println(
-                          "UI: game over, winner: " + winner + ", reason: " + reason);
-                      if (gameLoop != null) {
-                        gameLoop.stop();
-                      }
+                      if (stateReceiverSystem != null) stateReceiverSystem.stop();
+                      if (gameLoop != null) gameLoop.stop();
                       if (clientDeploymentId != null) vertx.undeploy(clientDeploymentId);
                       if (lobbyDeploymentId != null) vertx.undeploy(lobbyDeploymentId);
 
                       clientDeploymentId = null;
                       lobbyDeploymentId = null;
 
-                      showGameOverScreen(primaryStage, winner);
+                      showGameOverScreen(primaryStage, msg.body().getString("winner"));
                     }));
 
     vertx
         .eventBus()
         .<String>consumer(
             "lobby.yield",
-            msg -> {
-              String newHostIp = msg.body();
-              System.out.println(
-                  "UI: Split-brain rilevato. Cedo il ruolo e mi connetto a " + newHostIp);
-              Platform.runLater(
-                  () -> {
-                    String oldClient = clientDeploymentId;
-                    lobbyDeploymentId = null;
-                    clientDeploymentId = null;
+            msg ->
+                Platform.runLater(
+                    () -> {
+                      String oldClient = clientDeploymentId;
+                      lobbyDeploymentId = null;
+                      clientDeploymentId = null;
 
-                    if (oldClient != null) {
-                      vertx.undeploy(oldClient);
-                    }
+                      if (oldClient != null) {
+                        vertx.undeploy(oldClient);
+                      }
 
-                    vertx
-                        .deployVerticle(new ClientVerticle("/play", newHostIp))
-                        .onComplete(
-                            ar -> {
-                              if (ar.succeeded()) clientDeploymentId = ar.result();
-                            });
-                  });
-            });
+                      vertx
+                          .deployVerticle(new ClientVerticle("/play", msg.body()))
+                          .onComplete(
+                              ar -> {
+                                if (ar.succeeded()) clientDeploymentId = ar.result();
+                              });
+                    }));
 
     vertx
         .eventBus()
@@ -136,26 +116,16 @@ public class DonkeyKongRushUI extends Application {
                 Platform.runLater(
                     () -> {
                       String disconnectedId = msg.body().getString("deploymentId");
-
-                      if (disconnectedId != null && !disconnectedId.equals(clientDeploymentId)) {
-                        System.out.println(
-                            "UI: Disconnessione ignorata (riferita a un vecchio client obsoleto).");
+                      if (clientDeploymentId == null
+                          || (disconnectedId != null && !disconnectedId.equals(clientDeploymentId)))
                         return;
-                      }
-
-                      if (clientDeploymentId == null) return;
-
-                      System.out.println("UI: disconnected from server");
-                      if (gameLoop != null) {
-                        gameLoop.stop();
-                      }
-
+                      if (stateReceiverSystem != null) stateReceiverSystem.stop();
+                      if (gameLoop != null) gameLoop.stop();
                       if (clientDeploymentId != null) vertx.undeploy(clientDeploymentId);
                       if (lobbyDeploymentId != null) vertx.undeploy(lobbyDeploymentId);
                       clientDeploymentId = null;
                       lobbyDeploymentId = null;
-
-                      showGameOverScreen(primaryStage, "GUEST");
+                      showGameOverScreen(primaryStage, "NONE");
                     }));
   }
 
@@ -169,7 +139,7 @@ public class DonkeyKongRushUI extends Application {
         e -> {
           playButton.setDisable(true);
           spectateButton.setDisable(true);
-          statusLabel.setText("Ricerca di una partita in corso...");
+          statusLabel.setText("Searching for a game...");
 
           DiscoveryClient discovery = new DiscoveryClient(vertx);
           discovery
@@ -180,7 +150,7 @@ public class DonkeyKongRushUI extends Application {
                           () -> {
                             if (ar.succeeded()) {
                               String targetIp = ar.result();
-                              statusLabel.setText("Lobby trovata! Connessione...");
+                              statusLabel.setText("Game found! Connecting...");
                               vertx
                                   .deployVerticle(new ClientVerticle("/play", targetIp))
                                   .onComplete(
@@ -188,7 +158,7 @@ public class DonkeyKongRushUI extends Application {
                                         if (res.succeeded()) clientDeploymentId = res.result();
                                       });
                             } else {
-                              statusLabel.setText("Nessuna partita trovata. Avvio come Host...");
+                              statusLabel.setText("No game found. Starting as Host...");
                               vertx
                                   .deployVerticle(new LobbyVerticle())
                                   .onComplete(
@@ -212,7 +182,7 @@ public class DonkeyKongRushUI extends Application {
         e -> {
           playButton.setDisable(true);
           spectateButton.setDisable(true);
-          statusLabel.setText("Ricerca di una partita da osservare...");
+          statusLabel.setText("Searching for a game to spectate...");
 
           DiscoveryClient discovery = new DiscoveryClient(vertx);
           discovery
@@ -223,7 +193,7 @@ public class DonkeyKongRushUI extends Application {
                           () -> {
                             if (ar.succeeded()) {
                               String targetIp = ar.result();
-                              statusLabel.setText("Partita trovata! Accesso in corso...");
+                              statusLabel.setText("Game found! Waiting for host to start...");
                               vertx
                                   .deployVerticle(new ClientVerticle("/spectate", targetIp))
                                   .onComplete(
@@ -231,7 +201,7 @@ public class DonkeyKongRushUI extends Application {
                                         if (res.succeeded()) clientDeploymentId = res.result();
                                       });
                             } else {
-                              statusLabel.setText("Errore durante la ricerca.");
+                              statusLabel.setText("Error during search.");
                               playButton.setDisable(false);
                               spectateButton.setDisable(false);
                             }
@@ -250,7 +220,9 @@ public class DonkeyKongRushUI extends Application {
 
   private void showGameOverScreen(Stage primaryStage, String winner) {
     String resultText;
-    if ("SPECTATOR".equals(myRole)) {
+    if ("NONE".equals(winner)) {
+      resultText = "Connection lost. Game over.";
+    } else if ("SPECTATOR".equals(myRole)) {
       resultText = "Game over, winner: " + winner;
     } else if (winner.equals(myRole)) {
       resultText = "You win!";
@@ -281,9 +253,8 @@ public class DonkeyKongRushUI extends Application {
   }
 
   private void shutdownApp() {
-    if (gameLoop != null) {
-      gameLoop.stop();
-    }
+    if (stateReceiverSystem != null) stateReceiverSystem.stop();
+    if (gameLoop != null) gameLoop.stop();
     vertx
         .close()
         .onComplete(
@@ -331,11 +302,10 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(new PhysicsSystem());
     world.addSystem(
         new HealthSystem(
-            deadEntity -> {
-              JsonObject deathMsg = new JsonObject().put("type", "PLAYER_DIED");
-              vertx.eventBus().send("outbound.messages", deathMsg);
-              System.out.println("UI: Player " + deadEntity.getId() + " has died!");
-            },
+            deadEntity ->
+                vertx
+                    .eventBus()
+                    .send("outbound.messages", new JsonObject().put("type", "PLAYER_DIED")),
             destroyedEntity ->
                 destroyedEntity
                     .getComponent(NetworkComponent.class)
@@ -353,13 +323,13 @@ public class DonkeyKongRushUI extends Application {
     world.addSystem(new ClimbingSystem());
     world.addSystem(new InputSystem(gameStartTime));
     world.addSystem(new GravitySystem());
-    world.addSystem(new StateReceiverSystem(vertx.eventBus(), myRole, entityFactory));
+    this.stateReceiverSystem = new StateReceiverSystem(vertx.eventBus(), myRole, entityFactory);
+    world.addSystem(stateReceiverSystem);
     world.addSystem(
         new WinSystem(
             winner -> {
               JsonObject goalMsg = new JsonObject().put("type", "GOAL_REACHED");
               vertx.eventBus().send("outbound.messages", goalMsg);
-              System.out.println("UI: Player " + winner + " has reached the goal!");
             }));
     world.addSystem(new EventDispatchSystem());
     world.addSystem(new NetworkBroadcastSystem(vertx.eventBus(), myRole));

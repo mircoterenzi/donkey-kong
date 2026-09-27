@@ -1,6 +1,7 @@
 package it.unibo.donkeykong.ecs.system;
 
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import it.unibo.donkeykong.core.Constants;
@@ -18,6 +19,7 @@ public class StateReceiverSystem implements GameSystem {
   private final ConcurrentLinkedQueue<JsonObject> hostUpdates = new ConcurrentLinkedQueue<>();
   private final ConcurrentLinkedQueue<JsonObject> guestUpdates = new ConcurrentLinkedQueue<>();
   private final ConcurrentLinkedQueue<String> destroyedEntities = new ConcurrentLinkedQueue<>();
+  private final List<MessageConsumer<?>> consumers = new java.util.ArrayList<>();
 
   private volatile boolean processGuestDisconnect = false;
   private volatile boolean processGuestReconnect = false;
@@ -32,14 +34,22 @@ public class StateReceiverSystem implements GameSystem {
     this.entityFactory = entityFactory;
     this.eventBus = eventbus;
 
-    eventbus.<JsonObject>consumer("inbound.host_update", msg -> hostUpdates.add(msg.body()));
-    eventbus.<JsonObject>consumer("inbound.guest_update", msg -> guestUpdates.add(msg.body()));
-    eventbus.<JsonObject>consumer(
-        "inbound.entity_destroyed", msg -> destroyedEntities.add(msg.body().getString("id")));
-    eventbus.<JsonObject>consumer("inbound.restore_state", msg -> restoreStateDate = msg.body());
-    eventbus.<JsonObject>consumer("inbound.guest_reconnected", msg -> processGuestReconnect = true);
-    eventbus.<JsonObject>consumer(
-        "inbound.guest_disconnected", msg -> processGuestDisconnect = true);
+    consumers.add(
+        eventbus.<JsonObject>consumer("inbound.host_update", msg -> hostUpdates.add(msg.body())));
+    consumers.add(
+        eventbus.<JsonObject>consumer("inbound.guest_update", msg -> guestUpdates.add(msg.body())));
+    consumers.add(
+        eventbus.<JsonObject>consumer(
+            "inbound.entity_destroyed", msg -> destroyedEntities.add(msg.body().getString("id"))));
+    consumers.add(
+        eventbus.<JsonObject>consumer(
+            "inbound.restore_state", msg -> restoreStateDate = msg.body()));
+    consumers.add(
+        eventbus.<JsonObject>consumer(
+            "inbound.guest_reconnected", msg -> processGuestReconnect = true));
+    consumers.add(
+        eventbus.<JsonObject>consumer(
+            "inbound.guest_disconnected", msg -> processGuestDisconnect = true));
   }
 
   @Override
@@ -225,14 +235,6 @@ public class StateReceiverSystem implements GameSystem {
                   : Constants.BARREL_VELOCITY;
           entityFactory.createNetworkBarrel(
               barrelId, new PositionComponent(barrelX, barrelY), defaultVelocity);
-          System.out.println(
-              "Created new barrel with ID: "
-                  + barrelId
-                  + " at position ("
-                  + barrelX
-                  + ", "
-                  + barrelY
-                  + ")");
         }
       }
     }
@@ -247,5 +249,9 @@ public class StateReceiverSystem implements GameSystem {
               })
           .forEach(world::removeEntity);
     }
+  }
+
+  public void stop() {
+    consumers.forEach(MessageConsumer::unregister);
   }
 }

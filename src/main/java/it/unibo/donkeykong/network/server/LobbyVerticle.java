@@ -38,31 +38,35 @@ public class LobbyVerticle extends AbstractVerticle {
           if (res.succeeded()) {
             udpSocket.handler(
                 packet -> {
-                  JsonObject msg = new JsonObject(packet.data().toString());
-                  String type = msg.getString("type");
+                  try {
+                    JsonObject msg = new JsonObject(packet.data().toString());
+                    String type = msg.getString("type");
 
-                  if ("DISCOVER".equals(type)) {
-                    JsonObject reply =
-                        new JsonObject()
-                            .put("type", "LOBBY")
-                            .put("wsPort", 8080)
-                            .put("lobbyId", lobbyId)
-                            .put("guestSlotFree", guestSocket == null)
-                            .put("gameStarted", gameStarted);
-                    udpSocket.send(
-                        reply.encode(), packet.sender().port(), packet.sender().host(), r -> {});
-                  } else if ("LOBBY".equals(type)) {
-                    if (guestSocket == null && !gameStarted) {
-                      String otherId = msg.getString("lobbyId");
-                      if (msg.getBoolean("guestSlotFree", false)
-                          && otherId.compareTo(lobbyId) < 0) {
-                        System.out.println(
-                            "Split-brain: trovata lobby prioritaria. Cedo il ruolo di host.");
-                        vertx.eventBus().publish("lobby.yield", packet.sender().host());
-                        resetLobby();
-                        vertx.undeploy(context.deploymentID());
+                    if ("DISCOVER".equals(type)) {
+                      JsonObject reply =
+                          new JsonObject()
+                              .put("type", "LOBBY")
+                              .put("wsPort", 8080)
+                              .put("lobbyId", lobbyId)
+                              .put("guestSlotFree", guestSocket == null)
+                              .put("gameStarted", gameStarted);
+                      udpSocket.send(
+                          reply.encode(), packet.sender().port(), packet.sender().host(), r -> {});
+                    } else if ("LOBBY".equals(type)) {
+                      if (guestSocket == null && !gameStarted) {
+                        String otherId = msg.getString("lobbyId");
+                        if (msg.getBoolean("guestSlotFree", false)
+                            && otherId.compareTo(lobbyId) < 0) {
+                          System.out.println(
+                              "Split-brain: trovata lobby prioritaria. Cedo il ruolo di host.");
+                          vertx.eventBus().publish("lobby.yield", packet.sender().host());
+                          resetLobby();
+                          vertx.undeploy(context.deploymentID());
+                        }
                       }
                     }
+                  } catch (io.vertx.core.json.DecodeException e) {
+                    System.err.println("Scartato pacchetto UDP malformato.");
                   }
                 });
 
@@ -158,33 +162,37 @@ public class LobbyVerticle extends AbstractVerticle {
     }
     ws.textMessageHandler(
         text -> {
-          JsonObject message = new JsonObject(text);
-          String type = message.getString("type");
+          try {
+            JsonObject message = new JsonObject(text);
+            String type = message.getString("type");
 
-          if ("HOST_UPDATE".equals(type) && guestSocket != null) {
-            guestSocket.writeTextMessage(text);
-            broadcastToSpectators(text);
-          } else if ("GUEST_UPDATE".equals(type) && hostSocket != null) {
-            hostSocket.writeTextMessage(text);
-            broadcastToSpectators(text);
-          } else if ("GOAL_REACHED".equals(type) && gameStarted) {
-            gameStarted = false;
-            broadcastGameOver("GOAL_REACHED", role);
-          } else if ("PLAYER_DIED".equals(type) && gameStarted) {
-            gameStarted = false;
-            String winner = role.equals("HOST") ? "GUEST" : "HOST";
-            broadcastGameOver("PLAYER_DIED", winner);
-          } else if ("ENTITY_DESTROYED".equals(type) && gameStarted) {
-            if ("HOST".equals(role) && guestSocket != null) {
+            if ("HOST_UPDATE".equals(type) && guestSocket != null) {
               guestSocket.writeTextMessage(text);
-            } else if ("GUEST".equals(role) && hostSocket != null) {
+              broadcastToSpectators(text);
+            } else if ("GUEST_UPDATE".equals(type) && hostSocket != null) {
               hostSocket.writeTextMessage(text);
+              broadcastToSpectators(text);
+            } else if ("GOAL_REACHED".equals(type) && gameStarted) {
+              gameStarted = false;
+              broadcastGameOver("GOAL_REACHED", role);
+            } else if ("PLAYER_DIED".equals(type) && gameStarted) {
+              gameStarted = false;
+              String winner = role.equals("HOST") ? "GUEST" : "HOST";
+              broadcastGameOver("PLAYER_DIED", winner);
+            } else if ("ENTITY_DESTROYED".equals(type) && gameStarted) {
+              if ("HOST".equals(role) && guestSocket != null) {
+                guestSocket.writeTextMessage(text);
+              } else if ("GUEST".equals(role) && hostSocket != null) {
+                hostSocket.writeTextMessage(text);
+              }
+              broadcastToSpectators(text);
+            } else if ("RESTORE_STATE".equals(type) && gameStarted) {
+              if ("HOST".equals(role) && guestSocket != null) {
+                guestSocket.writeTextMessage(text);
+              }
             }
-            broadcastToSpectators(text);
-          } else if ("RESTORE_STATE".equals(type) && gameStarted) {
-            if ("HOST".equals(role) && guestSocket != null) {
-              guestSocket.writeTextMessage(text);
-            }
+          } catch (io.vertx.core.json.DecodeException e) {
+            System.err.println("Scartato messaggio WS malformato.");
           }
         });
 
@@ -213,6 +221,12 @@ public class LobbyVerticle extends AbstractVerticle {
               System.out.println("Host disconnected, game over. Winner: GUEST");
               broadcastGameOver("HOST_DISCONNECTED", "GUEST");
             }
+          } else {
+            if ("GUEST".equals(role)) {
+              guestSocket = null;
+            } else if ("HOST".equals(role)) {
+              resetLobby();
+            }
           }
         });
   }
@@ -229,7 +243,6 @@ public class LobbyVerticle extends AbstractVerticle {
     hostSocket.writeTextMessage(msgStr);
     guestSocket.writeTextMessage(msgStr);
     broadcastToSpectators(msgStr);
-    System.out.println("Game started");
   }
 
   private void broadcastToSpectators(String message) {
@@ -256,6 +269,10 @@ public class LobbyVerticle extends AbstractVerticle {
   }
 
   private void resetLobby() {
+    if (guestReconnectTimerId != -1) {
+      vertx.cancelTimer(guestReconnectTimerId);
+      guestReconnectTimerId = -1;
+    }
     if (hostSocket != null && !hostSocket.isClosed()) hostSocket.close();
     if (guestSocket != null && !guestSocket.isClosed()) guestSocket.close();
     for (ServerWebSocket spectator : spectators) {
