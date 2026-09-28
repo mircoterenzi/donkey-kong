@@ -14,6 +14,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DiscoveryClient {
   private final Vertx vertx;
@@ -27,30 +28,23 @@ public class DiscoveryClient {
     Promise<String> promise = Promise.promise();
     DatagramSocket socket =
         vertx.createDatagramSocket(new DatagramSocketOptions().setBroadcast(true));
-    String[] foundIp = new String[1];
 
     socket.handler(
         packet -> {
           JsonObject msg = new JsonObject(packet.data().toString());
           if ("LOBBY".equals(msg.getString("type")) && msg.getBoolean("guestSlotFree", false)) {
-            if (foundIp[0] == null) {
-              foundIp[0] = packet.sender().host();
-            }
+            promise.tryComplete(packet.sender().host());
           }
         });
 
     broadcast(socket);
-
     long jitter = random.nextInt(501);
+
     vertx.setTimer(
         1500 + jitter,
         id -> {
           socket.close();
-          if (foundIp[0] != null) {
-            promise.complete(foundIp[0]);
-          } else {
-            promise.fail("Nessuna lobby disponibile. Necessario deploy Host.");
-          }
+          promise.tryFail("No lobby available. Host deployment required.");
         });
 
     return promise.future();
@@ -60,14 +54,13 @@ public class DiscoveryClient {
     Promise<String> promise = Promise.promise();
     DatagramSocket socket =
         vertx.createDatagramSocket(new DatagramSocketOptions().setBroadcast(true));
-    System.out.println("Searching for games…");
+    System.out.println("Searching for games...");
 
     socket.handler(
         packet -> {
           JsonObject msg = new JsonObject(packet.data().toString());
           if ("LOBBY".equals(msg.getString("type"))) {
-            if (!promise.future().isComplete()) {
-              promise.complete(packet.sender().host());
+            if (promise.tryComplete(packet.sender().host())) {
               socket.close();
             }
           }
@@ -75,28 +68,24 @@ public class DiscoveryClient {
 
     broadcast(socket);
 
+    AtomicInteger attempts = new AtomicInteger(0);
+    final int MAX_ATTEMPTS = 5;
+
     vertx.setPeriodic(
         2000,
-        new io.vertx.core.Handler<>() {
-          int attempts = 0;
-          final int MAX_ATTEMPTS = 5;
+        id -> {
+          if (promise.future().isComplete()) {
+            vertx.cancelTimer(id);
+            return;
+          }
 
-          @Override
-          public void handle(Long id) {
-            if (promise.future().isComplete()) {
-              vertx.cancelTimer(id);
-              return;
-            }
-
-            if (attempts >= MAX_ATTEMPTS) {
-              vertx.cancelTimer(id);
-              socket.close();
-              promise.fail("Timeout: nessuna partita trovata.");
-            } else {
-              System.out.println("Searching for games…");
-              broadcast(socket);
-              attempts++;
-            }
+          if (attempts.getAndIncrement() >= MAX_ATTEMPTS) {
+            vertx.cancelTimer(id);
+            socket.close();
+            promise.tryFail("Timeout: no game found.");
+          } else {
+            System.out.println("Searching for games...");
+            broadcast(socket);
           }
         });
 
@@ -119,7 +108,7 @@ public class DiscoveryClient {
         }
       }
     } catch (SocketException e) {
-      System.err.println("Errore durante il broadcast: " + e.getMessage());
+      System.err.println("Error during broadcast: " + e.getMessage());
     }
   }
 }
