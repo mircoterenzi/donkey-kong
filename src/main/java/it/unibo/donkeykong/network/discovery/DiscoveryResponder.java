@@ -1,10 +1,9 @@
-package it.unibo.donkeykong.network.server;
+package it.unibo.donkeykong.network.discovery;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.datagram.DatagramSocket;
 import io.vertx.core.datagram.DatagramSocketOptions;
 import io.vertx.core.json.JsonObject;
-import it.unibo.donkeykong.network.discovery.DiscoveryClient;
 import it.unibo.donkeykong.network.protocol.Net;
 import java.util.function.Consumer;
 import java.util.function.Supplier;

@@ -1,16 +1,16 @@
-package it.unibo.donkeykong.ui;
+package it.unibo.donkeykong.core;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import it.unibo.donkeykong.core.Constants;
-import it.unibo.donkeykong.core.MapFactory;
-import it.unibo.donkeykong.core.WorldImpl;
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.NetworkComponent;
 import it.unibo.donkeykong.ecs.entity.EntityFactoryImpl;
 import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.*;
 import it.unibo.donkeykong.network.protocol.Net;
+import it.unibo.donkeykong.ui.AnimationSystem;
+import it.unibo.donkeykong.ui.InputHandler;
+import it.unibo.donkeykong.ui.RenderingSystem;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;

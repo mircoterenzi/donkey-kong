@@ -1,5 +1,7 @@
 package it.unibo.donkeykong.ui;
 
+import it.unibo.donkeykong.core.GameBootstrap;
+import it.unibo.donkeykong.network.SessionManager;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;

@@ -3,6 +3,7 @@ package it.unibo.donkeykong.network.server;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
+import it.unibo.donkeykong.network.discovery.DiscoveryResponder;
 import it.unibo.donkeykong.network.protocol.MessageType;
 import it.unibo.donkeykong.network.protocol.Net;
 import it.unibo.donkeykong.network.protocol.Role;
@@ -162,13 +163,11 @@ public class LobbyVerticle extends AbstractVerticle {
 
             switch (type) {
               case HOST_UPDATE -> {
-                // Valida lo schema DTO (lancia IllegalArgumentException in caso di mismatch)
                 message.mapTo(it.unibo.donkeykong.network.protocol.HostUpdateMessage.class);
                 send(role.opponent(), text);
                 broadcastToSpectators(text);
               }
               case GUEST_UPDATE -> {
-                // Valida lo schema DTO
                 message.mapTo(it.unibo.donkeykong.network.protocol.GuestUpdateMessage.class);
                 send(role.opponent(), text);
                 broadcastToSpectators(text);

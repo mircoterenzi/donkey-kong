@@ -1,4 +1,4 @@
-package it.unibo.donkeykong.ui;
+package it.unibo.donkeykong.network;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
