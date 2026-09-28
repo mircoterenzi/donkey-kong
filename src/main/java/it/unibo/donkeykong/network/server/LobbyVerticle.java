@@ -1,144 +1,65 @@
 package it.unibo.donkeykong.network.server;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.datagram.DatagramSocket;
-import io.vertx.core.datagram.DatagramSocketOptions;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
 import it.unibo.donkeykong.network.protocol.MessageType;
 import it.unibo.donkeykong.network.protocol.Net;
-import java.util.*;
+import it.unibo.donkeykong.network.protocol.Role;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * LobbyVerticle is a Vert.x verticle that manages the game lobby for a multiplayer game. It handles
- * WebSocket connections and matchmaking logics, then starts and manages the game. Finally, it
- * manages handles disconnections, notifying the remaining player of the game over condition and
- * cleaning up the lobby for new connections.
+ * WebSocket connections, delegates UDP discovery, and manages game state.
  */
 public class LobbyVerticle extends AbstractVerticle {
-
   private ServerWebSocket hostSocket;
   private ServerWebSocket guestSocket;
   private final List<ServerWebSocket> spectators = new ArrayList<>();
+
   private boolean gameStarted = false;
   private long guestReconnectTimerId = -1;
   private final String lobbyId = UUID.randomUUID().toString();
-  private DatagramSocket udpSocket;
 
-  /**
-   * Starts the LobbyVerticle by creating an HTTP server that listens for WebSocket connections,
-   * then assigns roles to the connected clients (host, guest, or spectator) and manages the game
-   * state accordingly.
-   */
   @Override
   public void start() {
-    udpSocket = vertx.createDatagramSocket(new DatagramSocketOptions().setBroadcast(true));
-    udpSocket.listen(
-        Net.DISCOVERY_PORT,
-        "0.0.0.0",
-        res -> {
-          if (res.succeeded()) {
-            udpSocket.handler(
-                packet -> {
-                  try {
-                    JsonObject msg = new JsonObject(packet.data().toString());
-                    String type = msg.getString("type");
+    DiscoveryResponder discoveryResponder =
+        new DiscoveryResponder(
+            vertx,
+            lobbyId,
+            () -> guestSocket == null,
+            () -> gameStarted,
+            host -> {
+              vertx.eventBus().publish("lobby.yield", host);
+              resetLobby();
+              vertx.undeploy(context.deploymentID());
+            });
+    discoveryResponder.start();
 
-                    if ("DISCOVER".equals(type)) {
-                      JsonObject reply =
-                          new JsonObject()
-                              .put("type", "LOBBY")
-                              .put("wsPort", 8080)
-                              .put("lobbyId", lobbyId)
-                              .put("guestSlotFree", guestSocket == null)
-                              .put("gameStarted", gameStarted);
-                      udpSocket.send(
-                          reply.encode(), packet.sender().port(), packet.sender().host(), r -> {});
-                    } else if ("LOBBY".equals(type)) {
-                      if (guestSocket == null && !gameStarted) {
-                        String otherId = msg.getString("lobbyId");
-                        if (msg.getBoolean("guestSlotFree", false)
-                            && otherId.compareTo(lobbyId) < 0) {
-                          System.out.println(
-                              "Split-brain: trovata lobby prioritaria. Cedo il ruolo di host.");
-                          vertx.eventBus().publish("lobby.yield", packet.sender().host());
-                          resetLobby();
-                          vertx.undeploy(context.deploymentID());
-                        }
-                      }
-                    }
-                  } catch (io.vertx.core.json.DecodeException e) {
-                    System.err.println("Scartato pacchetto UDP malformato.");
-                  }
-                });
-
-            vertx.setPeriodic(
-                2000,
-                id -> {
-                  if (guestSocket == null && !gameStarted) {
-                    it.unibo.donkeykong.network.discovery.DiscoveryClient.broadcast(udpSocket);
-                  }
-                });
-          } else {
-            System.out.println(
-                "Impossibile avviare il server UDP per la discovery: " + res.cause());
-          }
-        });
     vertx
         .createHttpServer()
         .webSocketHandler(
             ws -> {
               if ("/spectate".equals(ws.path())) {
-                spectators.add(ws);
-                setupSocket(ws, "SPECTATOR");
-                sendRole(ws, "SPECTATOR");
-                System.out.println("Spectator connected, total spectators: " + spectators.size());
-                if (gameStarted) {
-                  ws.writeTextMessage(new JsonObject().put("type", "GAME_START").encode());
-                }
+                onSpectator(ws);
               } else {
                 if (hostSocket == null) {
                   hostSocket = ws;
-                  setupSocket(ws, "HOST");
-                  sendRole(ws, "HOST");
+                  onPlayer(ws, Role.HOST);
                   System.out.println("Host connected");
                 } else if (guestSocket == null) {
                   guestSocket = ws;
-                  setupSocket(ws, "GUEST");
-                  sendRole(ws, "GUEST");
                   if (!gameStarted) {
+                    onPlayer(ws, Role.GUEST);
                     System.out.println("Guest connected, ready to start the game");
                     startGame();
                   } else {
-                    System.out.println("Guest reconnected");
-                    if (guestReconnectTimerId != -1) {
-                      vertx.cancelTimer(guestReconnectTimerId);
-                      guestReconnectTimerId = -1;
-                    }
-
-                    ws.writeTextMessage(
-                        new JsonObject()
-                            .put("type", "GAME_START")
-                            .put("isReconnect", true)
-                            .encode());
-
-                    vertx.setTimer(
-                        500,
-                        id -> {
-                          JsonObject msg = new JsonObject().put("type", "GUEST_RECONNECTED");
-                          if (hostSocket != null) hostSocket.writeTextMessage(msg.encode());
-                          broadcastToSpectators(msg.encode());
-                        });
+                    onGuestReconnect(ws);
                   }
-                } else {
-                  spectators.add(ws);
-                  setupSocket(ws, "SPECTATOR");
-                  sendRole(ws, "SPECTATOR");
-                  System.out.println("Spectator connected, total spectators: " + spectators.size());
-                  if (gameStarted) {
-                    JsonObject msg = new JsonObject().put("type", "GAME_START");
-                    ws.writeTextMessage(msg.encode());
-                  }
+                } else { // If there are no slots available, treat as spectator
+                  onSpectator(ws);
                 }
               }
             })
@@ -153,58 +74,31 @@ public class LobbyVerticle extends AbstractVerticle {
             });
   }
 
-  private void setupSocket(ServerWebSocket ws, String role) {
-    if ("SPECTATOR".equals(role)) {
-      ws.closeHandler(
-          v -> {
-            spectators.remove(ws);
-            System.out.println("Spectator disconnected, total spectators: " + spectators.size());
-          });
-      return;
-    }
-    ws.textMessageHandler(
-        text -> {
-          try {
-            JsonObject message = new JsonObject(text);
-            MessageType type = MessageType.valueOf(message.getString("type"));
-
-            if (type == MessageType.HOST_UPDATE && guestSocket != null) {
-              guestSocket.writeTextMessage(text);
-              broadcastToSpectators(text);
-            } else if (type == MessageType.GUEST_UPDATE && hostSocket != null) {
-              hostSocket.writeTextMessage(text);
-              broadcastToSpectators(text);
-            } else if (type == MessageType.GOAL_REACHED && gameStarted) {
-              gameStarted = false;
-              broadcastGameOver("GOAL_REACHED", role);
-            } else if (type == MessageType.PLAYER_DIED && gameStarted) {
-              gameStarted = false;
-              String winner = role.equals("HOST") ? "GUEST" : "HOST";
-              broadcastGameOver("PLAYER_DIED", winner);
-            } else if (type == MessageType.ENTITY_DESTROYED && gameStarted) {
-              if ("HOST".equals(role) && guestSocket != null) {
-                guestSocket.writeTextMessage(text);
-              } else if ("GUEST".equals(role) && hostSocket != null) {
-                hostSocket.writeTextMessage(text);
-              }
-              broadcastToSpectators(text);
-            } else if (type == MessageType.RESTORE_STATE && gameStarted) {
-              if ("HOST".equals(role) && guestSocket != null) {
-                guestSocket.writeTextMessage(text);
-              }
-            }
-          } catch (io.vertx.core.json.DecodeException e) {
-            System.err.println("Scartato messaggio WS malformato.");
-          }
+  private void onSpectator(ServerWebSocket ws) {
+    spectators.add(ws);
+    ws.closeHandler(
+        v -> {
+          spectators.remove(ws);
+          System.out.println("Spectator disconnected, total spectators: " + spectators.size());
         });
+    sendRole(ws, Role.SPECTATOR);
+    System.out.println("Spectator connected, total spectators: " + spectators.size());
+
+    if (gameStarted) {
+      ws.writeTextMessage(new JsonObject().put("type", "GAME_START").encode());
+    }
+  }
+
+  private void onPlayer(ServerWebSocket ws, Role role) {
+    sendRole(ws, role);
+    setupMessageHandlers(ws, role);
 
     ws.closeHandler(
         v -> {
           if (gameStarted) {
-            if ("GUEST".equals(role)) {
+            if (role == Role.GUEST) {
               System.out.println("Guest disconnected, starting 30 seconds timer for reconnection");
               guestSocket = null;
-
               JsonObject msg = new JsonObject().put("type", "GUEST_DISCONNECTED");
               if (hostSocket != null) hostSocket.writeTextMessage(msg.encode());
               broadcastToSpectators(msg.encode());
@@ -215,26 +109,109 @@ public class LobbyVerticle extends AbstractVerticle {
                       id -> {
                         System.out.println(
                             "Guest did not reconnect in time, game over. Winner: HOST");
-                        gameStarted = false;
-                        broadcastGameOver("GUEST_TIMEOUT", "HOST");
+                        endGame("GUEST_TIMEOUT", Role.HOST);
                       });
-            } else if ("HOST".equals(role)) {
-              gameStarted = false;
+            } else if (role == Role.HOST) {
               System.out.println("Host disconnected, game over. Winner: GUEST");
-              broadcastGameOver("HOST_DISCONNECTED", "GUEST");
+              endGame("HOST_DISCONNECTED", Role.GUEST);
             }
           } else {
-            if ("GUEST".equals(role)) {
+            if (role == Role.GUEST) {
               guestSocket = null;
-            } else if ("HOST".equals(role)) {
+            } else if (role == Role.HOST) {
               resetLobby();
             }
           }
         });
   }
 
-  private void sendRole(ServerWebSocket ws, String role) {
-    JsonObject msg = new JsonObject().put("type", "ROLE_ASSIGNMENT").put("role", role);
+  private void onGuestReconnect(ServerWebSocket ws) {
+    onPlayer(ws, Role.GUEST);
+    System.out.println("Guest reconnected");
+
+    if (guestReconnectTimerId != -1) {
+      vertx.cancelTimer(guestReconnectTimerId);
+      guestReconnectTimerId = -1;
+    }
+
+    ws.writeTextMessage(
+        new JsonObject().put("type", "GAME_START").put("isReconnect", true).encode());
+
+    vertx.setTimer(
+        500,
+        id -> {
+          JsonObject msg = new JsonObject().put("type", "GUEST_RECONNECTED");
+          if (hostSocket != null) hostSocket.writeTextMessage(msg.encode());
+          broadcastToSpectators(msg.encode());
+        });
+  }
+
+  private void setupMessageHandlers(ServerWebSocket ws, Role role) {
+    ws.textMessageHandler(
+        text -> {
+          try {
+            JsonObject message = new JsonObject(text);
+            String typeString = message.getString("type");
+
+            if (typeString == null) {
+              System.err.println("Discarded WS message: missing 'type' field.");
+              return;
+            }
+
+            MessageType type = MessageType.valueOf(typeString);
+
+            switch (type) {
+              case HOST_UPDATE -> {
+                // Valida lo schema DTO (lancia IllegalArgumentException in caso di mismatch)
+                message.mapTo(it.unibo.donkeykong.network.protocol.HostUpdateMessage.class);
+                send(role.opponent(), text);
+                broadcastToSpectators(text);
+              }
+              case GUEST_UPDATE -> {
+                // Valida lo schema DTO
+                message.mapTo(it.unibo.donkeykong.network.protocol.GuestUpdateMessage.class);
+                send(role.opponent(), text);
+                broadcastToSpectators(text);
+              }
+              case ENTITY_DESTROYED -> {
+                if (message.getString("id") == null)
+                  throw new IllegalArgumentException("Missing id");
+                if (gameStarted) {
+                  send(role.opponent(), text);
+                  broadcastToSpectators(text);
+                }
+              }
+              case RESTORE_STATE -> {
+                if (message.getDouble("playerX") == null)
+                  throw new IllegalArgumentException("Malformed state");
+                if (gameStarted && role == Role.HOST) send(Role.GUEST, text);
+              }
+              case GOAL_REACHED -> {
+                if (gameStarted) endGame("GOAL_REACHED", role);
+              }
+              case PLAYER_DIED -> {
+                if (gameStarted) endGame("PLAYER_DIED", role.opponent());
+              }
+              default -> System.out.println("Ignored: " + type);
+            }
+          } catch (io.vertx.core.json.DecodeException e) {
+            System.err.println("Discarded malformed WS message (not JSON).");
+          } catch (IllegalArgumentException e) {
+            System.err.println("Discarded WS message with unknown type or invalid schema: " + text);
+          }
+        });
+  }
+
+  private void send(Role targetRole, String message) {
+    if (targetRole == Role.HOST && hostSocket != null && !hostSocket.isClosed()) {
+      hostSocket.writeTextMessage(message);
+    } else if (targetRole == Role.GUEST && guestSocket != null && !guestSocket.isClosed()) {
+      guestSocket.writeTextMessage(message);
+    }
+  }
+
+  private void sendRole(ServerWebSocket ws, Role role) {
+    JsonObject msg = new JsonObject().put("type", "ROLE_ASSIGNMENT").put("role", role.name());
     ws.writeTextMessage(msg.encode());
   }
 
@@ -242,29 +219,29 @@ public class LobbyVerticle extends AbstractVerticle {
     gameStarted = true;
     JsonObject msg = new JsonObject().put("type", "GAME_START");
     String msgStr = msg.encode();
-    hostSocket.writeTextMessage(msgStr);
-    guestSocket.writeTextMessage(msgStr);
+    if (hostSocket != null) hostSocket.writeTextMessage(msgStr);
+    if (guestSocket != null) guestSocket.writeTextMessage(msgStr);
     broadcastToSpectators(msgStr);
   }
 
   private void broadcastToSpectators(String message) {
     for (ServerWebSocket spectator : spectators) {
-      if (!spectator.isClosed()) {
-        spectator.writeTextMessage(message);
-      }
+      if (!spectator.isClosed()) spectator.writeTextMessage(message);
     }
+  }
+
+  private void endGame(String reason, Role winner) {
+    gameStarted = false;
+    broadcastGameOver(reason, winner.name());
   }
 
   private void broadcastGameOver(String reason, String winner) {
     JsonObject msg =
         new JsonObject().put("type", "GAME_OVER").put("reason", reason).put("winner", winner);
     String msgStr = msg.encode();
-    if (hostSocket != null && !hostSocket.isClosed()) {
-      hostSocket.writeTextMessage(msgStr);
-    }
-    if (guestSocket != null && !guestSocket.isClosed()) {
-      guestSocket.writeTextMessage(msgStr);
-    }
+
+    if (hostSocket != null && !hostSocket.isClosed()) hostSocket.writeTextMessage(msgStr);
+    if (guestSocket != null && !guestSocket.isClosed()) guestSocket.writeTextMessage(msgStr);
     broadcastToSpectators(msgStr);
 
     resetLobby();
@@ -285,12 +262,5 @@ public class LobbyVerticle extends AbstractVerticle {
     guestSocket = null;
     gameStarted = false;
     System.out.println("Lobby correctly reset, waiting for new connections");
-  }
-
-  @Override
-  public void stop() {
-    if (udpSocket != null) {
-      udpSocket.close();
-    }
   }
 }

@@ -59,10 +59,19 @@ public class ClientVerticle extends AbstractVerticle {
   private void forward(String text) {
     try {
       JsonObject msg = new JsonObject(text);
-      MessageType type = MessageType.valueOf(msg.getString("type"));
+      String typeString = msg.getString("type");
+
+      if (typeString == null) {
+        System.err.println("Discarded WS message: missing 'type' field.");
+        return;
+      }
+
+      MessageType type = MessageType.valueOf(typeString);
       vertx.eventBus().publish(Net.inbound(type), msg);
-    } catch (DecodeException | IllegalArgumentException e) {
-      System.err.println("Invalid message: " + text);
+    } catch (DecodeException e) {
+      System.err.println("Discarded malformed WS message (not JSON).");
+    } catch (IllegalArgumentException e) {
+      System.err.println("Discarded WS message with unknown type: " + text);
     }
   }
 }
