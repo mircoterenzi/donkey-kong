@@ -1,7 +1,9 @@
 package it.unibo.donkeykong.network.client;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.http.*;
+import io.vertx.core.Promise;
+import io.vertx.core.http.WebSocketConnectOptions;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import it.unibo.donkeykong.network.protocol.MessageType;
 import it.unibo.donkeykong.network.protocol.Net;
@@ -11,109 +13,56 @@ import it.unibo.donkeykong.network.protocol.Net;
  * incoming messages and publishes them to the event bus for other components to consume.
  */
 public class ClientVerticle extends AbstractVerticle {
-
   private final String uri;
   private final String hostIp;
-  private WebSocket webSocket;
-  private String myRole;
 
   public ClientVerticle(String uri, String hostIp) {
     this.uri = uri;
     this.hostIp = hostIp;
   }
 
-  /**
-   * Starts the verticle and establishes a WebSocket connection to the server. It sets up handlers
-   * for incoming messages and publishes them to the event bus.
-   */
   @Override
-  public void start() {
-    WebSocketClient client = vertx.createWebSocketClient();
+  public void start(Promise<Void> startPromise) {
+    startPromise.complete();
 
-    WebSocketConnectOptions options =
-        new WebSocketConnectOptions().setHost(hostIp).setPort(Net.WS_PORT).setURI(uri);
+    vertx
+        .createWebSocketClient()
+        .connect(new WebSocketConnectOptions().setHost(hostIp).setPort(Net.WS_PORT).setURI(uri))
+        .onSuccess(
+            ws -> {
+              ws.textMessageHandler(this::forward);
 
-    client.connect(
-        options,
-        res -> {
-          if (res.succeeded()) {
-            webSocket = res.result();
-            webSocket.textMessageHandler(this::handleIncomingMessage);
+              ws.closeHandler(
+                  v -> {
+                    System.out.println("Disconnected from server");
+                    vertx
+                        .eventBus()
+                        .publish(
+                            "game.disconnected",
+                            new JsonObject().put("deploymentId", deploymentID()));
+                  });
 
-            vertx
-                .eventBus()
-                .<JsonObject>consumer(
-                    Net.OUTBOUND,
-                    msg -> {
-                      if (webSocket != null && !webSocket.isClosed()) {
-                        webSocket.writeTextMessage(msg.body().encode());
-                      }
-                    });
-
-            webSocket.closeHandler(
-                v -> {
-                  System.out.println("Disconnected from server");
-                  vertx
-                      .eventBus()
-                      .publish(
-                          "game.disconnected",
-                          new JsonObject().put("deploymentId", deploymentID()));
-                });
-          } else {
-            System.out.println("Failed to connect to server: " + res.cause().getMessage());
-          }
-        });
+              vertx
+                  .eventBus()
+                  .<JsonObject>consumer(Net.OUTBOUND, m -> ws.writeTextMessage(m.body().encode()));
+            })
+        .onFailure(
+            err -> {
+              System.out.println("Failed to connect to server: " + err.getMessage());
+              vertx
+                  .eventBus()
+                  .publish(
+                      "game.disconnected", new JsonObject().put("deploymentId", deploymentID()));
+            });
   }
 
-  private void handleIncomingMessage(String text) {
+  private void forward(String text) {
     try {
-      JsonObject message = new JsonObject(text);
-      MessageType msgType = MessageType.valueOf(message.getString("type"));
-      switch (msgType) {
-        case ROLE_ASSIGNMENT -> {
-          myRole = message.getString("role");
-          vertx.eventBus().publish("game.role", myRole);
-          System.out.println("Assigned role: " + myRole);
-        }
-        case GAME_START -> {
-          vertx.eventBus().publish("game.start", message);
-          System.out.println("Game started");
-        }
-        case HOST_UPDATE -> {
-          if (!"HOST".equals(myRole)) {
-            vertx.eventBus().publish("inbound.host_update", message);
-          }
-        }
-        case GUEST_UPDATE -> {
-          if (!"GUEST".equals(myRole)) {
-            vertx.eventBus().publish("inbound.guest_update", message);
-          }
-        }
-        case GAME_OVER -> {
-          System.out.println(
-              "Game Over! Winner: "
-                  + message.getString("winner")
-                  + " | Reason: "
-                  + message.getString("reason"));
-          vertx.eventBus().publish("game.over", message);
-        }
-        case ENTITY_DESTROYED -> vertx.eventBus().publish("inbound.entity_destroyed", message);
-        case GUEST_DISCONNECTED -> {
-          vertx.eventBus().publish("inbound.guest_disconnected", message);
-          System.out.println("Guest disconnected");
-        }
-        case GUEST_RECONNECTED -> {
-          vertx.eventBus().publish("inbound.guest_reconnected", message);
-          System.out.println("Guest reconnected");
-        }
-        case RESTORE_STATE -> {
-          System.out.println("Received restore state message");
-          vertx.eventBus().publish("inbound.restore_state", message);
-        }
-        default -> System.out.println("Impossible to handle message: " + message.encode());
-      }
-    } catch (io.vertx.core.json.DecodeException e) {
-      System.err.println("Scartato messaggio WS malformato.");
+      JsonObject msg = new JsonObject(text);
+      MessageType type = MessageType.valueOf(msg.getString("type"));
+      vertx.eventBus().publish(Net.inbound(type), msg);
+    } catch (DecodeException | IllegalArgumentException e) {
+      System.err.println("Invalid message: " + text);
     }
   }
 }

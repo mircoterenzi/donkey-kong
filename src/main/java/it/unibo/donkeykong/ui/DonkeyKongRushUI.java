@@ -12,6 +12,7 @@ import it.unibo.donkeykong.ecs.entity.api.EntityFactory;
 import it.unibo.donkeykong.ecs.system.*;
 import it.unibo.donkeykong.network.client.ClientVerticle;
 import it.unibo.donkeykong.network.discovery.DiscoveryClient;
+import it.unibo.donkeykong.network.protocol.MessageType;
 import it.unibo.donkeykong.network.protocol.Net;
 import it.unibo.donkeykong.network.server.LobbyVerticle;
 import javafx.animation.AnimationTimer;
@@ -58,12 +59,19 @@ public class DonkeyKongRushUI extends Application {
   }
 
   private void setupNetworkListeners(Stage primaryStage) {
-    vertx.eventBus().<String>consumer("game.role", msg -> this.myRole = msg.body());
+    vertx
+        .eventBus()
+        .<JsonObject>consumer(
+            Net.inbound(MessageType.ROLE_ASSIGNMENT),
+            msg -> {
+              this.myRole = msg.body().getString("role");
+              System.out.println("Assigned role: " + myRole);
+            });
 
     vertx
         .eventBus()
         .<JsonObject>consumer(
-            "game.start",
+            Net.inbound(MessageType.GAME_START),
             msg ->
                 Platform.runLater(
                     () -> startGame(primaryStage, msg.body().getBoolean("isReconnect", false))));
@@ -71,7 +79,7 @@ public class DonkeyKongRushUI extends Application {
     vertx
         .eventBus()
         .<JsonObject>consumer(
-            "game.over",
+            Net.inbound(MessageType.GAME_OVER),
             msg ->
                 Platform.runLater(
                     () -> {
