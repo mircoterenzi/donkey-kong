@@ -137,7 +137,6 @@ public class SessionManager {
   }
 
   public void shutdown() {
-    undeployAll();
     vertx.close();
   }
 

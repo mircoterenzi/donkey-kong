@@ -128,8 +128,8 @@ public record EntityFactoryImpl(World world, String myRole) implements EntityFac
   }
 
   @Override
-  public Entity createNetworkBarrel(String id, PositionComponent position, double velocity) {
-    return buildBarrelEntity(id, position, velocity);
+  public void createNetworkBarrel(String id, PositionComponent position, double velocity) {
+    buildBarrelEntity(id, position, velocity);
   }
 
   @Override

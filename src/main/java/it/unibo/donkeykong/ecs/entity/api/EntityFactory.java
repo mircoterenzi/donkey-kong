@@ -47,9 +47,8 @@ public interface EntityFactory {
    * @param id the unique identifier for the network barrel
    * @param position the position component of the network barrel
    * @param velocity the horizontal velocity of the network barrel
-   * @return a new entity representing a network barrel
    */
-  Entity createNetworkBarrel(String id, PositionComponent position, double velocity);
+  void createNetworkBarrel(String id, PositionComponent position, double velocity);
 
   /**
    * Creates a platform entity.
