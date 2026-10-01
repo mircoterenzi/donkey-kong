@@ -28,7 +28,10 @@ public class GameBootstrap {
 
   public Scene buildGameScene(Vertx vertx, String myRole, boolean isReconnect) {
     final World world = new WorldImpl();
-    long gameStartTime = System.currentTimeMillis() - (isReconnect ? RECONNECT_TIME_OFFSET_MS : 0);
+
+    boolean skipCountdown = isReconnect || "SPECTATOR".equals(myRole);
+    long gameStartTime =
+        System.currentTimeMillis() - (skipCountdown ? RECONNECT_TIME_OFFSET_MS : 0);
 
     final EntityFactory entityFactory = new EntityFactoryImpl(world, myRole);
     final MapFactory mapFactory = new MapFactory(entityFactory);
