@@ -17,12 +17,11 @@ import org.junit.jupiter.api.Test;
 
 public class FactoryTest {
 
-  private World world;
   private EntityFactory entityFactory;
 
   @BeforeEach
   void setUp() {
-    world = new WorldImpl();
+    World world = new WorldImpl();
     entityFactory = new EntityFactoryImpl(world, "HOST");
   }
 

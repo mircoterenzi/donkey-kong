@@ -9,9 +9,10 @@ import it.unibo.donkeykong.ecs.component.PositionComponent;
 import it.unibo.donkeykong.ecs.component.StateComponent;
 import it.unibo.donkeykong.ecs.entity.api.Entity;
 import it.unibo.donkeykong.ecs.system.api.GameSystem;
-import it.unibo.donkeykong.network.messages.BarrelData;
-import it.unibo.donkeykong.network.messages.GuestUpdateMessage;
-import it.unibo.donkeykong.network.messages.HostUpdateMessage;
+import it.unibo.donkeykong.network.protocol.BarrelData;
+import it.unibo.donkeykong.network.protocol.GuestUpdateMessage;
+import it.unibo.donkeykong.network.protocol.HostUpdateMessage;
+import it.unibo.donkeykong.network.protocol.Net;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +64,7 @@ public class NetworkBroadcastSystem implements GameSystem {
             lives,
             barrelDataList);
 
-    eventBus.send("outbound.messages", JsonObject.mapFrom(msg));
+    eventBus.send(Net.OUTBOUND, JsonObject.mapFrom(msg));
   }
 
   private void broadcastGuestState(World world) {
@@ -78,7 +79,7 @@ public class NetworkBroadcastSystem implements GameSystem {
         new GuestUpdateMessage(
             pos.x(), pos.y(), state.state().name(), state.direction().name(), lives);
 
-    eventBus.send("outbound.messages", JsonObject.mapFrom(msg));
+    eventBus.send(Net.OUTBOUND, JsonObject.mapFrom(msg));
   }
 
   private Optional<Entity> findNetworkEntity(World world, String type) {

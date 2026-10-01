@@ -20,7 +20,6 @@ public class InputSystemTest {
   private InputComponent playerInput;
   private VelocityComponent initialVelocity;
   private StateComponent initialPlayerState;
-  private PositionComponent initialPosition;
 
   @BeforeEach
   void setUp() {
@@ -32,7 +31,7 @@ public class InputSystemTest {
     playerInput = new InputComponent();
     initialVelocity = new VelocityComponent(0.0, 0.0);
     initialPlayerState = new StateComponent(State.IDLE, Direction.LEFT);
-    initialPosition = new PositionComponent(10, 10);
+    PositionComponent initialPosition = new PositionComponent(10, 10);
 
     player =
         world

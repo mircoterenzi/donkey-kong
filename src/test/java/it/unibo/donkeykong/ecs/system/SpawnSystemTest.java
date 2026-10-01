@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import it.unibo.donkeykong.core.WorldImpl;
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.*;
-import it.unibo.donkeykong.ecs.component.BouncinessComponent;
 import it.unibo.donkeykong.ecs.component.StateComponent.*;
 import it.unibo.donkeykong.ecs.entity.EntityFactoryImpl;
 import it.unibo.donkeykong.ecs.entity.api.Entity;

@@ -1,0 +1,17 @@
+package it.unibo.donkeykong.network.protocol;
+
+public enum MessageType {
+  ROLE_ASSIGNMENT,
+  GAME_START,
+  HOST_UPDATE,
+  GUEST_UPDATE,
+  GOAL_REACHED,
+  GAME_OVER,
+  PLAYER_DIED,
+  ENTITY_DESTROYED,
+  RESTORE_STATE,
+  GUEST_DISCONNECTED,
+  GUEST_RECONNECTED,
+  DISCOVER,
+  LOBBY
+}
