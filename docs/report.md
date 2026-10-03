@@ -151,37 +151,55 @@ This section details the architectural and structural decisions made to fulfill 
 ### 3.1 Architecture
 
 The project follows the Model-View-Controller (MVC) and Entity-Component-System (ECS) architectural patterns. The MVC
-pattern is used to separate the User Interface (UI) from the game logic, while the ECS pattern is used to manage the
-game entities and their behaviors.
+pattern is used to separate the User Interface (UI) from the game logic, while the ECS pattern is used because it favors
+composition over inheritance, providing flexibility to add/remove behaviors (components) and logic loops (systems).
 
-Regarding its distributed nature, the system utilizes a centralized **Client-Server architecture** heavily reliant on an
-Event-Driven model. The server acts as a central authoritative game lobby and message relay, while the clients maintain
-local instances of the game. This design minimizes peer-to-peer connection issues and provides a single source of truth
-for matchmaking, role assignment, and fault management.
+Regarding its distributed nature, the system utilizes an event-driven **Client-Server architecture**. Within this
+framework, the project implements a hybrid synchronization model that combines a _leader-follower_ pattern for the
+environment with distributed authority for player movement. The session creator acts as the authoritative host for the
+game world, holding exclusive control over global state transitions and environmental entities, such as generating and
+moving barrels. However, for player characters, the system utilizes client-side authority: each client independently
+calculates its own character's movement and actions locally, transmitting these authoritative updates to the other
+peers. This design guarantees a consistent world state while completely eliminating input lag for the players.
 
 ### 3.2 Infrastructure
 
 To support the game's multiplayer requirements, the infrastructure relies on a centralized star topology where all
 network traffic flows through the main server.
 
-* **Infrastructural Components:**
-  * **Game Server (`LobbyVerticle`):** A single server component responsible for accepting connections, storing the
-    active socket states (one `hostSocket`, one `guestSocket`, and a list of `spectators`), and brokering messages.
-  * **Clients (`ClientVerticle`):** Instances running on the players' local machines that establish a `WebSocketClient`
-    connection to the server.
-* **Network Distribution:**
-  * The server is deployed on a machine accessible to all players, acting as the central node. It exposes its services
-    over a single TCP port, listening on port 8080.
-  * Clients are distributed edge nodes that do not communicate directly with one another. When the Host acts and
-    generates a `HostUpdateMessage`, it sends the data (including player coordinates, state, lives, and barrel data) to
-    the server, which then mirrors this data to the Guest and all Spectators.
-* **Component Discovery and Addressing:**
-  * Clients discover and connect to the server using a predetermined IP address (`hostIp`) and port (`8080`), configured
-    upon client initialization.
-  * Role-based addressing is handled via endpoint paths and connection order. Standard players connect to the root path,
-    where the server automatically assigns the `HOST` role to the first connection and the `GUEST` role to the second.
-    Observers use a distinct discovery mechanism by connecting to the specific URI path `/spectate`, which routes them
-    directly into the server's `spectators` pool.
+#### Infrastructural Components
+
+* **Server:** Exactly one server component is active per game session. It manages the game lobby, handles network
+  connections for all participants, assigns roles, and acts as the authoritative source for game state transitions (
+  e.g., starting the game, handling disconnections).
+* **Clients:** There are multiple client components per session, one for each playing user and spectator. They establish
+  a connection to the server to forward outgoing inputs/messages and receive game state updates.
+* **Message Broker:** A local event bus acts as an internal message broker on each machine. It decouples the network
+  communication layer from the core game logic, routing incoming and outgoing messages between the network handlers and
+  the game systems.
+
+#### Network Distribution
+
+The game is designed to be deployed and played over a Local Area Network (LAN) and the network distribution of the
+components depends dynamically on the players' roles:
+
+* **Host Machine:** The player who creates the game session acts as the host. Their physical machine runs both the
+  central Server component and their own local Client component.
+* **Guest/Spectator Machines:** The other participants run only the client component on their respective physical
+  machines. These clients connect remotely over the local network to the host's IP address.
+
+Therefore, the infrastructure is entirely localized within the players' shared local network.
+
+#### Service Discovery
+
+Components do not rely on static IP configuration. Instead, they dynamically discover active sessions using a custom
+_service discovery_ mechanism based on UDP Broadcasts: when a player attempts to join or spectate a game, their client
+broadcasts a UDP discovery request to the entire subnet. The host's server listens for these packets and replies
+directly to the sender with the necessary connection details (IP, port, lobby ID, and slot availability).
+
+Moreover, a _conflict resolution_ mechanism handles cases where multiple players attempt to host a lobby simultaneously
+on the same network. Lobbies constantly broadcast their presence; if a server detects another active lobby with a higher
+priority, it yields its host status, shuts down its server component, and automatically reconnects as a client.
 
 ![Component Diagram](./images/component_diagram.png)
 
