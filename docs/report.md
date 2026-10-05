@@ -207,62 +207,62 @@ priority, it yields its host status, shuts down its server component, and automa
 
 #### Domain Entities and Infrastructure Mapping
 
-The domain models the distributed system and its state synchronization through specific entities, which are decoupled
-from, yet carefully mapped to, the underlying infrastructure. This mapping occurs through the following abstractions:
+The domain models the distributed system and its state synchronization through specific entities, which are mapped to
+the underlying infrastructure based on a partitioned authority model:
 
-* **Network Roles**: The concept of a peer's participation level is modeled through the `Role` enumeration, categorizing
-  clients strictly into `HOST`, `GUEST`, or `SPECTATOR`. Infrastructurally, this domain entity dictates the physical
-  topology of the network: a central lobby server component physically maps incoming WebSocket connections to these
-  roles, ensuring only one node acts as the host. Furthermore, this partitions the distributed logic, as the
-  infrastructural game loop selectively instantiates ECS systems based on the assigned role. For example, only the
-  `HOST` role runs the authoritative logic for generating dynamic obstacles, guaranteeing a single source of truth and
-  avoiding desynchronization.
-* **Replicated State**: To share the game state across the network, data is modeled using immutable record entities (
-  DTOs) such as `HostUpdateMessage` (encapsulating the host avatar and environmental `BarrelData`) and
-  `GuestUpdateMessage` (encapsulating only the guest avatar). Infrastructurally, these messages are serialized into JSON
-  payloads and sent over WebSockets. To prevent coupling between the sockets and the game loop, an internal asynchronous
-  message bus acts as a mediator. A network gateway component listens to the WebSocket, parses the JSON back into domain
-  entities, and publishes them to the local bus for the simulation to consume.
-* **ECS-to-Network**: Within the ECS architecture, the bridge between a purely local simulation object and a distributed
-  object is modeled by the `NetworkComponent`, which assigns a globally unique`networkId` and a string-based
-  `entityType`. This maps directly to two systems: a broadcasting system periodically extracts data from local entities,
-  mapping them into the outgoing DTO, and a receiver system listens for incoming DTOs and uses the `networkId` to find
-  the corresponding local entity.
+* **Game Session (Lobby)**: The core entity representing the match lifecycle. It resides centrally in the Server's
+  memory (`LobbyVerticle`) and maps incoming WebSocket connections to specific network roles (`HOST`, `GUEST`, or
+  `SPECTATOR`). It acts as the single source of truth for the game phase and connection fault tolerance.
+* **Player Avatars (Mario & Luigi)**: Synchronized game entities. Rather than a fully centralized model, ownership is
+  distributed: the Host computes and broadcasts its avatar's physics, while the Guest independently computes and
+  broadcasts its own. Remote clients hold a local replica updated via the ECS `StateReceiverSystem`.
+* **Dynamic Obstacles (Barrels)**: Authoritative game entities. Their generation and physical simulation reside
+  exclusively on the Host's infrastructural loop, which guarantees a single source of truth. The Server relays this
+  data, and clients map these entities as read-only visual replicas in their local ECS.
+* **Static Environment (Map, Platforms, Ladders)**: Local-only entities. They reside entirely in the clients' memory and
+  are deterministically loaded by a factory component at startup, requiring no network synchronization.
+
+#### Distributed System State
+
+The overall state of the application is decoupled into two distinct layers:
+
+* **Session State (Server)**: Maintained by the central lobby component. It comprehends the registry of active WebSocket
+  connections, the assigned roles, the current global game phase, and the active reconnection timers.
+* **Replicated Game State (Client / Host)**: The real-time state of the game held within the local ECS of each node.
+  This state comprehends only the strictly necessary data: precise spatial coordinates (`playerX`, `playerY`), visual
+  states (e.g., `IDLE`, `JUMP`), facing directions, remaining lives, and a list of active dynamic obstacles (their `id`,
+  and `x`, `y` coordinates).
 
 #### Domain Events and Exchanged Messages
 
-The system relies on specific domain events and messages, which are categorized by their architectural purpose and
-mapped directly to infrastructural triggers. Communication between nodes relies on asynchronous JSON payloads over
-WebSockets and UDP datagrams.
+Communication relies on serialized JSON messages over WebSockets and UDP datagrams, categorized by interaction type:
 
-* **Session and Discovery**: At the session level, discovery messages such as `DISCOVER` and `LOBBY` map directly to UDP
-  broadcast datagrams. These queries resolve active sessions on the local network and handle split-brain conflict
-  resolution if multiple hosts spawn concurrently.
-* **State Updates**: High-frequency synchronization is achieved through continuous update events sent over WebSockets.
-  The `HOST_UPDATE` event broadcasts the host's avatar state alongside a list of all active dynamic obstacles.
-  Conversely, the `GUEST_UPDATE` event transmits exclusively the guest's avatar data.
-* **Control Messages**: Explicit directives are used to enforce authoritative changes on remote clients. For instance,
-  `ENTITY_DESTROYED` commands clients to remove a specific object from their local ECS when it goes out of bounds. The
-  `RESTORE_STATE` command is used by the host to force a reconnected guest to a specific set of coordinates and life
-  count.
-* **Fault-Tolerance Events**: Physical TCP connection drops map to domain events like `GUEST_DISCONNECTED` and
-  `GUEST_RECONNECTED`. Infrastructurally, a disconnection event does not immediately halt the simulation; instead, it
-  triggers a 30-second fault-tolerance timer on the server side. If the timer expires without a reconnection event, a
-  `GAME_OVER` command is broadcasted.
+1. **Peer Discovery (UDP)**: Messages exchanged outside the WebSocket channel to resolve local network topology.
+    * `DISCOVER` (Guest → LAN): Client request broadcasted to search for available game sessions.
+    * `LOBBY` (Host → LAN): Host reply advertising its WebSocket port, lobby ID, and guest slot availability.
 
-#### System State
+2. **Session and Fault Tolerance (Server → Client)**: Messages orchestrating the match lifecycle, role delegation, and
+   managing connection drops.
+    * `ROLE_ASSIGNMENT`: Instructs a newly connected client of its domain role (`HOST`, `GUEST`, or `SPECTATOR`).
+    * `GAME_START`: Commands clients to instantiate the ECS world and begin the simulation loop.
+    * `GUEST_DISCONNECTED`: Notifies clients of a TCP connection drop, triggering a 30-second fault-tolerance timer on
+      the server.
+    * `GUEST_RECONNECTED`: Signals the successful recovery of the guest's connection within the allowed time frame.
+    * `RESTORE_STATE`: Authoritative event forcing a reconnected Guest to sync back to specific coordinates and lives to
+      safely resume the session.
+    * `GAME_OVER`: Broadcasts the definitive termination of the match, carrying the reason and the winner's name.
 
-* **Session State (Network Layer)**: This state is held centrally by the server lobby component. It comprehends the
-  lifecycle data of the distributed match, including references to active WebSocket connections for the Host, the Guest,
-  and an unbounded list of Spectators. It tracks the current game phase via a simple boolean flag (`gameStarted`) and
-  maintains the active reconnection timers used for fault tolerance.
-* **Replicated Simulation State (Logic Layer)**: The transient, real-time state of the game is distributed and
-  partitioned between the Host and the Guest. To optimize network throughput, the replicated state comprehends only the
-  strictly necessary data for visual synchronization and basic logic. This includes precise spatial coordinates, visual
-  enumeration states (e.g., `IDLE`, `JUMP`), facing directions, and remaining lives. For environmental elements, the
-  state only comprehends the unique network identifiers and spatial coordinates of active obstacles (`BarrelData`),
-  deferring complex physics interpolations to the local ECS of each client. Static map elements (like platforms and
-  ladders) are entirely omitted from the network state, as they are deterministically loaded by the clients at startup.
+3. **Game State and Commands (Client ↔ Server)**: High-frequency state payloads and authoritative triggers mapping
+   in-game events to the network.
+    * `HOST_UPDATE`: Broadcasts the Host's avatar state alongside a comprehensive list of all active dynamic obstacles
+      (`BarrelData`).
+    * `GUEST_UPDATE`: Broadcasts exclusively the Guest's avatar state.
+    * `PLAYER_DIED`: Triggered locally when a player's health drops to zero. The server intercepts this and broadcasts a
+      `GAME_OVER` event.
+    * `GOAL_REACHED`: Triggered locally when a player successfully collides with the final objective. The server
+      intercepts it and declares the match's end via `GAME_OVER`.
+    * `ENTITY_DESTROYED`: Event instructing remote clients to remove a specific network entity from their local ECS
+      world.
 
 ![Class Diagram](./images/class_diagram.png)
 
