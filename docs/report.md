@@ -683,7 +683,7 @@ requiring manual configuration.
 - **Expected Outcome:** The system will search for a game to spectate. Once found, you will be connected as a passive
   observer. You will see the active match rendered in real-time, but you will not have an avatar to control.
 
-![Main Menu UI](images/main_menu.png)
+![Main Menu UI](images/screenshot_menu.png)
 
 ### Gameplay Controls
 
@@ -698,7 +698,7 @@ keyboard bindings:
 barrels spawned by Donkey Kong. If you collide with a barrel, you will lose a life and respawn at the bottom. The game
 ends when a player reaches Pauline (Win) or loses all 3 lives (Lose), triggering the Game Over screen.
 
-![Active Gameplay Arena](images/gameplay.png)
+![Active Gameplay Arena](images/screenshot_gameplay.png)
 
 ## Self-evaluation
 
