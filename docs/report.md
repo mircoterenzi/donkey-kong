@@ -268,20 +268,46 @@ Communication relies on serialized JSON messages over WebSockets and UDP datagra
 
 ### 3.4 Interaction
 
-- **Communication Channels:** Components communicate bidirectionally using a persistent `WebSocket` connection. The
-  `ClientVerticle` pushes messages onto the local Vert.x `EventBus`, which are then transmitted over the network to the
-  `LobbyVerticle`. The Server broadcasts these messages back to the appropriate endpoints (either to the opposing player
-  or to all Spectators).
-- **Timing and Frequency:** Interaction is continuous. State update messages (`HostUpdateMessage` and
-  `GuestUpdateMessage`) are fired iteratively during the `GameLoop` (running at a target of 60 frames per second).
-  Event-triggered messages (like `ENTITY_DESTROYED`) are communicated asynchronously only when a specific collision
-  resolves locally.
-- **Interaction Patterns:** The system enacts a **Publish-Subscribe / Broadcast pattern** mediated by the Server. The
-  Host publishes the state of the authoritative world, to which Guests and Spectators are inherently subscribed.
-  Concurrently, it implements a **Client-Server RPC-like pattern** for matchmaking, where the client explicitly requests
-  a connection and waits for the server to reply with a `ROLE_ASSIGNMENT`.
+The system's interaction is event-driven and asynchronous, with the server acting as a central relay for all messages,
+using both WebSocket for continuous state updates and UDP for initial discovery. The communication patterns naturally
+adapt to the application's lifecycle, which can be divided into four main phases.
 
-![Sequence Diagram](./images/sequence_diagram.png)
+#### Discovery Phase
+
+The interaction lifecycle begins with network discovery. To find available game sessions, clients periodically broadcast
+UDP datagrams across the local network. Concurrently, nodes hosting an open lobby listen for these broadcasts and reply
+immediately upon receiving a valid request, provided there are still open slots in the lobby. Once a lobby is
+discovered, the system establishes a persistent connection to guarantee stable data exchange. Clients connect to the
+central server, which handles the session and assigns specific roles.
+
+![Sequence Diagram](./images/sequence_diagram_discovery.png)
+
+#### Active Gameplay Phase
+
+During the active game phase, communication becomes continuous and is driven by the game loop, which updates at 60
+frames per second. At every frame, dedicated broadcasting systems collect the current state of relevant entities and
+dispatch structured JSON payloads. These payloads include spatial coordinates, current animation states, facing
+directions, and remaining lives.
+
+To maintain a responsive experience and minimize input lag, the game adopts a split-authority state synchronization
+pattern. The host dictates the state of the shared environment, such as the spawning and tracking of dynamic obstacles
+like barrels, alongside its own avatar. Meanwhile, the guest retains authoritative control over its own character's
+movements. The central server continuously relays these updates to the opposing player and broadcasts them to all
+connected spectators. Alongside this continuous stream, asynchronous events (e.g., a player reaching the goal or losing
+a life) trigger the dispatch of specific control messages to notify all connected nodes.
+
+![Sequence Diagram](./images/sequence_diagram_gameplay.png)
+
+#### Recovery Phase
+
+The architecture is designed to handle unexpected interruptions. Network disconnects and reconnects trigger notification
+messages across the system. If a disconnected guest reconnects within the allowed timeframe, the host dispatches a
+targeted synchronization payload to restore the guest's last known coordinates and lives, resuming the game seamlessly.
+Finally, when a winning or losing condition is met, the central server broadcasts a game-over control message. This
+event triggers the UI observers, transitioning players to the final summary screens and tearing down the active game
+session.
+
+![Sequence Diagram](./images/sequence_diagram_recovery.png)
 
 ### 3.5 Behaviour
 
