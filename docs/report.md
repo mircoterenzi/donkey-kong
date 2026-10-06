@@ -595,25 +595,24 @@ contribute to the project.
 
 ## 7. User Guide
 
-![Main menu](images/screenshot_menu.png)
-
 1. **Main menu:** Upon launch, the user is presented with a graphical interface offering two options:
 
     - **Play:** Initiates the matchmaking process to either host a new game or join an existing one. If no active game
-      is
-      found, the user will automatically become the host.
+      is found, the user will automatically become the host.
     - **Spectate:** Searches for an active game session to observe without participating.
 
    Note that, if the lobby is already full (i.e., two players are connected), the system will automatically redirect
    the user to the spectate mode, ensuring that he can still enjoy the game as an observer.
 
-![Active Gameplay Arena](images/screenshot_gameplay.png)
+   ![Main menu](images/screenshot_menu.png)
 
 2. **In-game controls:** Once the game has started, active players can interact with the environment using the following
    keyboard bindings:
     - **Movement:** `←` / `A` to move left, `→` / `D` to move right.
     - **Climbing:** `↑` / `W` to climb up ladders, `↓` / `S` to climb down.
     - **Jumping:** `spacebar` to jump over obstacles and gaps.
+
+   ![Active Gameplay Arena](images/screenshot_gameplay.png)
 
 3. **Game objective:** Navigate your avatar from the bottom of the screen to the top to rescue Pauline. Avoid the
    rolling barrels spawned by Donkey Kong. If you collide with a barrel, you will lose a life and respawn at the bottom.
