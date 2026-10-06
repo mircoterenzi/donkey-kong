@@ -311,33 +311,29 @@ session.
 
 ### 3.5 Behaviour
 
-The system behavior is decoupled between the central server's finite state machine, which manages the session lifecycle,
-and the clients' execution loops, which handle the real-time simulation.
+The system behavior is modeled as an event-driven architecture where the server acts as the central Finite State
+Machine (FSM), while clients react to the server’s state transitions.
 
-#### Server Finite State Machine (Lobby Lifecycle)
+#### Server
 
-The central `LobbyVerticle` acts as the definitive Finite State Machine (FSM) orchestrating the match. As illustrated in
-the State Diagram, it transitions through several key phases based on network events:
+The server behavior is modeled through four states, each representing a distinct phase of the game session:
 
-1. **WAITING_HOST**: The initial state upon server startup. The lobby is empty and waits for the first WebSocket
-   connection to assign the authoritative Host role.
-2. **WAITING_GUEST**: Once the Host connects, the server waits for a second active player to join the session.
-   Spectators can join during this phase without triggering transitions.
-3. **GAME_STARTED**: Triggered when the Guest connects. The server broadcasts the `GAME_START` event, and active
-   state-update routing (barrels, positions) begins.
-4. **GUEST_DISCONNECT**: A transient fault-tolerance state. If the Guest drops, the server pauses updates and starts a
-   30-second timer.
-
-- If the Guest reconnects within the window, the FSM returns to `GAME_STARTED`.
-- If the timeout expires, it transitions to `GAME_OVER`.
-
-5. **GAME_OVER**: The terminal state. Triggered by a timeout, a player's death, reaching the goal, or an unrecoverable
-   Host disconnection. The server broadcasts the results and flushes the state (Lobby Reset), becoming available for new
-   connections.
+1. **`WAITING_PLAYERS`**: The initial state of the server immediately after the lobby is created. The server has a
+   host (or is waiting for one to connect), but the guest is missing. In this state, the UDP Discovery mechanism
+   (`DiscoveryResponder`) broadcasts that the guest slot is available. Spectators can join during this phase without
+   triggering transitions.
+2. **`GAME_RUNNING`**: The state in which the match is active. The host and the guest continuously exchange their
+   respective state updates.
+3. **`WAITING_RECONNECT`**: A fault-tolerance state. It occurs when, during an active match, the guest drops the
+   connection. The game "freezes" for the guest, while the server waits for a maximum timeout (30 seconds). If the guest
+   reconnects within this window, the server restores its last known state and resumes the match. If the timeout
+   expires, the server declares the host as the winner and transitions to `GAME_OVER`.
+4. **`GAME_OVER`**: The terminal state where the match ends due to victory, defeat, or definitive disconnection. The
+   server can either reset the lobby to `WAITING_PLAYERS` or shut down entirely.
 
 ![State Diagram](./images/state_diagram.png)
 
-#### Client-Side Behavior
+#### Client
 
 While the server manages the high-level session, the clients handle the continuous ECS simulation:
 
