@@ -217,31 +217,34 @@ The overall state of the application is decoupled into two distinct layers:
 Communication relies on serialized JSON messages over WebSockets and UDP datagrams, categorized by interaction type:
 
 1. **Peer Discovery (UDP)**: Messages exchanged outside the WebSocket channel to resolve local network topology.
-   * `DISCOVER` (Guest → LAN): Client request broadcasted to search for available game sessions.
-   * `LOBBY` (Host → LAN): Host reply advertising its WebSocket port, lobby ID, and guest slot availability.
+
+    * `DISCOVER` (Guest → LAN): Client request broadcasted to search for available game sessions.
+    * `LOBBY` (Host → LAN): Host reply advertising its WebSocket port, lobby ID, and guest slot availability.
 
 2. **Session and Fault Tolerance (Server → Client)**: Messages orchestrating the match lifecycle, role delegation, and
    managing connection drops.
-   * `ROLE_ASSIGNMENT`: Instructs a newly connected client of its domain role (`HOST`, `GUEST`, or `SPECTATOR`).
-   * `GAME_START`: Commands clients to instantiate the ECS world and begin the simulation loop.
-   * `GUEST_DISCONNECTED`: Notifies clients of a TCP connection drop, triggering a 30-second fault-tolerance timer on
-     the server.
-   * `GUEST_RECONNECTED`: Signals the successful recovery of the guest's connection within the allowed time frame.
-   * `RESTORE_STATE`: Authoritative event forcing a reconnected Guest to sync back to specific coordinates and lives to
-     safely resume the session.
-   * `GAME_OVER`: Broadcasts the definitive termination of the match, carrying the reason and the winner's name.
+
+    * `ROLE_ASSIGNMENT`: Instructs a newly connected client of its domain role (`HOST`, `GUEST`, or `SPECTATOR`).
+    * `GAME_START`: Commands clients to instantiate the ECS world and begin the simulation loop.
+    * `GUEST_DISCONNECTED`: Notifies clients of a TCP connection drop, triggering a 30-second fault-tolerance timer on
+      the server.
+    * `GUEST_RECONNECTED`: Signals the successful recovery of the guest's connection within the allowed time frame.
+    * `RESTORE_STATE`: Authoritative event forcing a reconnected Guest to sync back to specific coordinates and lives to
+      safely resume the session.
+    * `GAME_OVER`: Broadcasts the definitive termination of the match, carrying the reason and the winner's name.
 
 3. **Game State and Commands (Client ↔ Server)**: High-frequency state payloads and authoritative triggers mapping
    in-game events to the network.
-   * `HOST_UPDATE`: Broadcasts the Host's avatar state alongside a comprehensive list of all active dynamic obstacles
-     (`BarrelData`).
-   * `GUEST_UPDATE`: Broadcasts exclusively the Guest's avatar state.
-   * `PLAYER_DIED`: Triggered locally when a player's health drops to zero. The server intercepts this and broadcasts a
-     `GAME_OVER` event.
-   * `GOAL_REACHED`: Triggered locally when a player successfully collides with the final objective. The server
-     intercepts it and declares the match's end via `GAME_OVER`.
-   * `ENTITY_DESTROYED`: Event instructing remote clients to remove a specific network entity from their local ECS
-     world.
+
+    * `HOST_UPDATE`: Broadcasts the Host's avatar state alongside a comprehensive list of all active dynamic obstacles
+      (`BarrelData`).
+    * `GUEST_UPDATE`: Broadcasts exclusively the Guest's avatar state.
+    * `PLAYER_DIED`: Triggered locally when a player's health drops to zero. The server intercepts this and broadcasts a
+      `GAME_OVER` event.
+    * `GOAL_REACHED`: Triggered locally when a player successfully collides with the final objective. The server
+      intercepts it and declares the match's end via `GAME_OVER`.
+    * `ENTITY_DESTROYED`: Event instructing remote clients to remove a specific network entity from their local ECS
+      world.
 
 ![Class Diagram](./images/class_diagram.png)
 
@@ -314,18 +317,36 @@ The server behavior is modeled through four states, each representing a distinct
 
 #### Client
 
+The client-side gameplay behavior relies on the Entity-Component-System (ECS) architecture. In this paradigm, entities
+and components act as stateless data containers holding current values (like position or health) without executing any
+internal logic. The actual behavior emerges from the systems, which process these components during each tick of the
+game loop.
+
+The responsibility of updating the game state is divided between local physics processors and network synchronizers, all
+operating within the same update(deltaTime) cycle. Local systems, such as the MovementSystem and PhysicsSystem, run
+first to calculate and update the local player's state based on user input and environmental collisions.
+
+The `StateReceiverSystem` handles all state updates originating from the network. While it intercepts incoming messages
+asynchronously via the EventBus, it applies the actual state mutations strictly synchronously during its turn in the
+Game Loop. By polling a thread-safe queue, it directly overwrites the component values of remote entities or dynamically
+spawns and destroys objects (like barrels) to reconcile the local world with the authoritative data sent by the remote
+players. Finally, once all local and remote systems have modified the world state for the current frame, the
+NetworkBroadcastSystem takes over. Acting as a purely functional and stateless pipeline, it queries the World to extract
+the updated components of the locally controlled entities. It then serializes this final frame data and publishes it
+back to the EventBus, closing the loop by broadcasting the new state to the rest of the network.
+
 While the server manages the high-level session, the clients handle the continuous ECS simulation:
 
 - **Individual Component Behavior:**
-  - The **Host Client** is highly stateful and authoritative. It responds to local keyboard events by updating its own
-    physics and spawning barrels on an internal timer (`SpawnSystem`). It then blindly pushes this definitive state
-    outwards.
-  - The **Guest Client** is stateful but semi-authoritative. It computes its own player physics independently in
-    response to local keyboard events, but acts purely reactively regarding barrels, spawning or removing them locally
-    only when instructed by a `HOST_UPDATE` message via the `StateReceiverSystem`.
-  - The **Spectator Client** is passive and purely reactive. It does not update the `World` based on elapsed time
-    (`deltaTime`), but strictly overwrites entity positions based on incoming network messages to render the current
-    frame.
+    - The **Host Client** is highly stateful and authoritative. It responds to local keyboard events by updating its own
+      physics and spawning barrels on an internal timer (`SpawnSystem`). It then blindly pushes this definitive state
+      outwards.
+    - The **Guest Client** is stateful but semi-authoritative. It computes its own player physics independently in
+      response to local keyboard events, but acts purely reactively regarding barrels, spawning or removing them locally
+      only when instructed by a `HOST_UPDATE` message via the `StateReceiverSystem`.
+    - The **Spectator Client** is passive and purely reactive. It does not update the `World` based on elapsed time
+      (`deltaTime`), but strictly overwrites entity positions based on incoming network messages to render the current
+      frame.
 - **State Updating Mechanism:** The state is updated continuously via the ECS architecture. During each frame of the
   JavaFX `AnimationTimer`, the `WorldImpl.update()` method iterates through all active `GameSystem`s (e.g.,
   `MovementSystem`, `PhysicsSystem`). The `StateReceiverSystem` is explicitly in charge of capturing incoming network
@@ -371,13 +392,13 @@ While the server manages the high-level session, the clients handle the continuo
   favor of the Host.
 - **Error Handling and Component Failure:** The system relies on event-driven error handling to prevent deadlocks and
   ghost sessions:
-  - **Host Failure:** Since the Host holds the authoritative state of the game world, a sudden disconnection of the
-    Host's socket is unrecoverable. The server detects the closure, immediately broadcasts a `GAME_OVER` message (with
-    the reason `HOST_DISCONNECTED`) to the Guest and Spectators, and flushes the lobby state, reopening port
-    connections for a brand-new match.
-  - **Spectator Failure:** The system enforces strict isolation for passive observers. If a Spectator disconnects or
-    crashes, the server simply evicts their socket from the internal `spectators` array. This failure is completely
-    transparent to the active players and does not impact the game loop or the server's stability.
+    - **Host Failure:** Since the Host holds the authoritative state of the game world, a sudden disconnection of the
+      Host's socket is unrecoverable. The server detects the closure, immediately broadcasts a `GAME_OVER` message (with
+      the reason `HOST_DISCONNECTED`) to the Guest and Spectators, and flushes the lobby state, reopening port
+      connections for a brand-new match.
+    - **Spectator Failure:** The system enforces strict isolation for passive observers. If a Spectator disconnects or
+      crashes, the server simply evicts their socket from the internal `spectators` array. This failure is completely
+      transparent to the active players and does not impact the game loop or the server's stability.
 
 ### 3.8. Availability
 
@@ -410,15 +431,15 @@ While the server manages the high-level session, the clients handle the continuo
 - **Authorization:** While formal authentication is absent, a rudimentary form of Role-Based Access Control (RBAC) is
   enforced by the `LobbyVerticle` through connection routing and temporal ordering. Access rights are rigidly determined
   by the URI path utilized during the initial handshake:
-  - **HOST Role:** Assigned to the first WebSocket connecting to the root `/play` endpoint. This role is granted the
-    highest authorization, including the rights to dictate global game state, spawn barrels, and trigger game-over
-    conditions.
-  - **GUEST Role:** Assigned to the second WebSocket connecting to the `/play` endpoint. This role is strictly
-    authorized to broadcast updates regarding its own specific entity (the Guest player avatar) and cannot manipulate
-    the environment. Any attempt by a Guest to spawn a barrel would be ignored by the server's routing logic.
-  - **SPECTATOR Role:** Assigned to any WebSocket connecting to the `/spectate` endpoint. This role is granted
-    strictly read-only access. The server pushes updates to these clients but does not listen to or process any
-    state-update messages originating from them.
+    - **HOST Role:** Assigned to the first WebSocket connecting to the root `/play` endpoint. This role is granted the
+      highest authorization, including the rights to dictate global game state, spawn barrels, and trigger game-over
+      conditions.
+    - **GUEST Role:** Assigned to the second WebSocket connecting to the `/play` endpoint. This role is strictly
+      authorized to broadcast updates regarding its own specific entity (the Guest player avatar) and cannot manipulate
+      the environment. Any attempt by a Guest to spawn a barrel would be ignored by the server's routing logic.
+    - **SPECTATOR Role:** Assigned to any WebSocket connecting to the `/spectate` endpoint. This role is granted
+      strictly read-only access. The server pushes updates to these clients but does not listen to or process any
+      state-update messages originating from them.
 - **Cryptographic Schemas:** No cryptographic schemas, token verification, or in-transit data encryption protocols are
   employed. Messages are serialized as plaintext JSON and transmitted over standard, unencrypted WebSockets (`ws://`
   rather than `wss://`). This is a deliberate architectural trade-off: the game processes no sensitive personal data
@@ -431,13 +452,13 @@ This chapter details the specific technology-dependent choices made to realize t
 network protocols, data serialization, and the frameworks exploited.
 
 - **Network Protocols:** The system employs a dual-protocol approach to handle different networking phases efficiently:
-  - **UDP (User Datagram Protocol):** Utilized exclusively for the initial **Service Discovery** phase and split-brain
-    conflict resolution. The `LobbyVerticle` broadcasts its presence via UDP datagrams on port 8081. This allows
-    clients to dynamically discover active lobbies on the Local Area Network without requiring manual IP entry.
-  - **WebSockets (WS) over TCP:** Utilized for all continuous in-game communication. While UDP is traditionally
-    favored for fast-paced games, WebSockets were chosen because they provide a persistent, full-duplex communication
-    channel with guaranteed, ordered delivery out-of-the-box. This drastically simplifies the implementation for a
-    local area network (LAN) environment, ensuring the server can reliably push 60 FPS state updates to all clients.
+    - **UDP (User Datagram Protocol):** Utilized exclusively for the initial **Service Discovery** phase and split-brain
+      conflict resolution. The `LobbyVerticle` broadcasts its presence via UDP datagrams on port 8081. This allows
+      clients to dynamically discover active lobbies on the Local Area Network without requiring manual IP entry.
+    - **WebSockets (WS) over TCP:** Utilized for all continuous in-game communication. While UDP is traditionally
+      favored for fast-paced games, WebSockets were chosen because they provide a persistent, full-duplex communication
+      channel with guaranteed, ordered delivery out-of-the-box. This drastically simplifies the implementation for a
+      local area network (LAN) environment, ensuring the server can reliably push 60 FPS state updates to all clients.
 - **In-transit Data Representation:** All data exchanged over the network is serialized and represented in **JSON**. At
   the implementation level, the system leverages Vert.x's built-in `JsonObject` to automatically map incoming and
   outgoing JSON payloads directly to immutable Java `record` classes (e.g., `HostUpdateMessage`, `GuestUpdateMessage`).
@@ -461,12 +482,12 @@ The project relies on a specific technology stack to achieve its concurrency and
 - **Eclipse Vert.x:** This is the core framework used for networking and concurrency. Vert.x is built on a non-blocking,
   event-driven architecture (using the Reactor pattern), which allows it to handle multiple concurrent connections with
   minimal thread overhead.
-  - The `LobbyVerticle` acts as the central HTTP/WebSocket server.
-  - The `DiscoveryResponder` and `DiscoveryClient` utilize Vert.x's `DatagramSocket` for UDP broadcasting.
-  - The internal **Vert.x EventBus** is heavily exploited as the backbone of the application to decouple the network
-    layer from the game logic layer. Incoming network messages are published to specific EventBus addresses (e.g.,
-    `inbound.guest_update`), where the ECS `StateReceiverSystem` consumes them asynchronously, preventing network
-    operations from blocking the main game loop.
+    - The `LobbyVerticle` acts as the central HTTP/WebSocket server.
+    - The `DiscoveryResponder` and `DiscoveryClient` utilize Vert.x's `DatagramSocket` for UDP broadcasting.
+    - The internal **Vert.x EventBus** is heavily exploited as the backbone of the application to decouple the network
+      layer from the game logic layer. Incoming network messages are published to specific EventBus addresses (e.g.,
+      `inbound.guest_update`), where the ECS `StateReceiverSystem` consumes them asynchronously, preventing network
+      operations from blocking the main game loop.
 - **JavaFX:** Used exclusively for the client-side graphical user interface (GUI) and rendering. The game does not use
   traditional JavaFX UI controls for the gameplay; instead, it utilizes a raw `Canvas` and a `GraphicsContext` to
   manually draw and clear sprite sheets frame-by-frame. The core game loop is driven by a JavaFX `AnimationTimer`, which
@@ -493,34 +514,34 @@ ensuring that every pull request is validated before being merged. Tests can be 
 - **Unit Testing:**
   Individual components, specifically the core ECS architecture and pure execution logic, were strictly unit-tested in
   isolation.
-  - **Rationale:** To verify that the custom ECS engine, entity factories, game physics, and boundary limitations work
-    deterministically without spinning up the network or the graphical interface.
-  - **Implementation:** `WorldTest` verifies the core ECS mechanics (adding/removing entities and components).
-    `FactoryTest` ensures entities (like Player and Barrel) are assembled with the correct components. Furthermore,
-    tests such as `PhysicsSystemTest`, `GravitySystemTest`, and `MovementSystemTest` initialize a mock `World`, inject
-    entities, manually invoke the system's `update(deltaTime)` method, and assert the resulting state.
-    `BoundariesSystemTest` acts as a corner-case test by placing an entity outside the screen coordinates and
-    asserting that the system clamps its position back within the allowed arena. The `EventDispatchSystemTest` ensures
-    ephemeral event components are correctly cleared at the end of the update cycle.
-  - **Requirements Tested:** Verifies the functional requirements related to horizontal movement, jumping, and
-    collision detection, as well as the modularity non-functional requirement.
+    - **Rationale:** To verify that the custom ECS engine, entity factories, game physics, and boundary limitations work
+      deterministically without spinning up the network or the graphical interface.
+    - **Implementation:** `WorldTest` verifies the core ECS mechanics (adding/removing entities and components).
+      `FactoryTest` ensures entities (like Player and Barrel) are assembled with the correct components. Furthermore,
+      tests such as `PhysicsSystemTest`, `GravitySystemTest`, and `MovementSystemTest` initialize a mock `World`, inject
+      entities, manually invoke the system's `update(deltaTime)` method, and assert the resulting state.
+      `BoundariesSystemTest` acts as a corner-case test by placing an entity outside the screen coordinates and
+      asserting that the system clamps its position back within the allowed arena. The `EventDispatchSystemTest` ensures
+      ephemeral event components are correctly cleared at the end of the update cycle.
+    - **Requirements Tested:** Verifies the functional requirements related to horizontal movement, jumping, and
+      collision detection, as well as the modularity non-functional requirement.
 
 - **Integration Testing:**
   Communication and interaction among components, particularly between the network layer and the ECS engine, were tested
   using integration tests.
-  - **Rationale:** To verify that the Vert.x components correctly bind to ports, handle WebSocket handshakes, execute
-    UDP broadcasts, route messages through the EventBus, and correctly interact with the game state.
-  - **Implementation:** The `LobbyVerticleTest` and `ClientVerticleTest` utilize `VertxTestContext` to deploy the
-    server and client verticles in a sandboxed, asynchronous test environment to verify automatic role assignment.
-    Crucially, the `DiscoveryResponderTest` simulates a UDP datagram socket to validate the local network discovery
-    handshake and reply mechanism. `StateReceiverSystemTest` and `NetworkBroadcastSystemTest` prove the bidirectional
-    integration between the network and the game loop, verifying that messages arriving on the EventBus update the
-    local ECS entities and that outgoing state payloads (Host and Guest) are correctly formatted. Finally,
-    `EndGameScenariosTest`
-    and `WinSystemTest` simulate the integration between the collision logic and terminal network broadcasts.
-  - **Corner Cases Tested:** The tests specifically validate error handling, split-brain lobby prioritization, and
-    network partitions (e.g., simulating a client disconnection to ensure the server gracefully pauses the game or
-    resolves the match state).
+    - **Rationale:** To verify that the Vert.x components correctly bind to ports, handle WebSocket handshakes, execute
+      UDP broadcasts, route messages through the EventBus, and correctly interact with the game state.
+    - **Implementation:** The `LobbyVerticleTest` and `ClientVerticleTest` utilize `VertxTestContext` to deploy the
+      server and client verticles in a sandboxed, asynchronous test environment to verify automatic role assignment.
+      Crucially, the `DiscoveryResponderTest` simulates a UDP datagram socket to validate the local network discovery
+      handshake and reply mechanism. `StateReceiverSystemTest` and `NetworkBroadcastSystemTest` prove the bidirectional
+      integration between the network and the game loop, verifying that messages arriving on the EventBus update the
+      local ECS entities and that outgoing state payloads (Host and Guest) are correctly formatted. Finally,
+      `EndGameScenariosTest`
+      and `WinSystemTest` simulate the integration between the collision logic and terminal network broadcasts.
+    - **Corner Cases Tested:** The tests specifically validate error handling, split-brain lobby prioritization, and
+      network partitions (e.g., simulating a client disconnection to ensure the server gracefully pauses the game or
+      resolves the match state).
 
 - **End-to-End (E2E) Testing:**
   Fully automated End-to-End testing spinning up the production server, launching multiple headless JavaFX client
@@ -534,14 +555,14 @@ Manual testing was a critical phase of the validation process, conducted in a pr
 environment with multiple physical machines.
 
 - **What was tested:**
-  - **UI/UX Flow:** The transition from the Main Menu to the active game, and finally to the Game Over screen.
-  - **Network Synchronization:** The visual coherence of the game state between the Host, Guest, and Spectator
-    screens. This involved verifying that barrel spawns and player movements did not suffer from "rubber-banding" or
-    visual desynchronization.
-  - **Gameplay Feel:** The responsiveness of the keyboard inputs (jump height, movement speed) and the consistency of
-    the 60 FPS rendering loop.
-  - **Fault Recovery:** Physically disconnecting the Wi-Fi on the Guest machine to verify that the game paused, the
-    30-second timer started on the server, and the state was correctly restored upon reconnection.
+    - **UI/UX Flow:** The transition from the Main Menu to the active game, and finally to the Game Over screen.
+    - **Network Synchronization:** The visual coherence of the game state between the Host, Guest, and Spectator
+      screens. This involved verifying that barrel spawns and player movements did not suffer from "rubber-banding" or
+      visual desynchronization.
+    - **Gameplay Feel:** The responsiveness of the keyboard inputs (jump height, movement speed) and the consistency of
+      the 60 FPS rendering loop.
+    - **Fault Recovery:** Physically disconnecting the Wi-Fi on the Guest machine to verify that the game paused, the
+      30-second timer started on the server, and the state was correctly restored upon reconnection.
 
 - **Why wasn't it automatic?**
   While the mathematical determinism of the physics engine and the routing logic of the network were easily covered by
