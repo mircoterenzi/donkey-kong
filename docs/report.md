@@ -26,7 +26,7 @@ the players.
 multiplayer platform video game, which takes inspiration from the
 original [Donkey Kong](https://en.wikipedia.org/wiki/Donkey_Kong_(1981_video_game)) arcade game.
 
-### 1.1 Use case description
+### 1.1. Use case description
 
 The software provides a competitive multiplayer platforming experience. Users are located on separate desktop machines
 connected over the same local area network. Thus, distribution is a fundamental requirement for this project to enable a
@@ -52,9 +52,9 @@ The game relies on multiple user roles:
 - **Spectator**: A purely passive role that does not generate game input, but solely receives updates from the players
   to feed its local rendering system, allowing another user to watch the match in real-time.
 
-### 2. Requirements Elicitation and Analysis
+## 2. Requirements Elicitation and Analysis
 
-##### Glossary
+#### Glossary
 
 | Term          | Definition                                                                                                                                                                    |
 |---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -66,7 +66,7 @@ The game relies on multiple user roles:
 | **Barrel**    | A dynamic entity that deals damage when a player comes into contact with it.                                                                                                  |
 | **Ladder**    | A climbable entity in the game level that enables players to move vertically regardless of gravity.                                                                           |
 
-##### Functional Requirements
+#### Functional Requirements
 
 | Description                                                                                                                                     | Acceptance Criterion                                                                                                                              |
 |-------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -76,7 +76,7 @@ The game relies on multiple user roles:
 | The system must detect collisions between players and damaging entities (e.g., barrels), deducting a life upon impact.                          | When a player's character intersects with a barrel, the player's life count decreases by 1, and the character respawns at the starting position.  |
 | The system must declare a winner if a player reaches the goal (Pauline) or declare a loser if a player's lives reach zero.                      | The game transitions to a "Game Over" screen displaying the correct winner or loser when the goal is touched or 3 lives are lost.                 ||
 
-##### Non-Functional Requirements
+#### Non-Functional Requirements
 
 These requirements define the behavioral aspects and quality attributes of the system.
 
@@ -125,30 +125,9 @@ These requirements define the behavioral aspects and quality attributes of the s
 * **Economy and costs:** Developed as an academic project running on local hardware, there are no cloud deployment
   budgets, operational costs, or strict economic constraints driving the architecture.
 
-## Design
+## 3. Design
 
-This chapter explains the strategies used to meet the requirements identified in the analysis.
-
-### Architecture
-
-The project follows the Model-View-Controller (MVC) and Entity-Component-System (ECS) architectural patterns. The MVC
-pattern is used to separate the user interface from the game logic, while the ECS pattern is used to manage the game
-entities and their behaviors.
-
-For what concerns the distributed aspect of the project, a client-server architecture is used. The host player act as
-both the client and the server, while the other player and any spectators act as clients. The server is responsible for
-managing the game state and broadcasting updates to all connected clients.
-
-This architecture was selected for its simplicity, efficiency, low latency, and ability to abstract complexity from the
-user. A decentralized peer-to-peer alternative, where each user operates an interconnected server, was evaluated but
-rejected due to high implementation complexity and network latency overhead. Its sole advantage, mitigating the single
-point of failure if a central leader goes offline, did not justify the operational trade-offs.
-
-## 3 Design
-
-This section details the architectural and structural decisions made to fulfill the system's requirements.
-
-### 3.1 Architecture
+### 3.1. Architecture
 
 The project follows the Model-View-Controller (MVC) and Entity-Component-System (ECS) architectural patterns. The MVC
 pattern is used to separate the User Interface (UI) from the game logic, while the ECS pattern is used because it favors
@@ -162,7 +141,7 @@ moving barrels. However, for player characters, the system utilizes client-side 
 calculates its own character's movement and actions locally, transmitting these authoritative updates to the other
 peers. This design guarantees a consistent world state while completely eliminating input lag for the players.
 
-### 3.2 Infrastructure
+### 3.2. Infrastructure
 
 To support the game's multiplayer requirements, the infrastructure relies on a centralized star topology where all
 network traffic flows through the main server.
@@ -203,7 +182,7 @@ priority, it yields its host status, shuts down its server component, and automa
 
 ![Component Diagram](./images/component_diagram.png)
 
-### 3.3 Modelling
+### 3.3. Modelling
 
 #### Domain Entities and Infrastructure Mapping
 
@@ -238,35 +217,35 @@ The overall state of the application is decoupled into two distinct layers:
 Communication relies on serialized JSON messages over WebSockets and UDP datagrams, categorized by interaction type:
 
 1. **Peer Discovery (UDP)**: Messages exchanged outside the WebSocket channel to resolve local network topology.
-  * `DISCOVER` (Guest → LAN): Client request broadcasted to search for available game sessions.
-  * `LOBBY` (Host → LAN): Host reply advertising its WebSocket port, lobby ID, and guest slot availability.
+   * `DISCOVER` (Guest → LAN): Client request broadcasted to search for available game sessions.
+   * `LOBBY` (Host → LAN): Host reply advertising its WebSocket port, lobby ID, and guest slot availability.
 
 2. **Session and Fault Tolerance (Server → Client)**: Messages orchestrating the match lifecycle, role delegation, and
    managing connection drops.
-  * `ROLE_ASSIGNMENT`: Instructs a newly connected client of its domain role (`HOST`, `GUEST`, or `SPECTATOR`).
-  * `GAME_START`: Commands clients to instantiate the ECS world and begin the simulation loop.
-  * `GUEST_DISCONNECTED`: Notifies clients of a TCP connection drop, triggering a 30-second fault-tolerance timer on
-    the server.
-  * `GUEST_RECONNECTED`: Signals the successful recovery of the guest's connection within the allowed time frame.
-  * `RESTORE_STATE`: Authoritative event forcing a reconnected Guest to sync back to specific coordinates and lives to
-    safely resume the session.
-  * `GAME_OVER`: Broadcasts the definitive termination of the match, carrying the reason and the winner's name.
+   * `ROLE_ASSIGNMENT`: Instructs a newly connected client of its domain role (`HOST`, `GUEST`, or `SPECTATOR`).
+   * `GAME_START`: Commands clients to instantiate the ECS world and begin the simulation loop.
+   * `GUEST_DISCONNECTED`: Notifies clients of a TCP connection drop, triggering a 30-second fault-tolerance timer on
+     the server.
+   * `GUEST_RECONNECTED`: Signals the successful recovery of the guest's connection within the allowed time frame.
+   * `RESTORE_STATE`: Authoritative event forcing a reconnected Guest to sync back to specific coordinates and lives to
+     safely resume the session.
+   * `GAME_OVER`: Broadcasts the definitive termination of the match, carrying the reason and the winner's name.
 
 3. **Game State and Commands (Client ↔ Server)**: High-frequency state payloads and authoritative triggers mapping
    in-game events to the network.
-  * `HOST_UPDATE`: Broadcasts the Host's avatar state alongside a comprehensive list of all active dynamic obstacles
-    (`BarrelData`).
-  * `GUEST_UPDATE`: Broadcasts exclusively the Guest's avatar state.
-  * `PLAYER_DIED`: Triggered locally when a player's health drops to zero. The server intercepts this and broadcasts a
-    `GAME_OVER` event.
-  * `GOAL_REACHED`: Triggered locally when a player successfully collides with the final objective. The server
-    intercepts it and declares the match's end via `GAME_OVER`.
-  * `ENTITY_DESTROYED`: Event instructing remote clients to remove a specific network entity from their local ECS
-    world.
+   * `HOST_UPDATE`: Broadcasts the Host's avatar state alongside a comprehensive list of all active dynamic obstacles
+     (`BarrelData`).
+   * `GUEST_UPDATE`: Broadcasts exclusively the Guest's avatar state.
+   * `PLAYER_DIED`: Triggered locally when a player's health drops to zero. The server intercepts this and broadcasts a
+     `GAME_OVER` event.
+   * `GOAL_REACHED`: Triggered locally when a player successfully collides with the final objective. The server
+     intercepts it and declares the match's end via `GAME_OVER`.
+   * `ENTITY_DESTROYED`: Event instructing remote clients to remove a specific network entity from their local ECS
+     world.
 
 ![Class Diagram](./images/class_diagram.png)
 
-### 3.4 Interaction
+### 3.4. Interaction
 
 The system's interaction is event-driven and asynchronous, with the server acting as a central relay for all messages,
 using both WebSocket for continuous state updates and UDP for initial discovery. The communication patterns naturally
@@ -309,7 +288,7 @@ session.
 
 ![Sequence Diagram](./images/sequence_diagram_recovery.png)
 
-### 3.5 Behaviour
+### 3.5. Behaviour
 
 The system behavior is modeled as an event-driven architecture where the server acts as the central Finite State
 Machine (FSM), while clients react to the server’s state transitions.
@@ -353,7 +332,7 @@ While the server manages the high-level session, the clients handle the continuo
   updates from the Vert.x `EventBus` and applying those external coordinate changes to the local entities before the
   next render cycle.
 
-### 3.6 Data and Consistency Issues
+### 3.6. Data and Consistency Issues
 
 - **Transient Storage:** The system does not utilize persistent data storage (e.g., SQL, NoSQL, or key-value databases).
   All data generated during a session—such as entity coordinates, physical velocities, and life counts—represents the
@@ -372,7 +351,7 @@ While the server manages the high-level session, the clients handle the continuo
   positions. However, incoming network messages will forcefully correct and overwrite these local predictions with the
   authoritative coordinates, ensuring eventual consistency without the overhead of distributed locks.
 
-### 3.7 Fault-Tolerance
+### 3.7. Fault-Tolerance
 
 - **Data Replication and Sharing:** The system's architecture inherently relies on a continuous state-replication
   mechanism to maintain synchronization across the network. The ephemeral game state (encapsulated within the ECS
@@ -400,7 +379,7 @@ While the server manages the high-level session, the clients handle the continuo
     crashes, the server simply evicts their socket from the internal `spectators` array. This failure is completely
     transparent to the active players and does not impact the game loop or the server's stability.
 
-### 3.8 Availability
+### 3.8. Availability
 
 - **Caching Mechanism:** Traditional distributed data caching (e.g., Memcached or Redis) is not utilized because the
   game state is highly volatile, changing every 16 milliseconds to maintain a 60 FPS target. However, at the local
@@ -422,7 +401,7 @@ While the server manages the high-level session, the clients handle the continuo
   window. If the partition cannot be resolved within this timeframe, the server destroys the active game session to
   become available again for new, healthy connections.
 
-### 3.9 Security
+### 3.9. Security
 
 - **Authentication:** The system does not implement formal authentication mechanisms such as OAuth 2.0, JWT (JSON Web
   Tokens), or session cookies. Given the academic, local LAN scope of the project and the intentional absence of
@@ -446,7 +425,7 @@ While the server manages the high-level session, the clients handle the continuo
   (PII), financial records, or credentials. Consequently, prioritizing raw throughput and minimal latency over
   encryption overhead is the optimal choice for a local, real-time multiplayer application.
 
-## 4 Implementation
+## 4. Implementation
 
 This chapter details the specific technology-dependent choices made to realize the architectural design, focusing on
 network protocols, data serialization, and the frameworks exploited.
@@ -472,7 +451,7 @@ network protocols, data serialization, and the frameworks exploited.
   Role-Based Access Control (RBAC) enforced programmatically by the server based solely on the WebSocket connection
   endpoint (`/play` vs `/spectate`) and the chronological order of connections.
 
-### 4.1 Technological Details
+### 4.1. Technological Details
 
 The project relies on a specific technology stack to achieve its concurrency and rendering goals:
 
@@ -498,13 +477,13 @@ The project relies on a specific technology stack to achieve its concurrency and
   pure data (`Component`) from execution logic (`GameSystem`), making the implementation of network state
   synchronization straightforward and predictable.
 
-## 5 Validation
+## 5. Validation
 
 To ensure the reliability, correctness, and performance of the distributed game, the system was subjected to a rigorous
 testing phase, divided into automated testing for core logic and manual acceptance testing for gameplay feel and GUI
 responsiveness.
 
-### 5.1 Automatic Testing
+### 5.1. Automatic Testing
 
 Automated testing was implemented using JUnit 5 and managed via the Gradle build tool. The tests are executed
 automatically within a Continuous Integration (CI) pipeline using GitHub Actions (`ci.yml` and `pr-checks.yml`),
@@ -549,7 +528,7 @@ ensuring that every pull request is validated before being merged. Tests can be 
   extreme brittleness of automated GUI testing for real-time games. E2E validation was instead covered through manual
   acceptance testing.
 
-### 5.2 Acceptance Test
+### 5.2. Acceptance Test
 
 Manual testing was a critical phase of the validation process, conducted in a production-like local area network (LAN)
 environment with multiple physical machines.
@@ -572,13 +551,13 @@ environment with multiple physical machines.
   machines to test the fault-tolerance window would require a highly complex and fragile infrastructure that exceeds the
   academic scope of this project.
 
-## 6 Deployment
+## 6. Deployment
 
 This section outlines the process required to deploy and run "Donkey Kong: Rush" on a local machine. The deployment
 strategy focuses on simplicity, leveraging the Gradle build automation tool to manage dependencies and execution without
 requiring complex manual configurations.
 
-### Prerequisites
+#### Prerequisites
 
 Before deploying the software, the target machine must meet the following software requirements:
 
@@ -589,7 +568,7 @@ Before deploying the software, the target machine must meet the following softwa
   distribution with X11/Wayland).
 - **Network:** An active Local Area Network (LAN) connection if multiplayer capabilities are to be utilized.
 
-### Installation and Execution from Scratch
+#### Installation and Execution from Scratch
 
 The software does not require a traditional installer wizard. It is deployed and executed directly from the source code
 using the included Gradle Wrapper.
@@ -618,7 +597,7 @@ Upon executing the run command, the Gradle Wrapper will automatically download a
 DonkeyKongRushUI JavaFX application. The user will be presented with the Main Menu graphical interface, confirming a
 successful deployment.
 
-### Configuration Files and "Zero-Config" Approach
+#### Configuration Files and "Zero-Config" Approach
 
 The system is designed to be "plug-and-play" and does not rely on external configuration files (e.g., `.env`, `.yaml`,
 or `.properties` files). Furthermore, users do not even need to manually configure target IP addresses in the graphical
@@ -628,7 +607,7 @@ Thanks to the UDP Service Discovery mechanism implemented in the networking laye
 local network for active servers. This "Zero-Config" approach maximizes user accessibility, allowing players to
 establish connections dynamically out-of-the-box.
 
-### Containerization Strategy
+#### Containerization Strategy
 
 While modern distributed systems frequently rely on containerization tools like Docker or Kubernetes, "Donkey Kong:
 Rush" explicitly avoids this deployment model for the following reasons:
@@ -643,17 +622,17 @@ Rush" explicitly avoids this deployment model for the following reasons:
    game with a simple `java -jar donkeykong.jar` command, achieving total portability across operating systems without
    container overhead.
 
-## 7 User Guide
+## 7. User Guide
 
 This section provides a step-by-step guide on how to interact with the "Donkey Kong: Rush" application.
 
-### Launching the Game
+#### Launching the Game
 
 Upon executing the application via Gradle (`./gradlew run`), the user is greeted by the **Main Menu** window. Thanks to
 the automated LAN discovery, this graphical interface simply provides buttons to establish network connections without
 requiring manual configuration.
 
-### How to Play
+#### How to Play
 
 **1. Hosting a Game (Player 1)**
 
@@ -681,7 +660,7 @@ requiring manual configuration.
 
 ![Main Menu UI](images/screenshot_menu.png)
 
-### Gameplay Controls
+#### Gameplay Controls
 
 Once the game has started, active players (Host and Guest) can interact with the environment using the following
 keyboard bindings:
@@ -696,19 +675,19 @@ ends when a player reaches Pauline (Win) or loses all 3 lives (Lose), triggering
 
 ![Active Gameplay Arena](images/screenshot_gameplay.png)
 
-## Self-evaluation
+## 8. Self-evaluation
 
 - An individual section is required for each member of the group
 - Each member must self-evaluate their work, listing the strengths and weaknesses of the product
 - Each member must describe their role within the group as objectively as possible. It should be noted that each student
   is only responsible for their own section
 
-## 9 Future Works
+## 9. Future Works
 
 While the current implementation successfully fulfills the core requirements of a distributed, real-time multiplayer
 platformer, several avenues for improvement and architectural expansion remain.
 
-### Client-Side Prediction and Interpolation
+#### Client-Side Prediction and Interpolation
 
 Currently, the Guest and Spectator clients act as "dumb terminals" for external entities, strictly overwriting their
 local entity coordinates with the incoming network snapshots from the Host. On a high-latency network, this could lead
@@ -717,7 +696,7 @@ to visual stuttering or "rubber-banding." A primary future improvement would be 
 ** (allowing the Guest to predict the physics of barrels locally, correcting them only if the server's authoritative
 state deviates significantly).
 
-### Scalability and Wide Area Network (WAN) Matchmaking
+#### Scalability and Wide Area Network (WAN) Matchmaking
 
 The current zero-config matchmaking relies on UDP broadcasting, which strictly bounds the system to a Local Area Network
 (LAN) environment. To scale this into a production-grade application playable over the public Internet, the
@@ -725,7 +704,7 @@ The current zero-config matchmaking relies on UDP broadcasting, which strictly b
 Cloud) using Docker and Kubernetes. Introducing a centralized **Matchmaking Service** would allow clients from different
 networks to be dynamically paired into isolated game instances orchestrated by the cloud provider.
 
-### Security Enhancements (WSS and Tokens)
+#### Security Enhancements (WSS and Tokens)
 
 Currently, the system uses unencrypted WebSockets (`ws://`) and implicitly trusts connections based on routing order. A
 critical future extension for public network deployment would involve upgrading the infrastructure to utilize
@@ -733,7 +712,7 @@ critical future extension for public network deployment would involve upgrading 
 authentication system using **JSON Web Tokens (JWT)** would prevent malicious actors from spoofing the `/play` endpoint,
 ensuring that only authenticated users can claim the Host or Guest roles.
 
-### Dynamic Level Progression
+#### Dynamic Level Progression
 
 From a gameplay perspective, the game currently features a single, hardcoded map generated upon startup via the
 `MapFactory`. Future iterations could introduce dynamic map loading by parsing external configuration files (e.g., JSON
