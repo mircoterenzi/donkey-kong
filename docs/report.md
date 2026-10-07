@@ -427,6 +427,10 @@ The project relies on a specific technology stack to achieve its concurrency and
 
 ## 5. Validation
 
+To guarantee the overall reliability, state consistency, and fault tolerance of the distributed architecture, the
+validation phase was conducted through a combination of automated unit and integration tests, alongside manual
+acceptance testing.
+
 ### 5.1. Automatic Testing
 
 Automated testing was implemented using `JUnit 5` and managed via the Gradle build tool, and can be run via
@@ -455,8 +459,11 @@ that every pull request is validated before being merged.
 
 ### 5.2. Acceptance Test
 
-Manual testing was a critical phase of the validation process, conducted mainly by launching the application as two
-separate processes on a single machine or on two different machines connected to the same LAN.
+While automated tests comprehensively covered the programmatic logic and network routing, the real-time distributed
+nature of the game required manual End-to-End (E2E) testing in a production-like LAN environment with multiple physical
+machines. Evaluating subjective quality metrics—such as the smoothness of the JavaFX rendering and the tactile
+responsiveness of controls—alongside simulating physical network adapter disconnections to validate the fault-tolerance
+window, necessitated human observation and manual intervention.
 
 - **User Interface Flow:** The seamless transition from the main menu to gameplay and, finally, to the game-over screen.
 - **Network Synchronization:** The visual coherence of the game state between the host, guest, and spectator
