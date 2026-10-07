@@ -471,71 +471,43 @@ The project relies on a specific technology stack to achieve its concurrency and
 
 ## 5. Validation
 
-To ensure the reliability, correctness, and performance of the distributed game, the system was subjected to a rigorous
-testing phase, divided into automated testing for core logic and manual acceptance testing for gameplay feel and GUI
-responsiveness.
-
 ### 5.1. Automatic Testing
 
-Automated testing was implemented using JUnit 5 and managed via the Gradle build tool. The tests are executed
-automatically within a Continuous Integration (CI) pipeline using GitHub Actions (`ci.yml` and `pr-checks.yml`),
-ensuring that every pull request is validated before being merged. Tests can be run locally by executing
-`./gradlew test` via the command line interface.
+Automated testing was implemented using `JUnit 5` and managed via the Gradle build tool, and can be run via
+`./gradlew test`. These tests are also used to validate the codebase within continuous integration pipelines ensuring
+that every pull request is validated before being merged.
 
-- **Unit Testing:**
-  Individual components, specifically the core ECS architecture and pure execution logic, were strictly unit-tested in
-  isolation.
-    - **Rationale:** To verify that the custom ECS engine, entity factories, game physics, and boundary limitations work
-      deterministically without spinning up the network or the graphical interface.
-    - **Implementation:** `WorldTest` verifies the core ECS mechanics (adding/removing entities and components).
-      `FactoryTest` ensures entities (like Player and Barrel) are assembled with the correct components. Furthermore,
-      tests such as `PhysicsSystemTest`, `GravitySystemTest`, and `MovementSystemTest` initialize a mock `World`, inject
-      entities, manually invoke the system's `update(deltaTime)` method, and assert the resulting state.
-      `BoundariesSystemTest` acts as a corner-case test by placing an entity outside the screen coordinates and
-      asserting that the system clamps its position back within the allowed arena. The `EventDispatchSystemTest` ensures
-      ephemeral event components are correctly cleared at the end of the update cycle.
-    - **Requirements Tested:** Verifies the functional requirements related to horizontal movement, jumping, and
-      collision detection, as well as the modularity non-functional requirement.
+- **Unit Testing:** Individual components were tested in isolation to verify their correct behavior. In particular:
+    - `WorldTest` verifies the core ECS mechanics (adding/removing entities and components).
+    - `FactoryTest` ensures entities are assembled with the correct components.
+    - All the system-level tests (`PhysicsSystemTest`, `GravitySystemTest`, etc.) are used to verify each system's
+      behavior in isolation, including edge cases like boundary clamping and event dispatching, by using a real,
+      in-memory `WorldImpl` instance and manually invoking the `update` method.
 
-- **Integration Testing:**
-  Communication and interaction among components, particularly between the network layer and the ECS engine, were tested
-  using integration tests.
-    - **Rationale:** To verify that the Vert.x components correctly bind to ports, handle WebSocket handshakes, execute
-      UDP broadcasts, route messages through the EventBus, and correctly interact with the game state.
-    - **Implementation:** The `LobbyVerticleTest` and `ClientVerticleTest` utilize `VertxTestContext` to deploy the
-      server and client verticles in a sandboxed, asynchronous test environment to verify automatic role assignment.
-      Crucially, the `DiscoveryResponderTest` simulates a UDP datagram socket to validate the local network discovery
-      handshake and reply mechanism. `StateReceiverSystemTest` and `NetworkBroadcastSystemTest` prove the bidirectional
-      integration between the network and the game loop, verifying that messages arriving on the EventBus update the
-      local ECS entities and that outgoing state payloads (Host and Guest) are correctly formatted. Finally,
-      `EndGameScenariosTest`
-      and `WinSystemTest` simulate the integration between the collision logic and terminal network broadcasts.
-    - **Corner Cases Tested:** The tests specifically validate error handling, split-brain lobby prioritization, and
-      network partitions (e.g., simulating a client disconnection to ensure the server gracefully pauses the game or
-      resolves the match state).
+  These tests are useful to verify the functional requirements related to horizontal movement, jumping, collision
+  detection, etc., as well as the modularity non-functional requirement.
+
+- **Integration Testing:** Components were tested together to verify their correct interaction, and how they integrate
+  with external dependencies (e.g., Vert.x).
+    - `EndGameScenariosTest` verifies direct win and death callbacks and guest disconnection handling.
+    - `LobbyVerticleTest`, `ClientVerticleTest`, and `DiscoveryResponderTest` verify isolated network and discovery
+      behavior, including WebSocket role assignment and broadcasting, client message forwarding through the event bus,
+      and UDP discovery responses.
+    - `StateReceiverSystemTest` and `NetworkBroadcastSystemTest` verify the correct integration between the network and
+      the game loop, ensuring that messages arriving on the event bus update the local ECS entities and that outgoing
+      state payloads are correctly formatted.
 
 ### 5.2. Acceptance Test
 
-Manual testing was a critical phase of the validation process, conducted in a production-like local area network (LAN)
-environment with multiple physical machines.
+Manual testing was a critical phase of the validation process, conducted mainly by launching the application as two
+separate processes on a single machine or on two different machines connected to the same LAN.
 
-- **What was tested:**
-    - **UI/UX Flow:** The transition from the Main Menu to the active game, and finally to the Game Over screen.
-    - **Network Synchronization:** The visual coherence of the game state between the Host, Guest, and Spectator
-      screens. This involved verifying that barrel spawns and player movements did not suffer from "rubber-banding" or
-      visual desynchronization.
-    - **Gameplay Feel:** The responsiveness of the keyboard inputs (jump height, movement speed) and the consistency of
-      the 60 FPS rendering loop.
-    - **Fault Recovery:** Physically disconnecting the Wi-Fi on the Guest machine to verify that the game paused, the
-      30-second timer started on the server, and the state was correctly restored upon reconnection.
-
-- **Why wasn't it automatic?**
-  While the mathematical determinism of the physics engine and the routing logic of the network were easily covered by
-  automated unit and integration tests, subjective quality metrics cannot be automatically asserted. The "smoothness" of
-  the JavaFX Canvas rendering, the tactile responsiveness of the controls, and the human perception of network latency
-  require manual observation. Furthermore, automating the disconnection of physical network adapters across distributed
-  machines to test the fault-tolerance window would require a highly complex and fragile infrastructure that exceeds the
-  academic scope of this project.
+- **User Interface Flow:** The seamless transition from the main menu to gameplay and, finally, to the game-over screen.
+- **Network Synchronization:** The visual coherence of the game state between the host, guest, and spectator
+  screens. This involved verifying that barrel spawns and player movements did not suffer from visual desynchronization.
+- **Gameplay Feel:** The responsiveness of the keyboard inputs and the game mechanics (jump height, movement speed).
+- **Fault Recovery:** Physically disconnecting the Wi-Fi on the guest machine to verify the avatar freezing behavior,
+  and the correct state restoration upon reconnection.
 
 ## 6. Deployment
 
