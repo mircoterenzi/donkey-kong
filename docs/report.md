@@ -1,14 +1,16 @@
 # Donkey Kong: Rush
 
-- [Foschi Giacomo](mailto:giacomo.foschi3@studio.unibo.it)
-- [Terenzi Mirco](mailto:mirco.terenzi@studio.unibo.it)
+### Final Report for the Distributed System Course (A.Y. 2024/2025)
 
-### AI Disclaimer
+[Foschi Giacomo](mailto:giacomo.foschi3@studio.unibo.it), [Terenzi Mirco](mailto:mirco.terenzi@studio.unibo.it)
 
-During the preparation of this work, the authors used GitHub Copilot and DeepL to assist with writing the Javadoc and to
-check the grammar of this report. Moreover, Copilot has been used as a review tool in some pull requests on GitHub.
-After using this tool/service, the authors reviewed and edited the content as needed and take (s) full responsibility
-for the content of the final report/artifact.
+### Disclaimer
+
+> During the preparation of this work, the authors used [GitHub Copilot](https://github.com/features/copilot)
+> and [DeepL](https://www.deepl.com/) to assist with writing the Javadoc and to check the grammar of this report.
+> Moreover, Copilot has been used as a review tool in some pull requests on GitHub (for
+> example, [here](https://github.com/mircoterenzi/donkey-kong/pull/4)). After using this tool/service, the authors
+> reviewed and edited the content as needed and take full responsibility for the content of the final report/artifact.
 
 ## Abstract
 
