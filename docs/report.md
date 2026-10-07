@@ -345,76 +345,40 @@ authoritative coordinates overwrite stale local values to preserve eventual cons
 are published as `PLAYER_DIED` or `GOAL_REACHED` messages; the server validates the resulting session transition and
 broadcasts the final outcome to every connected client.
 
-### 3.6. Data and Consistency Issues
+### 3.6. Fault-Tolerance
 
-- **Transient Storage:** The system does not utilize persistent data storage (e.g., SQL, NoSQL, or key-value databases).
-  All data generated during a session—such as entity coordinates, physical velocities, and life counts—represents the
-  active, ephemeral game state. This data is stored exclusively in volatile memory (RAM) within the `WorldImpl` instance
-  of each client. This architecture strictly reflects the session-based arcade nature of the game, which deliberately
-  lacks user accounts, persistent leaderboards, or save files.
-- **Shared Data:** The physical state of the game world is highly shared among all distributed components. The Host
-  actively shares the coordinates of its avatar and all dynamic environmental entities (barrels). The Guest shares its
-  local avatar's coordinates. Spectators share no data but receive all shared state.
-- **Consistency Model:** The game relies on a **continuous state-replication** model rather than strict transactional
-  consensus. The Host is the definitive source of truth for the game environment, while the Guest acts as the source of
-  truth for its own movement. Consistency is maintained through high-frequency network broadcasts (running at the target
-  60 FPS). In the event of network latency, a client's local `MovementSystem` will predictively extrapolate entity
-  positions. However, incoming network messages will forcefully correct and overwrite these local predictions with the
-  authoritative coordinates, ensuring eventual consistency without the overhead of distributed locks.
+- **State Replication and Authority:** The game uses selective state replication to keep the participating clients
+  visually synchronized without distributing full control of the simulation to every node. The host is authoritative
+  for the shared environment, including dynamic obstacles and its own player state. The guest reports the state of its
+  controlled player to the host, while spectators receive replicated updates in read-only form. This arrangement
+  limits conflicting updates and provides a clear authority model for resolving state changes.
+- **Connection Loss and Recovery:** A temporary loss of connectivity by the guest does not immediately terminate the
+  match. The active session enters a recovery window during which the guest's last known state is retained and the
+  remaining participants are informed of the interruption. If the guest reconnects in time, the session restores the
+  last synchronized player state and resumes normal communication. This approach tolerates short-lived network
+  interruptions while avoiding uncontrolled divergence between the two players.
+- **Recovery Timeout:** Recovery is deliberately bounded. If the guest does not return within the allowed interval, the
+  session is ended and the host is declared the winner. A bounded recovery period prevents abandoned sessions from
+  occupying the lobby indefinitely and allows the server to become available for a subsequent match.
+- **Component Failure:** The host is a critical component because it maintains the authoritative shared simulation. Its
+  disconnection cannot be recovered without risking inconsistent game state, so the current match is terminated and the
+  session is reset. A spectator failure has no effect on the match: spectators are passive consumers of replicated
+  state and can leave without affecting either player or the simulation.
 
-### 3.7. Fault-Tolerance
+### 3.7. Availability
 
-- **Data Replication and Sharing:** The system's architecture inherently relies on a continuous state-replication
-  mechanism to maintain synchronization across the network. The ephemeral game state (encapsulated within the ECS
-  `World` instance) is actively replicated across all connected nodes rather than federated. The Host serves as the
-  definitive source of truth, replicating the state of dynamic entities (such as barrels) and its own avatar to both the
-  Guest and Spectators. Simultaneously, the Guest shares its local avatar's coordinates, which are replicated back to
-  the Host. Spectators maintain a read-only replicated state, ensuring their local simulation mirrors the active game
-  without interfering with it.
-- **Error Handling and Retry Mechanism:**
-  - **Guest Failure:** To handle transient network instability (e.g., temporary Wi-Fi drops
-    on a local area network), it's implemented a dedicated timeout and retry mechanism specifically
-    for the Guest connection. If the Guest's WebSocket closes unexpectedly while the game is active, the server
-    does not immediately terminate the match. Instead, it pauses active event broadcasting for that node and initiates a
-    30-second timer. If it successfully reconnects within this 30-second window, the
-    server transmits a specific payload, and the Host replies with a `RESTORE_STATE` message
-    containing the exact coordinates and lives count of the Guest just before the drop, seamlessly resuming the game. If
-    the timeout expires without a successful reconnection, the server resolves the match in favor of the Host.
-  - **Host Failure:** Since the Host holds the authoritative state of the game world, a sudden disconnection of the
-    Host's socket is unrecoverable. The server detects the closure, immediately broadcasts a `GAME_OVER` message (with
-    the reason `HOST_DISCONNECTED`) to the Guest and Spectators, and flushes the lobby state, reopening port
-    connections for a brand-new match.
-  - **Spectator Failure:** The system enforces strict isolation for passive observers. If a Spectator disconnects or
-    crashes, the server simply evicts their socket from the internal `spectators` array. This failure is completely
-    transparent to the active players and does not impact the game loop or the server's stability.
-
-### 3.8. Availability
-
-- **Caching Mechanism:** At the local client level, a strict asset caching mechanism is implemented within the `RenderingSystem`. Visual resources are
-  loaded and sliced into sprite sheet frames only once upon initialization and stored in local memory (`assetCache` and
-  `sourceImageCache`). This prevents continuous disk I/O operations and memory reallocation during the intensive
-  rendering loop, ensuring the client remains highly responsive and visually available.
-- **Network Partitioning:** In the context of the CAP theorem, the system deliberately prioritizes **Consistency (C)**
-  over **Availability (A)** during a network partition. If a partition isolates the Guest from the Server, local
-  gameplay cannot proceed independently, as a desynchronized competitive platformer would result in unfair and invalid
-  states (e.g., a player passing through a barrel on their screen, but being hit on the opponent's screen). The server
-  handles the partition by enforcing a hard pause on state updates via the aforementioned 30-second fault-tolerance
-  window. If the partition cannot be resolved within this timeframe, the server destroys the active game session to
-  become available again for new, healthy connections.
-
-### 3.9. Security
-
-- **Authorization:** A form of Role-Based Access Control (RBAC) is enforced by the `LobbyVerticle` through connection routing and temporal ordering. Access rights are rigidly determined
-  by the URI path utilized during the initial handshake:
-    - **HOST Role:** Assigned to the first WebSocket connecting to the root `/play` endpoint. This role is granted the
-      highest authorization, including the rights to dictate global game state, spawn barrels, and trigger game-over
-      conditions.
-    - **GUEST Role:** Assigned to the second WebSocket connecting to the `/play` endpoint. This role is strictly
-      authorized to broadcast updates regarding its own specific entity (the Guest player avatar) and cannot manipulate
-      the environment. Any attempt by a Guest to spawn a barrel would be ignored by the server's routing logic.
-    - **SPECTATOR Role:** Assigned to any WebSocket connecting to the `/spectate` endpoint. This role is granted
-      strictly read-only access. The server pushes updates to these clients but does not listen to or process any
-      state-update messages originating from them.
+- **Resource Reuse:** Frequently accessed visual resources are retained locally after they have been loaded and
+  prepared for rendering. Reusing these resources avoids unnecessary I/O and processing during the game loop,
+  supporting smooth interaction and consistent visual performance.
+- **Network Partitions:** The CAP theorem states that any distributed data store can simultaneously provide at most two
+  of three guarantees: consistency, availability, and partition tolerance. Since the system is designed to operate over
+  a local area network, it must tolerate network partitions and communication failures. In this case, the system
+  prioritizes **consistency over availability** for the affected match: gameplay does not continue independently while
+  communication is interrupted, because doing so could create divergent positions, collision results, or victory
+  conditions and give a player an unfair outcome. Instead, the session enters recovery and resumes only from a
+  synchronized state, or is terminated if recovery is unsuccessful. A spectator leaving the session does not affect the
+  match because spectators do not participate in the simulation. By contrast, loss of the authoritative participant
+  cannot be safely recovered without risking inconsistent state, so the affected match is ended.
 
 ## 4. Implementation
 
