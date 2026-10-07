@@ -360,8 +360,6 @@ While the server manages the high-level session, the clients handle the continuo
   active, ephemeral game state. This data is stored exclusively in volatile memory (RAM) within the `WorldImpl` instance
   of each client. This architecture strictly reflects the session-based arcade nature of the game, which deliberately
   lacks user accounts, persistent leaderboards, or save files.
-- **Database Queries:** As there is no persistent storage layer, there are no database queries, concurrent database
-  reads/writes, or transactional locks to manage.
 - **Shared Data:** The physical state of the game world is highly shared among all distributed components. The Host
   actively shares the coordinates of its avatar and all dynamic environmental entities (barrels). The Guest shares its
   local avatar's coordinates. Spectators share no data but receive all shared state.
@@ -381,39 +379,29 @@ While the server manages the high-level session, the clients handle the continuo
   Guest and Spectators. Simultaneously, the Guest shares its local avatar's coordinates, which are replicated back to
   the Host. Spectators maintain a read-only replicated state, ensuring their local simulation mirrors the active game
   without interfering with it.
-- **Heart-beating, Timeout, and Retry Mechanism:** To handle transient network instability (e.g., temporary Wi-Fi drops
-  on a local area network), the central `LobbyVerticle` implements a dedicated timeout and retry mechanism specifically
-  tailored for the Guest connection. If the Guest's WebSocket closes unexpectedly while the game is active, the server
-  does not immediately terminate the match. Instead, it pauses active event broadcasting for that node and initiates a
-  30-second timer (`guestReconnectTimerId`). If the Guest successfully reconnects within this 30-second window, the
-  server transmits a specific payload (`isReconnect: true`), and the Host replies with a `RESTORE_STATE` message
-  containing the exact coordinates and lives count of the Guest just before the drop, seamlessly resuming the game. If
-  the timeout expires without a successful reconnection, the server declares a `GUEST_TIMEOUT` and resolves the match in
-  favor of the Host.
-- **Error Handling and Component Failure:** The system relies on event-driven error handling to prevent deadlocks and
-  ghost sessions:
-    - **Host Failure:** Since the Host holds the authoritative state of the game world, a sudden disconnection of the
-      Host's socket is unrecoverable. The server detects the closure, immediately broadcasts a `GAME_OVER` message (with
-      the reason `HOST_DISCONNECTED`) to the Guest and Spectators, and flushes the lobby state, reopening port
-      connections for a brand-new match.
-    - **Spectator Failure:** The system enforces strict isolation for passive observers. If a Spectator disconnects or
-      crashes, the server simply evicts their socket from the internal `spectators` array. This failure is completely
-      transparent to the active players and does not impact the game loop or the server's stability.
+- **Error Handling and Retry Mechanism:**
+  - **Guest Failure:** To handle transient network instability (e.g., temporary Wi-Fi drops
+    on a local area network), it's implemented a dedicated timeout and retry mechanism specifically
+    for the Guest connection. If the Guest's WebSocket closes unexpectedly while the game is active, the server
+    does not immediately terminate the match. Instead, it pauses active event broadcasting for that node and initiates a
+    30-second timer. If it successfully reconnects within this 30-second window, the
+    server transmits a specific payload, and the Host replies with a `RESTORE_STATE` message
+    containing the exact coordinates and lives count of the Guest just before the drop, seamlessly resuming the game. If
+    the timeout expires without a successful reconnection, the server resolves the match in favor of the Host.
+  - **Host Failure:** Since the Host holds the authoritative state of the game world, a sudden disconnection of the
+    Host's socket is unrecoverable. The server detects the closure, immediately broadcasts a `GAME_OVER` message (with
+    the reason `HOST_DISCONNECTED`) to the Guest and Spectators, and flushes the lobby state, reopening port
+    connections for a brand-new match.
+  - **Spectator Failure:** The system enforces strict isolation for passive observers. If a Spectator disconnects or
+    crashes, the server simply evicts their socket from the internal `spectators` array. This failure is completely
+    transparent to the active players and does not impact the game loop or the server's stability.
 
 ### 3.8. Availability
 
-- **Caching Mechanism:** Traditional distributed data caching (e.g., Memcached or Redis) is not utilized because the
-  game state is highly volatile, changing every 16 milliseconds to maintain a 60 FPS target. However, at the local
-  client level, a strict asset caching mechanism is implemented within the `RenderingSystem`. Visual resources are
+- **Caching Mechanism:** At the local client level, a strict asset caching mechanism is implemented within the `RenderingSystem`. Visual resources are
   loaded and sliced into sprite sheet frames only once upon initialization and stored in local memory (`assetCache` and
   `sourceImageCache`). This prevents continuous disk I/O operations and memory reallocation during the intensive
   rendering loop, ensuring the client remains highly responsive and visually available.
-- **Load Balancing:** Load balancing is neither implemented nor required for this specific architecture. The system's
-  scope is strictly bounded to a local area network supporting a single active game session per server instance
-  (hardcoded to one Host, one Guest, and a passive array of Spectators). If the system were to be scaled for a wider
-  internet deployment (e.g., a matchmaking hub hosting hundreds of concurrent Donkey Kong arenas), a reverse proxy (like
-  Nginx) or a dedicated matchmaking service would be necessary to dynamically balance incoming WebSocket connections
-  across multiple horizontally scaled `LobbyVerticle` worker nodes.
 - **Network Partitioning:** In the context of the CAP theorem, the system deliberately prioritizes **Consistency (C)**
   over **Availability (A)** during a network partition. If a partition isolates the Guest from the Server, local
   gameplay cannot proceed independently, as a desynchronized competitive platformer would result in unfair and invalid
@@ -424,12 +412,7 @@ While the server manages the high-level session, the clients handle the continuo
 
 ### 3.9. Security
 
-- **Authentication:** The system does not implement formal authentication mechanisms such as OAuth 2.0, JWT (JSON Web
-  Tokens), or session cookies. Given the academic, local LAN scope of the project and the intentional absence of
-  persistent user accounts or leaderboards, clients are implicitly trusted simply by successfully establishing a
-  TCP/WebSocket connection to the server's IP address.
-- **Authorization:** While formal authentication is absent, a rudimentary form of Role-Based Access Control (RBAC) is
-  enforced by the `LobbyVerticle` through connection routing and temporal ordering. Access rights are rigidly determined
+- **Authorization:** A form of Role-Based Access Control (RBAC) is enforced by the `LobbyVerticle` through connection routing and temporal ordering. Access rights are rigidly determined
   by the URI path utilized during the initial handshake:
     - **HOST Role:** Assigned to the first WebSocket connecting to the root `/play` endpoint. This role is granted the
       highest authorization, including the rights to dictate global game state, spawn barrels, and trigger game-over
@@ -440,11 +423,6 @@ While the server manages the high-level session, the clients handle the continuo
     - **SPECTATOR Role:** Assigned to any WebSocket connecting to the `/spectate` endpoint. This role is granted
       strictly read-only access. The server pushes updates to these clients but does not listen to or process any
       state-update messages originating from them.
-- **Cryptographic Schemas:** No cryptographic schemas, token verification, or in-transit data encryption protocols are
-  employed. Messages are serialized as plaintext JSON and transmitted over standard, unencrypted WebSockets (`ws://`
-  rather than `wss://`). This is a deliberate architectural trade-off: the game processes no sensitive personal data
-  (PII), financial records, or credentials. Consequently, prioritizing raw throughput and minimal latency over
-  encryption overhead is the optimal choice for a local, real-time multiplayer application.
 
 ## 4. Implementation
 
@@ -464,13 +442,6 @@ network protocols, data serialization, and the frameworks exploited.
   outgoing JSON payloads directly to immutable Java `record` classes (e.g., `HostUpdateMessage`, `GuestUpdateMessage`).
   This choice eliminated boilerplate parsing code while maintaining high human-readability, which greatly sped up the
   debugging process.
-- **Database Queries:** As extensively discussed in the design section, the system does not utilize any persistent
-  storage. Consequently, there are no SQL or NoSQL databases queried, and the application relies entirely on volatile
-  memory (RAM) to manage the game state during runtime.
-- **Authentication and Authorization:** The implementation does not utilize standardized authentication protocols (such
-  as OAuth 2.0 or JWT) nor formal authorization frameworks (like ABAC). The system implements a custom, lightweight
-  Role-Based Access Control (RBAC) enforced programmatically by the server based solely on the WebSocket connection
-  endpoint (`/play` vs `/spectate`) and the chronological order of connections.
 
 ### 4.1. Technological Details
 
@@ -542,12 +513,6 @@ ensuring that every pull request is validated before being merged. Tests can be 
     - **Corner Cases Tested:** The tests specifically validate error handling, split-brain lobby prioritization, and
       network partitions (e.g., simulating a client disconnection to ensure the server gracefully pauses the game or
       resolves the match state).
-
-- **End-to-End (E2E) Testing:**
-  Fully automated End-to-End testing spinning up the production server, launching multiple headless JavaFX client
-  instances, simulating network latency, and injecting programmatic keyboard inputs was deemed out of scope due to the
-  extreme brittleness of automated GUI testing for real-time games. E2E validation was instead covered through manual
-  acceptance testing.
 
 ### 5.2. Acceptance Test
 
