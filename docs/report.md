@@ -389,10 +389,10 @@ network protocols, data serialization, and the frameworks exploited.
 
 - **Network Protocols:** The system employs a dual-protocol approach to handle different networking phases efficiently:
     - **UDP (User Datagram Protocol):** Utilized exclusively for the initial **Service Discovery** phase and split-brain
-      conflict resolution. The `LobbyVerticle` broadcasts its presence via UDP datagrams on port 8081. This allows
+      conflict resolution. The central game server broadcasts its presence via UDP datagrams on port 8081. This allows
       clients to dynamically discover active lobbies on the Local Area Network without requiring manual IP entry.
-    - **WebSockets (WS) over TCP:** Utilized for all continuous in-game communication. While UDP is traditionally
-      favored for fast-paced games, WebSockets were chosen because they provide a persistent, full-duplex communication
+    - **WebSockets (WS) over TCP:** Utilized for all continuous in-game communication. WebSockets were chosen because
+      they provide a persistent, full-duplex communication
       channel with guaranteed, ordered delivery out-of-the-box. This drastically simplifies the implementation for a
       local area network (LAN) environment, ensuring the server can reliably push 60 FPS state updates to all clients.
 - **In-transit Data Representation:** All data exchanged over the network is serialized and represented in **JSON**. At
@@ -406,26 +406,24 @@ network protocols, data serialization, and the frameworks exploited.
 The project relies on a specific technology stack to achieve its concurrency and rendering goals:
 
 - **Java (JDK 21+):** The entire application is written in Java, taking advantage of modern language features. In
-  particular, Java `record` classes are extensively exploited to define immutable ECS Components (e.g.,
-  `PositionComponent`, `VelocityComponent`) and network messages, ensuring thread safety and reducing boilerplate code.
+  particular, Java `record` classes are exploited to define immutable ECS Components (e.g., `PositionComponent`,
+  `VelocityComponent`) and network messages, ensuring thread safety.
 - **Eclipse Vert.x:** This is the core framework used for networking and concurrency. Vert.x is built on a non-blocking,
   event-driven architecture (using the Reactor pattern), which allows it to handle multiple concurrent connections with
   minimal thread overhead.
-    - The `LobbyVerticle` acts as the central HTTP/WebSocket server.
-    - The `DiscoveryResponder` and `DiscoveryClient` utilize Vert.x's `DatagramSocket` for UDP broadcasting.
-    - The internal **Vert.x EventBus** is heavily exploited as the backbone of the application to decouple the network
-      layer from the game logic layer. Incoming network messages are published to specific EventBus addresses (e.g.,
-      `inbound.guest_update`), where the ECS `StateReceiverSystem` consumes them asynchronously, preventing network
+    - A dedicated component acts as the central HTTP/WebSocket server.
+    - Specialized network agents utilize Vert.x's `DatagramSocket` for UDP broadcasting.
+    - The internal **Vert.x EventBus** is used in the application to decouple the network layer from the game logic
+      layer. Incoming network messages are published to specific EventBus addresses (e.g.,
+      `inbound.guest_update`), where the dedicated ECS receiver system consumes them asynchronously, preventing network
       operations from blocking the main game loop.
-- **JavaFX:** Used exclusively for the client-side graphical user interface (GUI) and rendering. The game does not use
-  traditional JavaFX UI controls for the gameplay; instead, it utilizes a raw `Canvas` and a `GraphicsContext` to
-  manually draw and clear sprite sheets frame-by-frame. The core game loop is driven by a JavaFX `AnimationTimer`, which
-  triggers the ECS `World.update(deltaTime)` method to process physics and render the graphics concurrently at a
-  targeted 60 FPS.
-- **Custom ECS Engine:** Rather than relying on a heavy third-party game engine (like LibGDX), the project implements a
-  custom Entity-Component-System from scratch. This allows for total control over the modularity of the code, separating
-  pure data (`Component`) from execution logic (`GameSystem`), making the implementation of network state
-  synchronization straightforward and predictable.
+- **JavaFX:** Used exclusively for the client-side graphical user interface (GUI) and rendering. The game utilizes a raw
+  `Canvas` and a `GraphicsContext` to manually draw and clear sprite sheets frame-by-frame. The core game loop is driven
+  by a JavaFX `AnimationTimer`, which triggers the ECS engine's main update cycle to process physics and render
+  the graphics concurrently at a targeted 60 FPS.
+- **Custom ECS Engine:** The project implements a custom Entity-Component-System engine from scratch. This allows for
+  total control over the modularity of the code, strictly separating pure data representations from the core execution
+  logic, making the implementation of network state synchronization straightforward and predictable.
 
 ## 5. Validation
 
