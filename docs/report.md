@@ -18,7 +18,7 @@ This report presents the "Donkey Kong: Rush" project, realized for the "Distribu
 Bologna. The project involves the development of a 2D multiplayer platform video game inspired by the
 classic [Donkey Kong](https://en.wikipedia.org/wiki/Donkey_Kong_(1981_video_game)). The system is designed around an
 Entity-Component-System (ECS) architecture written in Java, utilizing JavaFX for rendering. The main focus of the
-project is the implementation of smooth multiplayer gameplay. The solution combines the Host's authority over the
+project is the implementation of smooth multiplayer gameplay. The solution combines the host's authority over the
 deterministic environment with a reactive handling of local inputs, guaranteeing an experience free of blocking lag for
 the players.
 
@@ -42,7 +42,7 @@ Players interact with the system via the GUI during setup or keyboard controls d
 consist of standard keybindings for movement (left/right, climbing ladders) and jumping.
 
 The system does not require persistent, long-term data storage. All necessary data represents the state of the ongoing
-match (such as player and barrel coordinates) and is kept strictly in RAM.
+match (such as player and barrel coordinates).
 
 The game relies on multiple user roles:
 
@@ -50,7 +50,7 @@ The game relies on multiple user roles:
   possesses authority over the game environment (e.g., generating barrels) and broadcasts the world state to all
   connected clients.
 - **Guest (Player)**: Actively plays the game by processing their own input locally while simultaneously receiving
-  continuous updates from the Host regarding the rest of the world state.
+  continuous updates from the host regarding the rest of the world state.
 - **Spectator**: A purely passive role that does not generate game input, but solely receives updates from the players
   to feed its local rendering system, allowing another user to watch the match in real-time.
 
@@ -58,23 +58,27 @@ The game relies on multiple user roles:
 
 #### Glossary
 
-| Term          | Definition                                                                                                                                                                    |
-|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Host**      | A player who actively plays the game, processes local input, acts as the authoritative entity for game-world generation (e.g., barrels), and broadcasts the state to clients. |
-| **Guest**     | A player who actively plays the game, processes local input, and receives continuous world state updates from the Host.                                                       |
-| **Spectator** | A passive user who does not generate input but receives real-time updates to render and watch the match.                                                                      |
-| **Lobby**     | The pre-game networking state where users connect and are assigned their respective roles (Host, Guest, or Spectator) before the match begins.                                |
-| **Entity**    | Any distinct object in the game world.                                                                                                                                        |
-| **Barrel**    | A dynamic entity that deals damage when a player comes into contact with it.                                                                                                  |
-| **Ladder**    | A climbable entity in the game level that enables players to move vertically regardless of gravity.                                                                           |
+| Term            | Definition                                                                                                                                                                    |
+|-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Host**        | A player who actively plays the game, processes local input, acts as the authoritative entity for game-world generation (e.g., barrels), and broadcasts the state to clients. |
+| **Guest**       | A player who actively plays the game, processes local input, and receives continuous world state updates from the host.                                                       |
+| **Spectator**   | A passive user who does not generate input but receives real-time updates to render and watch the match.                                                                      |
+| **Lobby**       | The pre-game networking state where users connect and are assigned their respective roles (host, guest, or spectator) before the match begins.                                |
+| **Entity**      | Any distinct object in the game world.                                                                                                                                        |
+| **Barrel**      | A dynamic entity that deals damage when a player comes into contact with it.                                                                                                  |
+| **Ladder**      | A climbable entity in the game level that enables players to move vertically regardless of gravity.                                                                           |
+| **Mario**       | The playable avatar assigned to the host, capable of moving horizontally, jumping, and climbing ladders.                                                                      |
+| **Luigi**       | The playable avatar assigned to the guest, sharing identical movement mechanics with Mario while competing in the race to the top.                                            |
+| **Pauline**     | The static goal entity positioned at the top of the level; colliding with her triggers the winning condition and concludes the match.                                         |
+| **Donkey Kong** | The non-playable antagonist entity positioned at the top of the arena, serving as the source that periodically spawns rolling barrels.                                        |
 
 #### Functional Requirements
 
 | Description                                                                                                                                     | Acceptance Criterion                                                                                                                              |
 |-------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| The system must allow users to join a lobby and automatically assign them a role (Host, Guest, or Spectator) based on join order or preference. | A user successfully connects to the server and receives a distinct role assignment (Host, Guest, or Spectator) before the game starts.            |
+| The system must allow users to join a lobby and automatically assign them a role (host, guest, or spectator) based on join order or preference. | A user successfully connects to the server and receives a distinct role assignment (host, guest, or spectator) before the game starts.            |
 | The system must allow active players to move horizontally (left/right), jump, and climb ladders.                                                | Pressing the designated keys updates the player's position appropriately on the screen according to game physics (gravity, collision).            |
-| The system must synchronize the game state (entities positions, and lives) between all connected clients in real time.                          | When the Host moves or a barrel spawns, the Guest and Spectators see the updated positions on their screens without noticeable desynchronization. |
+| The system must synchronize the game state (entities positions, and lives) between all connected clients in real time.                          | When the host moves or a barrel spawns, the guest and Spectators see the updated positions on their screens without noticeable desynchronization. |
 | The system must detect collisions between players and damaging entities (e.g., barrels), deducting a life upon impact.                          | When a player's character intersects with a barrel, the player's life count decreases by 1, and the character respawns at the starting position.  |
 | The system must declare a winner if a player reaches the goal (Pauline) or declare a loser if a player's lives reach zero.                      | The game transitions to a "Game Over" screen displaying the correct winner or loser when the goal is touched or 3 lives are lost.                 ||
 
@@ -97,35 +101,28 @@ These requirements define the behavioral aspects and quality attributes of the s
   delivered within the 33ms latency threshold to maintain a fair 60 FPS gameplay experience.
 
 * **Evolvability and maintainability:** To ensure long-term maintainability and ease of updates, the system's
-  architecture must strictly decouple game state data from execution logic. The design must allow new game mechanics or
-  virtual objects to be added modularly, actively avoiding rigid, monolithic class hierarchies.
+  architecture must decouple game state data from execution logic. The design must allow new game mechanics or objects
+  to be added modularly, avoiding rigid class hierarchies.
 
 * **Fault tolerance, dependability, and availability:** While data integrity for long-term storage is irrelevant since
   all match state is kept in volatile memory, the system must gracefully handle network faults. If a player's connection
   drops, the central server must detect the failure and immediately broadcast a game-over message, resetting the lobby
   to prevent deadlocks and ensure continued availability for future matches.
 
-* **Resource sharing:** The active game world acts as a synchronized shared resource. The Host is responsible for
-  managing authoritative game mechanics and synchronizing this shared state with the Guest and Spectators via continuous
+* **Resource sharing:** The active game world acts as a synchronized shared resource. The host is responsible for
+  managing authoritative game mechanics and synchronizing this shared state with the guest and Spectators via continuous
   network message broadcasts.
 
 * **Transparency:** The system provides basic *location transparency*; clients seamlessly connect to the lobby without
   needing to know the physical network topology of the other players. However, *failure transparency* is intentionally
   absent; if a connection drops, the failure is explicitly exposed to the remaining users via the game over UI.
 
-* **Scalability:** The game is explicitly bounded to a small, finite number of simultaneous connections (one Host, one
-  Guest, and passive Spectators) on a local area network. It is not expected to scale horizontally to thousands of users
+* **Scalability:** The game is explicitly bounded to a small, finite number of simultaneous connections (one host, one
+  guest, and passive Spectators) on a local area network. It is not expected to scale horizontally to thousands of users
   or handle massive data growth over time.
 
-* **Security and trust:** As a local LAN game without persistent user accounts or sensitive data storage, there is no
-  need for cryptographic schemes, data encryption, or complex authentication mechanisms.
-
-* **Openness and interoperability:** The project is a closed ecosystem. While it utilizes standardized text formats for
-  message passing, it is not required to interact with external third-party systems or heterogeneous technological
-  components.
-
-* **Economy and costs:** Developed as an academic project running on local hardware, there are no cloud deployment
-  budgets, operational costs, or strict economic constraints driving the architecture.
+* **Security and trust:** As a local LAN game without persistent or sensitive data storage, there is no need for
+  cryptographic schemes, data encryption, or complex authentication mechanisms.
 
 ## 3. Design
 
@@ -164,9 +161,9 @@ network traffic flows through the main server.
 The game is designed to be deployed and played over a Local Area Network (LAN) and the network distribution of the
 components depends dynamically on the players' roles:
 
-* **Host Machine:** The player who creates the game session acts as the host. Their physical machine runs both the
-  central Server component and their own local Client component.
-* **Guest/Spectator Machines:** The other participants run only the client component on their respective physical
+* **Host machine:** The player who creates the game session acts as the host. His physical machine runs both the
+  central server component and his own local client component.
+* **Guest/Spectator machines:** The other participants run only the client component on their respective physical
   machines. These clients connect remotely over the local network to the host's IP address.
 
 Therefore, the infrastructure is entirely localized within the players' shared local network.
@@ -174,13 +171,13 @@ Therefore, the infrastructure is entirely localized within the players' shared l
 #### Service Discovery
 
 Components do not rely on static IP configuration. Instead, they dynamically discover active sessions using a custom
-_service discovery_ mechanism based on UDP Broadcasts: when a player attempts to join or spectate a game, their client
-broadcasts a UDP discovery request to the entire subnet. The host's server listens for these packets and replies
-directly to the sender with the necessary connection details (IP, port, lobby ID, and slot availability).
+_service discovery_ mechanism based on UDP broadcasts: when a player attempts to join or spectate a game, their client
+sens a UDP discovery request to the entire subnet. The host's server listens for these packets and replies
+directly to the sender with the necessary connection details (IP, port, etc.).
 
-Moreover, a _conflict resolution_ mechanism handles cases where multiple players attempt to host a lobby simultaneously
-on the same network. Lobbies constantly broadcast their presence; if a server detects another active lobby with a higher
-priority, it yields its host status, shuts down its server component, and automatically reconnects as a client.
+Moreover, to avoid scenarios where multiple players attempt to host a lobby simultaneously on the same network, lobbies
+constantly broadcast their presence. If a server detects another active lobby with a higher priority, it yields its host
+status, shuts down its server component, and connects as a client.
 
 ![Component Diagram](./images/component_diagram.png)
 
@@ -191,47 +188,48 @@ priority, it yields its host status, shuts down its server component, and automa
 The domain models the distributed system and its state synchronization through specific entities, which are mapped to
 the underlying infrastructure based on a partitioned authority model:
 
-* **Game Session (Lobby)**: The core entity representing the match lifecycle. It resides centrally in the Server's
-  memory (`LobbyVerticle`) and maps incoming WebSocket connections to specific network roles (`HOST`, `GUEST`, or
-  `SPECTATOR`). It acts as the single source of truth for the game phase and connection fault tolerance.
+* **Game Session (Lobby)**: The core entity representing the match lifecycle. It resides centrally in the server's
+  memory and maps incoming connections to specific network roles (`HOST`, `GUEST`, or `SPECTATOR`). It acts as the
+  single source of truth for the game phase and connection fault tolerance.
 * **Player Avatars (Mario & Luigi)**: Synchronized game entities. Rather than a fully centralized model, ownership is
   distributed: the Host computes and broadcasts its avatar's physics, while the Guest independently computes and
   broadcasts its own. Remote clients hold a local replica updated via the ECS `StateReceiverSystem`.
 * **Dynamic Obstacles (Barrels)**: Authoritative game entities. Their generation and physical simulation reside
-  exclusively on the Host's infrastructural loop, which guarantees a single source of truth. The Server relays this
+  exclusively on the host's infrastructural loop, which guarantees a single source of truth. The server relays this
   data, and clients map these entities as read-only visual replicas in their local ECS.
 * **Static Environment (Map, Platforms, Ladders)**: Local-only entities. They reside entirely in the clients' memory and
-  are deterministically loaded by a factory component at startup, requiring no network synchronization.
+  are loaded by a factory component at startup, requiring no network synchronization.
 
 #### Distributed System State
 
 The overall state of the application is decoupled into two distinct layers:
 
-* **Session State (Server)**: Maintained by the central lobby component. It comprehends the registry of active WebSocket
-  connections, the assigned roles, the current global game phase, and the active reconnection timers.
-* **Replicated Game State (Client / Host)**: The real-time state of the game held within the local ECS of each node.
-  This state comprehends only the strictly necessary data: precise spatial coordinates (`playerX`, `playerY`), visual
-  states (e.g., `IDLE`, `JUMP`), facing directions, remaining lives, and a list of active dynamic obstacles (their `id`,
-  and `x`, `y` coordinates).
+* **Session State (server)**: Maintained by the server. It comprehends the registry of active connections, the assigned
+  roles,
+  the current global game phase, and the active reconnection timers.
+* **Replicated Game State (client / host)**: The real-time state of the game held within the local ECS of each node.
+  This state
+  comprehends only the strictly necessary data: precise spatial coordinates, visual states (e.g., `IDLE`,`JUMP`), facing
+  directions, remaining lives, and a list of active dynamic obstacles (their `id`, and coordinates).
 
 #### Domain Events and Exchanged Messages
 
-Communication relies on serialized JSON messages over WebSockets and UDP datagrams, categorized by interaction type:
+Communication relies on serialized JSON messages, categorized by interaction type:
 
-1. **Peer Discovery (UDP)**: Messages exchanged outside the WebSocket channel to resolve local network topology.
+1. **Peer Discovery (UDP)**: Messages exchanged to resolve local network topology.
 
     * `DISCOVER` (Guest → LAN): Client request broadcasted to search for available game sessions.
-    * `LOBBY` (Host → LAN): Host reply advertising its WebSocket port, lobby ID, and guest slot availability.
+    * `LOBBY` (Host → LAN): host reply advertising its port, lobby ID, and slot availability.
 
 2. **Session and Fault Tolerance (Server → Client)**: Messages orchestrating the match lifecycle, role delegation, and
    managing connection drops.
 
     * `ROLE_ASSIGNMENT`: Instructs a newly connected client of its domain role (`HOST`, `GUEST`, or `SPECTATOR`).
     * `GAME_START`: Commands clients to instantiate the ECS world and begin the simulation loop.
-    * `GUEST_DISCONNECTED`: Notifies clients of a TCP connection drop, triggering a 30-second fault-tolerance timer on
-      the server.
+    * `GUEST_DISCONNECTED`: Notifies clients of a connection drop, triggering a 30-second fault-tolerance timer on the
+      server.
     * `GUEST_RECONNECTED`: Signals the successful recovery of the guest's connection within the allowed time frame.
-    * `RESTORE_STATE`: Authoritative event forcing a reconnected Guest to sync back to specific coordinates and lives to
+    * `RESTORE_STATE`: Authoritative event forcing a reconnected guest to sync back to specific coordinates and lives to
       safely resume the session.
     * `GAME_OVER`: Broadcasts the definitive termination of the match, carrying the reason and the winner's name.
 
@@ -240,7 +238,7 @@ Communication relies on serialized JSON messages over WebSockets and UDP datagra
 
     * `HOST_UPDATE`: Broadcasts the Host's avatar state alongside a comprehensive list of all active dynamic obstacles
       (`BarrelData`).
-    * `GUEST_UPDATE`: Broadcasts exclusively the Guest's avatar state.
+    * `GUEST_UPDATE`: Broadcasts exclusively the guest's avatar state.
     * `PLAYER_DIED`: Triggered locally when a player's health drops to zero. The server intercepts this and broadcasts a
       `GAME_OVER` event.
     * `GOAL_REACHED`: Triggered locally when a player successfully collides with the final objective. The server
@@ -284,12 +282,12 @@ a life) trigger the dispatch of specific control messages to notify all connecte
 
 #### Recovery Phase
 
-The architecture is designed to handle unexpected interruptions. Network disconnects and reconnects trigger notification
-messages across the system. If a disconnected guest reconnects within the allowed timeframe, the host dispatches a
-targeted synchronization payload to restore the guest's last known coordinates and lives, resuming the game seamlessly.
-Finally, when a winning or losing condition is met, the central server broadcasts a game-over control message. This
-event triggers the UI observers, transitioning players to the final summary screens and tearing down the active game
-session.
+The architecture is designed to handle unexpected network interruptions. Disconnection and reconnection trigger
+notification messages across the system. If a disconnected guest reconnects within the allowed timeframe, the host
+dispatches a synchronization payload to restore the guest's last known coordinates and lives, resuming the game
+seamlessly. Finally, when a winning or losing condition is met, the central server broadcasts a game-over control
+message. This event triggers the UI observers, transitioning players to the final summary screens and tearing down the
+active game session.
 
 ![Sequence Diagram](./images/sequence_diagram_recovery.png)
 
@@ -334,18 +332,18 @@ the same lifecycle:
    environment, including barrel generation and movement. At regular intervals, it sends `HOST_UPDATE` messages
    containing its avatar and barrel state, while the guest sends `GUEST_UPDATE` messages containing only its own avatar
    state. Spectators do not send gameplay updates.
+
+   During `PLAYING`, local movement is intentionally handled without waiting for a network round trip, eliminating input
+   latency for the controlled avatar. Remote entities are updated from the most recent network snapshot, and incoming
+   authoritative coordinates overwrite stale local values to preserve eventual consistency. Local collision and goal
+   events are published as `PLAYER_DIED` or `GOAL_REACHED` messages; the server validates the resulting session
+   transition and broadcasts the final outcome to every connected client.
 5. **`WAITING_RECONNECT`**: If the guest loses its connection, its local gameplay is suspended while the client attempts
    to reconnect to the session. A successful reconnection causes the client to receive a `RESTORE_STATE` message with
    the avatar's coordinates and remaining lives, after which the world and game loop resume.
 6. **`GAME_OVER`**: When the client receives `GAME_OVER`, it stops processing gameplay updates, displays the result
    identified by the server, and releases the active game resources. The user can then return to the main menu or exit
    the application.
-
-During `PLAYING`, local movement is intentionally handled without waiting for a network round trip, eliminating input
-latency for the controlled avatar. Remote entities are updated from the most recent network snapshot, and incoming
-authoritative coordinates overwrite stale local values to preserve eventual consistency. Local collision and goal events
-are published as `PLAYER_DIED` or `GOAL_REACHED` messages; the server validates the resulting session transition and
-broadcasts the final outcome to every connected client.
 
 ### 3.6. Fault-Tolerance
 
@@ -409,9 +407,9 @@ network protocols, data serialization, and the frameworks exploited.
   authentication protocols (such as OAuth or JWT). Players are implicitly trusted upon successfully establishing a
   WebSocket connection. However, authorization is securely managed via a lightweight Role-Based Access Control (RBAC)
   enforced programmatically by the server. Roles are deterministically assigned based on the requested URI and
-  chronological connection order: the first user connecting to the `/play` endpoint is granted the authoritative Host
-  role, the second becomes the Guest, and any subsequent users (or those connecting directly to the `/spectate`
-  endpoint) are restricted to read-only Spectator access.
+  chronological connection order: the first user connecting to the `/play` endpoint is granted the authoritative host
+  role, the second becomes the guest, and any subsequent users (or those connecting directly to the `/spectate`
+  endpoint) are restricted to read-only spectator access.
 
 ### 4.1. Technological Details
 
