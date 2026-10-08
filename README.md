@@ -22,7 +22,7 @@ the [GitHub Releases page](https://github.com/mircoterenzi/donkey-kong/releases)
 double-clicking it or running the following command in your terminal:
 
 ```bash
-java -jar DonkeyKongRush.jar
+java -jar DonkeyKong-Game.jar
 ```
 
 Alternatively, you can clone the repository by running:

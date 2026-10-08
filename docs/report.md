@@ -400,12 +400,24 @@ network protocols, data serialization, and the frameworks exploited.
   outgoing JSON payloads directly to immutable Java `record` classes (e.g., `HostUpdateMessage`, `GuestUpdateMessage`).
   This choice eliminated boilerplate parsing code while maintaining high human-readability, which greatly sped up the
   debugging process.
+- **Data Storage and Persistence:** The system operates entirely without a traditional Database Management System (DBMS)
+  or persistent file storage. Due to the session-based, arcade nature of the game, all state data—such as entity
+  coordinates, physical velocities, and life counts—is maintained exclusively in volatile memory (RAM) within the local
+  ECS `World` instance. Once a match concludes or the central server shuts down, this ephemeral game state is completely
+  flushed.
+- **Authentication and Authorization:** The system prioritizes immediate accessibility and does not employ strict
+  authentication protocols (such as OAuth or JWT). Players are implicitly trusted upon successfully establishing a
+  WebSocket connection. However, authorization is securely managed via a lightweight Role-Based Access Control (RBAC)
+  enforced programmatically by the server. Roles are deterministically assigned based on the requested URI and
+  chronological connection order: the first user connecting to the `/play` endpoint is granted the authoritative Host
+  role, the second becomes the Guest, and any subsequent users (or those connecting directly to the `/spectate`
+  endpoint) are restricted to read-only Spectator access.
 
 ### 4.1. Technological Details
 
 The project relies on a specific technology stack to achieve its concurrency and rendering goals:
 
-- **Java (JDK 21+):** The entire application is written in Java, taking advantage of modern language features. In
+- **Java (JDK 17+):** The entire application is written in Java, taking advantage of modern language features. In
   particular, Java `record` classes are exploited to define immutable ECS Components (e.g., `PositionComponent`,
   `VelocityComponent`) and network messages, ensuring thread safety.
 - **Eclipse Vert.x:** This is the core framework used for networking and concurrency. Vert.x is built on a non-blocking,
@@ -474,13 +486,20 @@ window, necessitated human observation and manual intervention.
 
 ## 6. Deployment
 
-The system is designed to be platform-independent, running on any desktop operating system that supports Java 21 or
-higher. Make sure the `JAVA_HOME` environment variable is set correctly, and the `java` command is available in your
-system's PATH. Moreover, to play from two different machines, ensure that both devices are connected to the same local
-area network (LAN) and that no firewall rules block UDP broadcasts or WebSocket connections.
+### Prerequisites
+
+Before deploying the software, the target machine must meet the following software requirements:
+
+- **Java Development Kit (JDK):** Version 17 or higher must be installed.
+- **Environment Variables:** The `JAVA_HOME` environment variable must be correctly configured and pointing to the JDK
+  17 installation path.
+- **Operating System:** A desktop operating system with a graphical windowing environment (Windows, macOS, or a Linux
+  distribution with X11/Wayland).
+- **Network:** An active Local Area Network (LAN) connection if multiplayer capabilities are to be utilized and no
+  firewall rules that block UDP broadcasts or WebSocket connections.
 
 To deploy the application, users can download the pre-built JAR file from the release section and execute it directly
-using `java -jar donkeykong.jar` in the same directory where the JAR is located.
+using `java -jar DonkeyKong-Game.jar` in the same directory where the JAR is located.
 
 Alternatively, the source code can be cloned from the repository:
 
@@ -548,3 +567,4 @@ platformer, several avenues for improvement and architectural expansion remain.
   JSON or Tiled map formats). This would require extending the network protocol to broadcast a `LEVEL_LOAD` message,
   ensuring that all distributed clients successfully load and synchronize the same level assets before the `GAME_START`
   event is triggered.
+* Leaderboards/User profiles?
