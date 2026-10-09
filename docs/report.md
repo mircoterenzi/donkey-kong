@@ -540,10 +540,24 @@ contribute to the project.
 
 ## 8. Self-evaluation
 
-- An individual section is required for each member of the group
-- Each member must self-evaluate their work, listing the strengths and weaknesses of the product
-- Each member must describe their role within the group as objectively as possible. It should be noted that each student
-  is only responsible for their own section
+### Foschi Giacomo
+
+I am highly satisfied with the outcome of this project. Building a real-time game from scratch required meticulous
+planning, but it ultimately provided a deep understanding of distributed synchronization and network routing.
+
+Regarding project's strengths, I consider the automatic handshake/matchmaking and the fault-tolerance mechanisms to be
+the highlights of our work, alongside the overall fluidity and responsiveness of the gameplay in a LAN environment. The
+primary weakness of the product is tied to its topology, where the authoritative server is hosted directly on one of the
+client machines. While perfectly suited for a small LAN, scaling the system to a wide area network or supporting
+concurrent multi-lobby sessions would require extracting the backend logic into a dedicated, standalone server.
+Furthermore, under high-latency network conditions, the current strict reliance on the Host's authoritative state
+becomes a limitation; maintaining a smooth visual experience over the internet would necessitate implementing advanced
+techniques such as client-side prediction, entity interpolation, and state replication.
+
+Within the group, I had an excellent and highly productive experience collaborating with Terenzi. My specific
+contributions focused on the validation phase through rigorous testing, implementing client-side fault tolerance
+mechanisms, and engineering the core network communication layer. I was responsible for structuring the message exchange
+protocols and decoupling the network payloads from the game engine by utilizing Eclipse Vert.x and its EventBus.
 
 ## 9. Future Works
 
