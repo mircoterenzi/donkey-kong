@@ -89,16 +89,11 @@ These requirements define the behavioral aspects and quality attributes of the s
 | Description                                                                                  | Acceptance Criterion                                                                                                                                                                                                                                                                      |
 |----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | The game must update and render at a consistent frame rate to ensure smooth gameplay.        | The local game loop executes consistently at the target of 60 Frames-Per-Second (FPS).                                                                                                                                                                                                    |
-| State updates must be transmitted rapidly to prevent visual stuttering or unfair advantages. | State update payloads are serialized, transmitted over the local network, and deserialized by the receiving client in under 33 milliseconds (roughly 2 frames).                                                                                                                           |
-| The system must ensure automatic recovery from disconnections for non-Host users.            | If a Guest or Spectator loses their network connection and subsequently reconnects to the server while the match is still active, the system automatically restores their role and resumes sending them real-time game state updates without requiring a full lobby reset.                |
+| State updates must be transmitted rapidly to prevent visual stuttering or unfair advantages. | State update payloads are serialized, transmitted over the local network, and deserialized by the receiving client.                                                                                                                                                                       |
+| The system must ensure automatic recovery from disconnections for non-host users.            | If a guest or spectator loses their network connection and subsequently reconnects to the server while the match is still active, the system automatically restores their role and resumes sending them real-time game state updates without requiring a full lobby reset.                |
 | Code must be modular and documented to make extensions and changes easy.                     | Modularity is enforced by strictly decoupling data structures from execution logic, avoiding deep and rigid inheritance trees. Maintainability is verified by the presence of comprehensive Javadoc comments on all core API interfaces, ensuring new features can be integrated rapidly. |
 
 ### 2.1 Relevant Distributed System Features
-
-* **Performance, concurrency, and communication efficiency:** Real-time games require extremely strict throughput and
-  response times. The system must process player inputs, update physics, and broadcast network messages concurrently
-  without blocking the main application thread. High communication efficiency is paramount to ensure state updates are
-  delivered within the 33ms latency threshold to maintain a fair 60 FPS gameplay experience.
 
 * **Evolvability and maintainability:** To ensure long-term maintainability and ease of updates, the system's
   architecture must decouple game state data from execution logic. The design must allow new game mechanics or objects
@@ -192,8 +187,8 @@ the underlying infrastructure based on a partitioned authority model:
   memory and maps incoming connections to specific network roles (`HOST`, `GUEST`, or `SPECTATOR`). It acts as the
   single source of truth for the game phase and connection fault tolerance.
 * **Player Avatars (Mario & Luigi)**: Synchronized game entities. Rather than a fully centralized model, ownership is
-  distributed: the Host computes and broadcasts its avatar's physics, while the Guest independently computes and
-  broadcasts its own. Remote clients hold a local replica updated via the ECS `StateReceiverSystem`.
+  distributed: the host computes and broadcasts its avatar's physics, while the guest independently computes and
+  broadcasts its own. Remote clients hold a local replica updated via the ECS receiver.
 * **Dynamic Obstacles (Barrels)**: Authoritative game entities. Their generation and physical simulation reside
   exclusively on the host's infrastructural loop, which guarantees a single source of truth. The server relays this
   data, and clients map these entities as read-only visual replicas in their local ECS.
@@ -266,10 +261,9 @@ central server, which handles the session and assigns specific roles.
 
 #### Active Gameplay Phase
 
-During the active game phase, communication becomes continuous and is driven by the game loop, which updates at 60
-frames per second. At every frame, dedicated broadcasting systems collect the current state of relevant entities and
-dispatch structured JSON payloads. These payloads include spatial coordinates, current animation states, facing
-directions, and remaining lives.
+During the active game phase, communication becomes continuous and is driven by the game loop. At every frame, dedicated
+broadcasting systems collect the current state of relevant entities and dispatch structured JSON payloads. These
+payloads include spatial coordinates, current animation states, facing directions, and remaining lives.
 
 To maintain a responsive experience and minimize input lag, the game adopts a split-authority state synchronization
 pattern. The host dictates the state of the shared environment, such as the spawning and tracking of dynamic obstacles
@@ -302,7 +296,7 @@ The server behavior is modeled through four states, each representing a distinct
 
 1. **`WAITING_PLAYERS`**: The initial state of the server immediately after the lobby is created. The server has a
    host (or is waiting for one to connect), but the guest is missing. In this state, the UDP Discovery mechanism
-   (`DiscoveryResponder`) broadcasts that the guest slot is available. Spectators can join during this phase without
+   broadcasts that the guest slot is available. Spectators can join during this phase without
    triggering transitions.
 2. **`GAME_RUNNING`**: The state in which the match is active. The host and the guest continuously exchange their
    respective state updates.
@@ -357,9 +351,6 @@ the same lifecycle:
   remaining participants are informed of the interruption. If the guest reconnects in time, the session restores the
   last synchronized player state and resumes normal communication. This approach tolerates short-lived network
   interruptions while avoiding uncontrolled divergence between the two players.
-- **Recovery Timeout:** Recovery is deliberately bounded. If the guest does not return within the allowed interval, the
-  session is ended and the host is declared the winner. A bounded recovery period prevents abandoned sessions from
-  occupying the lobby indefinitely and allows the server to become available for a subsequent match.
 - **Component Failure:** The host is a critical component because it maintains the authoritative shared simulation. Its
   disconnection cannot be recovered without risking inconsistent game state, so the current match is terminated and the
   session is reset. A spectator failure has no effect on the match: spectators are passive consumers of replicated
@@ -386,13 +377,13 @@ This chapter details the specific technology-dependent choices made to realize t
 network protocols, data serialization, and the frameworks exploited.
 
 - **Network Protocols:** The system employs a dual-protocol approach to handle different networking phases efficiently:
-    - **UDP (User Datagram Protocol):** Utilized exclusively for the initial **Service Discovery** phase and split-brain
-      conflict resolution. The central game server broadcasts its presence via UDP datagrams on port 8081. This allows
+    - **UDP (User Datagram Protocol):** Utilized exclusively for the initial **service discovery** phase and conflict
+      resolution. The central game server broadcasts its presence via UDP datagrams on port 8081. This allows
       clients to dynamically discover active lobbies on the Local Area Network without requiring manual IP entry.
     - **WebSockets (WS) over TCP:** Utilized for all continuous in-game communication. WebSockets were chosen because
-      they provide a persistent, full-duplex communication
-      channel with guaranteed, ordered delivery out-of-the-box. This drastically simplifies the implementation for a
-      local area network (LAN) environment, ensuring the server can reliably push 60 FPS state updates to all clients.
+      they provide a persistent, full-duplex communication channel with guaranteed, ordered delivery out-of-the-box.
+      This drastically simplifies the implementation for a local area network (LAN) environment, ensuring the server can
+      reliably push state updates to all clients.
 - **In-transit Data Representation:** All data exchanged over the network is serialized and represented in **JSON**. At
   the implementation level, the system leverages Vert.x's built-in `JsonObject` to automatically map incoming and
   outgoing JSON payloads directly to immutable Java `record` classes (e.g., `HostUpdateMessage`, `GuestUpdateMessage`).
@@ -489,10 +480,6 @@ window, necessitated human observation and manual intervention.
 Before deploying the software, the target machine must meet the following software requirements:
 
 - **Java Development Kit (JDK):** Version 17 or higher must be installed.
-- **Environment Variables:** The `JAVA_HOME` environment variable must be correctly configured and pointing to the JDK
-  17 installation path.
-- **Operating System:** A desktop operating system with a graphical windowing environment (Windows, macOS, or a Linux
-  distribution with X11/Wayland).
 - **Network:** An active Local Area Network (LAN) connection if multiplayer capabilities are to be utilized and no
   firewall rules that block UDP broadcasts or WebSocket connections.
 
@@ -565,12 +552,12 @@ While the current implementation successfully fulfills the core requirements of 
 platformer, several avenues for improvement and architectural expansion remain.
 
 * Currently, the guest and spectator clients act as "dumb terminals" for external entities, strictly overwriting their
-  local entity coordinates with the incoming network snapshots from the Host. On a high-latency network, this could lead
-  to visual stuttering or "rubber-banding." A primary future improvement would be implementing **entity interpolation
-  ** (smoothing the visual transition between the last known network state and the current one) and **client-side
+  local entity coordinates with the incoming network snapshots from the host. On a high-latency network, this could lead
+  to visual stuttering or "rubber-banding." A primary future improvement would be implementing **entity interpolation**
+  (smoothing the visual transition between the last known network state and the current one) and **client-side
   prediction** (allowing the guest to predict the physics locally, correcting them only if needed).
 * The current zero-config matchmaking relies on UDP broadcasting, which strictly bounds the system to a LAN environment.
-  To scale this into a production-grade application playable over the public Internet, the `LobbyVerticle` could be
+  To scale this into a production-grade application playable over the public Internet, the server could be
   decoupled and deployed as a standalone microservice on a cloud provider (e.g., AWS or Google Cloud) using Docker and
   Kubernetes. Introducing a centralized matchmaking service would allow clients from different networks to be
   dynamically paired into isolated game instances orchestrated by the cloud provider.
@@ -579,4 +566,7 @@ platformer, several avenues for improvement and architectural expansion remain.
   JSON or Tiled map formats). This would require extending the network protocol to broadcast a `LEVEL_LOAD` message,
   ensuring that all distributed clients successfully load and synchronize the same level assets before the `GAME_START`
   event is triggered.
-* Leaderboards/User profiles?
+* A possible future extension would be introducing a dedicated persistence layer backed by a database management
+  system (DBMS) to manage **user profiles**, account authentication, and player statistics. Building on this
+  infrastructure, a centralized **leaderboard** service could be implemented to track and rank competitive
+  performance metrics, such as the time elapsed to rescue Pauline or the remaining lives upon victory.
