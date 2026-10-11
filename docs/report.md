@@ -167,8 +167,8 @@ Therefore, the infrastructure is entirely localized within the players' shared l
 
 Components do not rely on static IP configuration. Instead, they dynamically discover active sessions using a custom
 _service discovery_ mechanism based on UDP broadcasts: when a player attempts to join or spectate a game, their client
-sens a UDP discovery request to the entire subnet. The host's server listens for these packets and replies
-directly to the sender with the necessary connection details (IP, port, etc.).
+sends a UDP discovery request to the entire subnet. The host's server listens for these packets and replies
+directly to the sender with the n   ecessary connection details (IP, port, etc.).
 
 Moreover, to avoid scenarios where multiple players attempt to host a lobby simultaneously on the same network, lobbies
 constantly broadcast their presence. If a server detects another active lobby with a higher priority, it yields its host
@@ -214,7 +214,7 @@ Communication relies on serialized JSON messages, categorized by interaction typ
 1. **Peer Discovery (UDP)**: Messages exchanged to resolve local network topology.
 
     * `DISCOVER` (Guest → LAN): Client request broadcasted to search for available game sessions.
-    * `LOBBY` (Host → LAN): host reply advertising its port, lobby ID, and slot availability.
+    * `LOBBY` (Host → Guest): host reply advertising its port, lobby ID, and slot availability.
 
 2. **Session and Fault Tolerance (Server → Client)**: Messages orchestrating the match lifecycle, role delegation, and
    managing connection drops.
@@ -484,7 +484,7 @@ Before deploying the software, the target machine must meet the following softwa
   firewall rules that block UDP broadcasts or WebSocket connections.
 
 To deploy the application, users can download the pre-built JAR file from the release section and execute it directly
-using `java -jar DonkeyKong-Game.jar` in the same directory where the JAR is located.
+using `java -jar DonkeyKongRush.jar` in the same directory where the JAR is located.
 
 Alternatively, the source code can be cloned from the repository:
 
