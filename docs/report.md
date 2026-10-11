@@ -168,7 +168,7 @@ Therefore, the infrastructure is entirely localized within the players' shared l
 Components do not rely on static IP configuration. Instead, they dynamically discover active sessions using a custom
 _service discovery_ mechanism based on UDP broadcasts: when a player attempts to join or spectate a game, their client
 sends a UDP discovery request to the entire subnet. The host's server listens for these packets and replies
-directly to the sender with the n   ecessary connection details (IP, port, etc.).
+directly to the sender with the necessary connection details (IP, port, etc.).
 
 Moreover, to avoid scenarios where multiple players attempt to host a lobby simultaneously on the same network, lobbies
 constantly broadcast their presence. If a server detects another active lobby with a higher priority, it yields its host
@@ -545,6 +545,37 @@ Within the group, I had an excellent and highly productive experience collaborat
 contributions focused on the validation phase through rigorous testing, implementing client-side fault tolerance
 mechanisms, and engineering the core network communication layer. I was responsible for structuring the message exchange
 protocols and decoupling the network payloads from the game engine by utilizing Eclipse Vert.x and its EventBus.
+
+### Terenzi Mirco
+
+I enjoyed working on this project because it allowed me to explore both distributed-systems concepts and real-time
+multiplayer game development. I am particularly satisfied with the final result and with the way the different
+architectural components were integrated.
+
+Initially, I focused on the design and implementation of the Entity-Component-System architecture and the core game
+logic. I contributed to defining how entities, components, and systems interact, keeping the game logic modular and
+extensible. In particular, I worked on the movement, physics, gravity, collision-detection and collision-resolution
+systems, as well as on animation and game-state management. Regarding the distributed aspects of the project, one of my
+main contributions was the design and implementation of an automatic LAN lobby-discovery mechanism. Instead of requiring
+players to manually exchange IP addresses and configure connection details, clients can search the local network for
+available game sessions. When a suitable lobby is found, the client connects automatically; otherwise, a new lobby is
+created and the player becomes the host. The same mechanism also supports spectator discovery and includes a
+conflict-resolution procedure for handling multiple lobbies started simultaneously. I also contributed to the network
+communication layer, which manages the exchange of messages between the host, guest, and spectators. This layer is
+responsible for forwarding game-state updates, broadcasting information to spectators, synchronizing player and barrel
+state, handling game-start and game-over events, and managing temporary guest disconnections and reconnections.
+
+Overall, I believe that the main strength of the project is its modularity. The ECS architecture separates data from
+behavior, while the networking and user-interface responsibilities are divided into dedicated components. This makes it
+possible to add new features or modify existing ones without requiring extensive changes to unrelated parts of the
+system. Moreover, regarding network synchronization, since the project follows a hybrid authority model: each client
+simulates the movement and physics of its own player locally and player collisions and damage are evaluated locally
+instead of relying on a strictly server-authoritative model. This improves responsiveness and makes gameplay smoother by
+reducing visible latency effects, such as rubber-banding during movement and jumps.
+The main drawback of this approach is the trade-off between responsiveness and security. Since collision, damage, and
+death decisions are made by the clients themselves, a malicious client could potentially tamper with its local game
+state or send fraudulent events. A stricter server-authoritative architecture would provide stronger protection against
+cheating, but would also introduce additional latency and complexity.
 
 ## 9. Future Works
 
