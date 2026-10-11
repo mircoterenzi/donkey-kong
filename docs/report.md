@@ -174,7 +174,7 @@ Moreover, to avoid scenarios where multiple players attempt to host a lobby simu
 constantly broadcast their presence. If a server detects another active lobby with a higher priority, it yields its host
 status, shuts down its server component, and connects as a client.
 
-![Component Diagram](./images/component_diagram.png)
+<img src="./images/component_diagram.png" alt="Component Diagram" style="width: auto; height: auto; max-width: 800px; max-height: 600px;">
 
 ### 3.3. Modelling
 
@@ -241,7 +241,7 @@ Communication relies on serialized JSON messages, categorized by interaction typ
     * `ENTITY_DESTROYED`: Event instructing remote clients to remove a specific network entity from their local ECS
       world.
 
-![Class Diagram](./images/class_diagram.png)
+<img src="./images/class_diagram.png" alt="Class Diagram" style="width: auto; height: auto; max-width: 1400px; max-height: 800px;">
 
 ### 3.4. Interaction
 
@@ -257,7 +257,7 @@ immediately upon receiving a valid request, provided there are still open slots 
 discovered, the system establishes a persistent connection to guarantee stable data exchange. Clients connect to the
 central server, which handles the session and assigns specific roles.
 
-![Sequence Diagram](./images/sequence_diagram_discovery.png)
+<img src="./images/sequence_diagram_discovery.png" alt="Sequence Diagram" style="width: auto; height: auto; max-width: 1000px; max-height: 600px;">
 
 #### Active Gameplay Phase
 
@@ -272,7 +272,7 @@ movements. The central server continuously relays these updates to the opposing 
 connected spectators. Alongside this continuous stream, asynchronous events (e.g., a player reaching the goal or losing
 a life) trigger the dispatch of specific control messages to notify all connected nodes.
 
-![Sequence Diagram](./images/sequence_diagram_gameplay.png)
+<img src="./images/sequence_diagram_gameplay.png" alt="Sequence Diagram" style="width: auto; height: auto; max-width: 1000px; max-height: 600px;">
 
 #### Recovery Phase
 
@@ -283,7 +283,7 @@ seamlessly. Finally, when a winning or losing condition is met, the central serv
 message. This event triggers the UI observers, transitioning players to the final summary screens and tearing down the
 active game session.
 
-![Sequence Diagram](./images/sequence_diagram_recovery.png)
+<img src="./images/sequence_diagram_recovery.png" alt="Sequence Diagram" style="width: auto; height: auto; max-width: 1000px; max-height: 600px;">
 
 ### 3.5. Behaviour
 
@@ -307,7 +307,7 @@ The server behavior is modeled through four states, each representing a distinct
 4. **`GAME_OVER`**: The terminal state where the match ends due to victory, defeat, or definitive disconnection. The
    server can either reset the lobby to `WAITING_PLAYERS` or shut down entirely.
 
-![State Diagram](./images/state_diagram.png)
+<img src="./images/state_diagram.png" alt="State Diagram" style="width: auto; height: auto; max-width: 1000px; max-height: 600px;">
 
 #### Client
 
@@ -508,7 +508,7 @@ contribute to the project.
    Note that, if the lobby is already full (i.e., two players are connected), the system will automatically redirect
    the user to the spectate mode, ensuring that he can still enjoy the game as an observer.
 
-   ![Main menu](images/screenshot_menu.png)
+   <img src="images/screenshot_menu.png" alt="Main menu" style="width: auto; height: auto; max-width: 1000px; max-height: 600px;">
 
 2. **In-game controls:** Once the game has started, active players can interact with the environment using the following
    keyboard bindings:
@@ -516,7 +516,7 @@ contribute to the project.
     - **Climbing:** `↑` / `W` to climb up ladders, `↓` / `S` to climb down.
     - **Jumping:** `spacebar` to jump over obstacles and gaps.
 
-   ![Active Gameplay Arena](images/screenshot_gameplay.png)
+   <img src="images/screenshot_gameplay.png" alt="Active Gameplay Arena" style="width: auto; height: auto; max-width: 1000px; max-height: 1000px;">
 
 3. **Game objective:** Navigate your avatar from the bottom of the screen to the top to rescue Pauline. Avoid the
    rolling barrels spawned by Donkey Kong. If you collide with a barrel, you will lose a life and respawn at the bottom.
