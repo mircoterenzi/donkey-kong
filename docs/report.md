@@ -529,22 +529,23 @@ contribute to the project.
 
 ### Foschi Giacomo
 
-I am highly satisfied with the outcome of this project. Building a real-time game from scratch required meticulous
-planning, but it ultimately provided a deep understanding of distributed synchronization and network routing.
+I am highly satisfied with the outcome of this project. Building a real-time multiplayer game from scratch required
+meticulous planning, but it ultimately provided a deep understanding of distributed synchronization and network routing.
 
-Regarding project's strengths, I consider the automatic handshake/matchmaking and the fault-tolerance mechanisms to be
-the highlights of our work, alongside the overall fluidity and responsiveness of the gameplay in a LAN environment. The
-primary weakness of the product is tied to its topology, where the authoritative server is hosted directly on one of the
-client machines. While perfectly suited for a small LAN, scaling the system to a wide area network or supporting
-concurrent multi-lobby sessions would require extracting the backend logic into a dedicated, standalone server.
-Furthermore, under high-latency network conditions, the current strict reliance on the Host's authoritative state
-becomes a limitation; maintaining a smooth visual experience over the internet would necessitate implementing advanced
-techniques such as client-side prediction, entity interpolation, and state replication.
+Regarding the project's strengths, I consider the fault-tolerance mechanisms and the seamless LAN matchmaking to be the
+highlights of our work, resulting in a highly accessible and resilient application, alongside the overall fluidity and
+responsiveness of the gameplay. The primary weakness of the product is tied to its network topology, where the
+authoritative server is hosted directly on one of the client machines. While perfectly suited for a small LAN
+environment, scaling the system to a wide area network (WAN) or supporting concurrent multi-lobby sessions would require
+extracting the backend logic into a dedicated, standalone microservice.
 
-Within the group, I had an excellent and highly productive experience collaborating with Terenzi. My specific
-contributions focused on the validation phase through rigorous testing, implementing client-side fault tolerance
-mechanisms, and engineering the core network communication layer. I was responsible for structuring the message exchange
-protocols and decoupling the network payloads from the game engine by utilizing Eclipse Vert.x and its EventBus.
+Within the group, I had an excellent and highly productive experience collaborating with Terenzi. While he focused on
+the core ECS architecture and the discovery mechanism, my specific contributions centered on the structural network
+architecture, fault tolerance, and validation. I took charge of engineering the core network communication layer using
+Eclipse Vert.x. I was responsible for defining the message exchange protocols, managing the EventBus routing, and
+successfully decoupling the asynchronous network payloads from the synchronous game engine. Furthermore, I led the
+validation phase through rigorous testing and implemented the client-side fault-tolerance logic to ensure smooth
+recovery from network drops.
 
 ### Terenzi Mirco
 
