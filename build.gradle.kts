@@ -17,9 +17,9 @@ val vertxVersion = "4.5.35"
 val junitJupiterVersion = "5.9.1"
 
 val mainVerticleName = "it.unibo.donkeykong.MainVerticle"
-val launcherClassName = "io.vertx.launcher.application.VertxApplication"
+val launcherClassName = "it.unibo.donkeykong.Launcher"
 
-application { mainClass.set("it.unibo.donkeykong.ui.DonkeyKongRushUI") } // launcherClassName
+application { mainClass.set("it.unibo.donkeykong.Launcher") }
 
 dependencies {
   implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))

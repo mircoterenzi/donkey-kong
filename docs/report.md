@@ -484,7 +484,7 @@ Before deploying the software, the target machine must meet the following softwa
   firewall rules that block UDP broadcasts or WebSocket connections.
 
 To deploy the application, users can download the pre-built JAR file from the release section and execute it directly
-using `java -jar DonkeyKongRush.jar` in the same directory where the JAR is located.
+using `java -jar donkeykong-fat.jar` in the same directory where the JAR is located.
 
 Alternatively, the source code can be cloned from the repository:
 

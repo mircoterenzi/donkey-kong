@@ -6,7 +6,7 @@
     "@semantic-release/changelog",
     ["@semantic-release/github", {
       "assets": [
-        {"path": "build/libs/*-fat.jar", "label": "DonkeyKongRush.jar"}
+        {"path": "build/libs/*-fat.jar"}
       ]
     }],
     ["@semantic-release/git", {
