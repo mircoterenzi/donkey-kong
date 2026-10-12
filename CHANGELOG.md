@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/mircoterenzi/donkey-kong/compare/v2.2.1...v2.3.0) (2026-10-12)
+
+
+### Features
+
+* update build process for unified fat JAR and update instructions ([8bc3988](https://github.com/mircoterenzi/donkey-kong/commit/8bc3988c41ff69289f68f335fbacde9db97144f4))
+
 ## [2.2.1](https://github.com/mircoterenzi/donkey-kong/compare/v2.2.0...v2.2.1) (2026-10-12)
 
 
