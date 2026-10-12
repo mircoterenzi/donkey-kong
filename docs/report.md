@@ -483,13 +483,8 @@ Before deploying the software, the target machine must meet the following softwa
 - **Network:** An active Local Area Network (LAN) connection if multiplayer capabilities are to be utilized and no
   firewall rules that block UDP broadcasts or WebSocket connections.
 
-To deploy the application, users can download the pre-built, platform-specific JAR file from the release section and
-execute it directly in the same directory where the JAR is located. Release assets use the
-`donkeykong-fat-<os>.jar` naming scheme, where `<os>` is `linux`, `mac`, `mac-aarch64`, or `win`. For example:
-
-   ```bash
-   java -jar donkeykong-fat-linux.jar
-   ```
+To deploy the application, users can download the pre-built JAR file from the release section and execute it directly
+using `java -jar donkeykong-fat.jar` in the same directory where the JAR is located.
 
 Alternatively, the source code can be cloned from the repository:
 
@@ -498,11 +493,9 @@ Alternatively, the source code can be cloned from the repository:
    cd donkey-kong
    ```
 
-and the application can be built directly using the Gradle wrapper. The command
-`./gradlew shadowJar -PtargetOs=<os>` creates `build/libs/donkeykong-fat-<os>.jar`, where `<os>` must match the target
-platform (`linux`, `mac`, `mac-aarch64`, or `win`). The application can also be launched directly using
-`./gradlew run` on Linux/macOS or `gradlew.bat run` on Windows. This approach is particularly useful for developers
-who wish to modify the code or contribute to the project.
+and the application can be run directly using the Gradle wrapper, using `./gradlew run` on Linux/macOS or
+`gradlew.bat run` on Windows. This approach is particularly useful for developers who wish to modify the code or
+contribute to the project.
 
 ## 7. User Guide
 

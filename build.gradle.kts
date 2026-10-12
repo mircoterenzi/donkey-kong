@@ -28,11 +28,13 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
   implementation("com.fasterxml.jackson.core:jackson-databind:2.22.3")
 
-  val targetOs = project.findProperty("targetOs") as String? ?: "linux"
-  implementation("org.openjfx:javafx-base:17.0.14:$targetOs")
-  implementation("org.openjfx:javafx-graphics:17.0.14:$targetOs")
-  implementation("org.openjfx:javafx-controls:17.0.14:$targetOs")
-  implementation("org.openjfx:javafx-fxml:17.0.14:$targetOs")
+  val osClassifiers = listOf("win", "mac-aarch64", "linux")
+  for (os in osClassifiers) {
+    implementation("org.openjfx:javafx-base:17.0.14:$os")
+    implementation("org.openjfx:javafx-graphics:17.0.14:$os")
+    implementation("org.openjfx:javafx-controls:17.0.14:$os")
+    implementation("org.openjfx:javafx-fxml:17.0.14:$os")
+  }
 }
 
 java {
@@ -72,9 +74,3 @@ tasks.withType<Test> {
 tasks.withType<JavaExec> { args = listOf(mainVerticleName) }
 
 tasks.withType<JavaCompile> { dependsOn("spotlessApply") }
-
-tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-  archiveClassifier.set("fat-${project.findProperty("targetOs") ?: "linux"}")
-  manifest { attributes(mapOf("Main-Verticle" to mainVerticleName)) }
-  mergeServiceFiles()
-}

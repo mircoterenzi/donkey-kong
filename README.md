@@ -19,14 +19,11 @@ join the session as a spectator to watch the match unfold in real-time.
 
 To run the game, you will need **Java 17** or newer. You can download the latest game release from
 the [GitHub Releases page](https://github.com/mircoterenzi/donkey-kong/releases) and execute the provided JAR file by
-double-clicking it or running the platform-specific file in your terminal:
+double-clicking it or running the following command in your terminal:
 
 ```bash
-java -jar donkeykong-fat-<os>.jar
+java -jar donkeykong-fat.jar
 ```
-
-Replace `<os>` with `linux`, `mac`, `mac-aarch64`, or `win`, according to the operating system and architecture of
-the target machine. For example, the Linux release is `donkeykong-fat-linux.jar`.
 
 Alternatively, you can clone the repository by running:
 
@@ -35,17 +32,8 @@ git clone https://github.com/mircoterenzi/donkey-kong.git
 ```
 
 And build the project using Gradle. The repository includes a Gradle wrapper, so you don't need to install Gradle
-globally. To create a runnable platform-specific JAR, run the command matching your target operating system:
-
-```bash
-./gradlew shadowJar -PtargetOs=linux       # Linux
-./gradlew shadowJar -PtargetOs=mac         # macOS Intel
-./gradlew shadowJar -PtargetOs=mac-aarch64 # macOS Apple Silicon
-./gradlew shadowJar -PtargetOs=win         # Windows
-```
-
-The generated file is saved under `build/libs/donkeykong-fat-<os>.jar`. Alternatively, you can launch the project
-directly with `./gradlew run` (macOS/Linux) or `gradlew.bat run` (Windows).
+globally. Based on your operating system, you can use `./gradlew run` (macOS/Linux) or `gradlew.bat run` (Windows) to
+build the project.
 
 ## How to Play
 
