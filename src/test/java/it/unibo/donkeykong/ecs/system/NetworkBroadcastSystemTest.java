@@ -44,19 +44,19 @@ public class NetworkBroadcastSystemTest {
         .eventBus()
         .<JsonObject>consumer(
             Net.OUTBOUND,
-            msg -> {
-              testContext.verify(
-                  () -> {
-                    JsonObject body = msg.body();
-                    assertEquals(MessageType.HOST_UPDATE.name(), body.getString("type"));
-                    assertEquals(100.0, body.getDouble("playerX"));
-                    assertEquals(3, body.getInteger("lives"));
-                    assertEquals(1, body.getJsonArray("barrels").size());
-                    assertEquals(
-                        "barrel-1", body.getJsonArray("barrels").getJsonObject(0).getString("id"));
-                    testContext.completeNow();
-                  });
-            });
+            msg ->
+                testContext.verify(
+                    () -> {
+                      JsonObject body = msg.body();
+                      assertEquals(MessageType.HOST_UPDATE.name(), body.getString("type"));
+                      assertEquals(100.0, body.getDouble("playerX"));
+                      assertEquals(3, body.getInteger("lives"));
+                      assertEquals(1, body.getJsonArray("barrels").size());
+                      assertEquals(
+                          "barrel-1",
+                          body.getJsonArray("barrels").getJsonObject(0).getString("id"));
+                      testContext.completeNow();
+                    }));
 
     world.update(0.1f);
   }
@@ -77,17 +77,16 @@ public class NetworkBroadcastSystemTest {
         .eventBus()
         .<JsonObject>consumer(
             Net.OUTBOUND,
-            msg -> {
-              testContext.verify(
-                  () -> {
-                    JsonObject body = msg.body();
-                    assertEquals(MessageType.GUEST_UPDATE.name(), body.getString("type"));
-                    assertEquals(50.0, body.getDouble("playerX"));
-                    assertEquals("JUMP", body.getString("playerState"));
-                    assertEquals("LEFT", body.getString("playerDirection"));
-                    testContext.completeNow();
-                  });
-            });
+            msg ->
+                testContext.verify(
+                    () -> {
+                      JsonObject body = msg.body();
+                      assertEquals(MessageType.GUEST_UPDATE.name(), body.getString("type"));
+                      assertEquals(50.0, body.getDouble("playerX"));
+                      assertEquals("JUMP", body.getString("playerState"));
+                      assertEquals("LEFT", body.getString("playerDirection"));
+                      testContext.completeNow();
+                    }));
 
     world.update(0.1f);
   }
