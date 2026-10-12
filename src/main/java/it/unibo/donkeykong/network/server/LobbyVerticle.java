@@ -163,16 +163,28 @@ public class LobbyVerticle extends AbstractVerticle {
 
             switch (type) {
               case HOST_UPDATE -> {
+                // Only the HOST can update its state
+                if (role != Role.HOST) {
+                  System.err.println("Unauthorized: " + role + " tried to send HOST_UPDATE");
+                  return;
+                }
                 message.mapTo(it.unibo.donkeykong.network.protocol.HostUpdateMessage.class);
                 send(role.opponent(), text);
                 broadcastToSpectators(text);
               }
               case GUEST_UPDATE -> {
+                // Only the GUEST can update its state
+                if (role != Role.GUEST) {
+                  System.err.println("Unauthorized: " + role + " tried to send GUEST_UPDATE");
+                  return;
+                }
                 message.mapTo(it.unibo.donkeykong.network.protocol.GuestUpdateMessage.class);
                 send(role.opponent(), text);
                 broadcastToSpectators(text);
               }
               case ENTITY_DESTROYED -> {
+                // Spectators can't send destroy entities
+                if (role == Role.SPECTATOR) return;
                 if (message.getString("id") == null)
                   throw new IllegalArgumentException("Missing id");
                 if (gameStarted) {
@@ -181,14 +193,20 @@ public class LobbyVerticle extends AbstractVerticle {
                 }
               }
               case RESTORE_STATE -> {
+                // Only the HOST can restore the game state
+                if (role != Role.HOST) return;
                 if (message.getDouble("playerX") == null)
                   throw new IllegalArgumentException("Malformed state");
-                if (gameStarted && role == Role.HOST) send(Role.GUEST, text);
+                if (gameStarted) send(Role.GUEST, text);
               }
               case GOAL_REACHED -> {
+                // Spectators can't reach the goal
+                if (role == Role.SPECTATOR) return;
                 if (gameStarted) endGame("GOAL_REACHED", role);
               }
               case PLAYER_DIED -> {
+                // Spectators can't die
+                if (role == Role.SPECTATOR) return;
                 if (gameStarted) endGame("PLAYER_DIED", role.opponent());
               }
               default -> System.out.println("Ignored: " + type);
