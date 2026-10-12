@@ -53,6 +53,78 @@ public class LobbyVerticleTest {
   }
 
   @Test
+  void testCrossRoleMessageAuthorizationIsEnforced(Vertx vertx, VertxTestContext testContext) {
+    WebSocketClient client = vertx.createWebSocketClient();
+    WebSocketConnectOptions defaultOptions =
+        new WebSocketConnectOptions().setHost("localhost").setPort(8080).setURI("/");
+    WebSocketConnectOptions spectateOptions =
+        new WebSocketConnectOptions().setHost("localhost").setPort(8080).setURI("/spectate");
+
+    client.connect(
+        defaultOptions,
+        testContext.succeeding(
+            hostWs ->
+                client.connect(
+                    defaultOptions,
+                    testContext.succeeding(
+                        guestWs ->
+                            client.connect(
+                                spectateOptions,
+                                testContext.succeeding(
+                                    spectatorWs -> {
+                                      spectatorWs.textMessageHandler(
+                                          msg -> {
+                                            JsonObject json = new JsonObject(msg);
+                                            String type = json.getString("type");
+
+                                            if ("GUEST_UPDATE".equals(type)) {
+                                              testContext.failNow(
+                                                  "Security breach: Received forged GUEST_UPDATE from Host");
+                                            } else if ("GOAL_REACHED".equals(type)) {
+                                              testContext.failNow(
+                                                  "Security breach: Received forged GOAL_REACHED from Spectator");
+                                            } else if ("HOST_UPDATE".equals(type)) {
+                                              if (json.getDouble("playerX") == 999.0) {
+                                                testContext.failNow(
+                                                    "Security breach: Received forged HOST_UPDATE from Guest");
+                                              } else if (json.getDouble("playerX") == 100.0) {
+                                                testContext.completeNow();
+                                              }
+                                            }
+                                          });
+
+                                      JsonObject forgedHost =
+                                          new JsonObject()
+                                              .put("type", "HOST_UPDATE")
+                                              .put("playerX", 999.0)
+                                              .put("playerY", 999.0);
+                                      guestWs.writeTextMessage(forgedHost.encode());
+
+                                      JsonObject forgedGuest =
+                                          new JsonObject()
+                                              .put("type", "GUEST_UPDATE")
+                                              .put("playerX", 888.0)
+                                              .put("playerY", 888.0);
+                                      hostWs.writeTextMessage(forgedGuest.encode());
+
+                                      JsonObject forgedGoal =
+                                          new JsonObject().put("type", "GOAL_REACHED");
+                                      spectatorWs.writeTextMessage(forgedGoal.encode());
+
+                                      vertx.setTimer(
+                                          200,
+                                          id -> {
+                                            JsonObject validHost =
+                                                new JsonObject()
+                                                    .put("type", "HOST_UPDATE")
+                                                    .put("playerX", 100.0)
+                                                    .put("playerY", 200.0);
+                                            hostWs.writeTextMessage(validHost.encode());
+                                          });
+                                    }))))));
+  }
+
+  @Test
   void testSpectatorConnectionAndBroadcast(Vertx vertx, VertxTestContext testContext) {
     WebSocketClient client = vertx.createWebSocketClient();
     WebSocketConnectOptions defaultOptions =
