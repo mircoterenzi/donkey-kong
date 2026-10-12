@@ -27,6 +27,14 @@ dependencies {
   testImplementation("io.vertx:vertx-junit5")
   testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
   implementation("com.fasterxml.jackson.core:jackson-databind:2.22.3")
+
+  val osClassifiers = listOf("win", "mac", "mac-aarch64", "linux")
+  for (os in osClassifiers) {
+    implementation("org.openjfx:javafx-base:17.0.14:$os")
+    implementation("org.openjfx:javafx-graphics:17.0.14:$os")
+    implementation("org.openjfx:javafx-controls:17.0.14:$os")
+    implementation("org.openjfx:javafx-fxml:17.0.14:$os")
+  }
 }
 
 java {
