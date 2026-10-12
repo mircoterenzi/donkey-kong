@@ -378,8 +378,8 @@ network protocols, data serialization, and the frameworks exploited.
 
 - **Network Protocols:** The system employs a dual-protocol approach to handle different networking phases efficiently:
     - **UDP (User Datagram Protocol):** Utilized exclusively for the initial **service discovery** phase and conflict
-      resolution. The central game server broadcasts its presence via UDP datagrams on port 8081. This allows
-      clients to dynamically discover active lobbies on the Local Area Network without requiring manual IP entry.
+      resolution. Clients broadcast `DISCOVER` datagrams on port 8081 across the LAN, and available hosts reply
+      directly with the WebSocket connection details.
     - **WebSockets (WS) over TCP:** Utilized for all continuous in-game communication. WebSockets were chosen because
       they provide a persistent, full-duplex communication channel with guaranteed, ordered delivery out-of-the-box.
       This drastically simplifies the implementation for a local area network (LAN) environment, ensuring the server can
