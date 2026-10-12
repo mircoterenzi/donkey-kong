@@ -11,12 +11,8 @@ permissions:
   pull-requests: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os-classifier: [linux, mac, win, mac-aarch64]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -32,35 +28,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Build Fat Jar for ${{ matrix.os-classifier }}
-        run: ./gradlew shadowJar -PtargetOs=${{ matrix.os-classifier }} -x test
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: donkeykong-jar-${{ matrix.os-classifier }}
-          path: build/libs/*-fat-${{ matrix.os-classifier }}.jar
-          retention-days: 1
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-artifacts
-          merge-multiple: true
-
-      - name: Run Tests
-        run: ./gradlew test
-
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -70,6 +37,9 @@ jobs:
         run: npm install -g semantic-release @semantic-release/git @semantic-release/github @semantic-release/changelog
       - name: Run Tests
         run: ./gradlew test
+
+      - name: Build Fat Jar
+        run: ./gradlew shadowJar
 
       - name: Semantic Release
         env:
