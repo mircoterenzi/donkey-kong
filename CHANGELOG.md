@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/mircoterenzi/donkey-kong/compare/v2.1.0...v2.1.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* **build:** resolve JavaFX runtime error on fat jar execution ([#73](https://github.com/mircoterenzi/donkey-kong/issues/73)) ([e9b3399](https://github.com/mircoterenzi/donkey-kong/commit/e9b3399b2c984c535aa3f303cc633a84166663c9))
+
 # [2.1.0](https://github.com/mircoterenzi/donkey-kong/compare/v2.0.0...v2.1.0) (2026-10-12)
 
 
