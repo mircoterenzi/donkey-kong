@@ -1,3 +1,10 @@
+## [2.2.1](https://github.com/mircoterenzi/donkey-kong/compare/v2.2.0...v2.2.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* update build process for platform-specific fat JARs and enhance README instructions ([b1ee292](https://github.com/mircoterenzi/donkey-kong/commit/b1ee2929d0774a00bc9a1759004ab14142ea1c38))
+
 # [2.2.0](https://github.com/mircoterenzi/donkey-kong/compare/v2.1.1...v2.2.0) (2026-10-12)
 
 
