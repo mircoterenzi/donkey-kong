@@ -1,3 +1,15 @@
+# [2.1.0](https://github.com/mircoterenzi/donkey-kong/compare/v2.0.0...v2.1.0) (2026-10-12)
+
+
+### Features
+
+* add test for cross-role message authorization in LobbyVerticle ([200fc6b](https://github.com/mircoterenzi/donkey-kong/commit/200fc6b8028f02ca26b318c26ff7530c1ac0a940))
+
+
+### Reverts
+
+* Revert "docs: modify README with game launch instructions" ([ca5b0bb](https://github.com/mircoterenzi/donkey-kong/commit/ca5b0bbdda5953816cfcbe35bbc4bbf98be0d133))
+
 # [2.0.0](https://github.com/mircoterenzi/donkey-kong/compare/v1.4.0...v2.0.0) (2026-10-01)
 
 
