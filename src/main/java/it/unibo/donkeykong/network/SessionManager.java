@@ -89,7 +89,12 @@ public class SessionManager {
                         return;
                       }
                       LOG.warning("Disconnected from game session");
-                      stopSessionAndShowGameOver("NONE");
+
+                      if("HOST".equals(myRole)) {
+                        stopSessionAndShowGameOver("NONE");
+                      } else {
+                        LOG.info("Connection lost. Relying on freeze/timeout flow for recovery.");
+                      }
                     }));
 
     vertx
