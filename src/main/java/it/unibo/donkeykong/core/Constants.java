@@ -8,6 +8,7 @@ public class Constants {
   public static final int BOTTOM_THRESHOLD = 900;
   public static final long INPUT_DELAY = 3000;
   public static final long TIMEOUT_GUEST = 40_000_000_000L;
+  public static final long GUEST_RECONNECTION = 30_000L;
   public static final long FREEZE_GUEST = 1_500_000_000L;
 
   public static final double GRAVITY = 9.81;
