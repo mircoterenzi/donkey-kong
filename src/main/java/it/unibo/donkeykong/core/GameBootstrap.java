@@ -1,6 +1,7 @@
 package it.unibo.donkeykong.core;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import it.unibo.donkeykong.core.api.World;
 import it.unibo.donkeykong.ecs.component.NetworkComponent;
@@ -26,8 +27,8 @@ public class GameBootstrap {
   private AnimationTimer gameLoop;
   private StateReceiverSystem stateReceiverSystem;
 
-  private boolean isFrozen = false;
-  private RenderingSystem renderingSystem;
+  private volatile boolean isFrozen = false;
+  private MessageConsumer<JsonObject> freezeConsumer;
 
   public Scene buildGameScene(Vertx vertx, String myRole, boolean isReconnect) {
     final World world = new WorldImpl();
@@ -87,10 +88,7 @@ public class GameBootstrap {
     world.addSystem(new EventDispatchSystem());
     world.addSystem(new NetworkBroadcastSystem(vertx.eventBus(), myRole));
 
-    vertx
-        .eventBus()
-        .<JsonObject>consumer(
-            "game.freeze", msg -> this.isFrozen = msg.body().getBoolean("frozen", false));
+    this.freezeConsumer = vertx.eventBus().consumer("game.freeze", msg -> this.isFrozen = msg.body().getBoolean("frozen", false));
 
     final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
     final Rectangle2D screen = Screen.getPrimary().getVisualBounds();
@@ -106,8 +104,7 @@ public class GameBootstrap {
     scene.setOnKeyReleased(e -> inputHandler.handleKeyEvent(e.getCode(), false));
 
     world.addSystem(new AnimationSystem());
-    this.renderingSystem = new RenderingSystem(canvas, gameStartTime);
-    world.addSystem(this.renderingSystem);
+    world.addSystem(new RenderingSystem(canvas, gameStartTime));
 
     this.gameLoop =
         new AnimationTimer() {
@@ -124,7 +121,6 @@ public class GameBootstrap {
 
               if (isFrozen) {
                 if (stateReceiverSystem != null) stateReceiverSystem.update(world, deltaTime);
-                if (renderingSystem != null) renderingSystem.update(world, deltaTime);
               } else {
                 world.update(deltaTime);
               }
@@ -143,5 +139,6 @@ public class GameBootstrap {
   public void stop() {
     if (stateReceiverSystem != null) stateReceiverSystem.stop();
     if (gameLoop != null) gameLoop.stop();
+    if (freezeConsumer != null) freezeConsumer.unregister();
   }
 }

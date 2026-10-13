@@ -19,6 +19,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import static it.unibo.donkeykong.core.Constants.FREEZE_GUEST;
+import static it.unibo.donkeykong.core.Constants.TIMEOUT_GUEST;
+
 public class StateReceiverSystem implements GameSystem {
 
   private final Queue<Consumer<World>> pending = new ConcurrentLinkedQueue<>();
@@ -28,9 +31,10 @@ public class StateReceiverSystem implements GameSystem {
   private final EntityFactory entityFactory;
   private final String myRole;
 
-  private long lastHostUpdateTime = System.currentTimeMillis();
+  private long lastHostUpdateTime = System.nanoTime();
   private boolean isFrozen = false;
   private boolean isGuestDisconnected = false;
+  private boolean isTimedOut = false;
 
   public StateReceiverSystem(EventBus eventBus, String myRole, EntityFactory entityFactory) {
     this.myRole = myRole;
@@ -67,10 +71,13 @@ public class StateReceiverSystem implements GameSystem {
     }
 
     if ("GUEST".equals(myRole) || "SPECTATOR".equals(myRole)) {
-      long elapsed = System.currentTimeMillis() - lastHostUpdateTime;
-      if (elapsed > 40000) {
-        eventBus.send("game.timeout", new JsonObject());
-      } else if (elapsed > 1500 && !isFrozen) {
+      long elapsed = System.nanoTime() - lastHostUpdateTime;
+      if (elapsed > TIMEOUT_GUEST) {
+        if (!isTimedOut) {
+          isTimedOut = true;
+          eventBus.send("game.timeout", new JsonObject());
+        }
+      } else if (elapsed > FREEZE_GUEST && !isFrozen) {
         isFrozen = true;
         eventBus.send("game.freeze", new JsonObject().put("frozen", true));
       }
@@ -112,7 +119,8 @@ public class StateReceiverSystem implements GameSystem {
   }
 
   private void handleRestoreState(World world, JsonObject restoreStateData) {
-    lastHostUpdateTime = System.currentTimeMillis();
+    lastHostUpdateTime = System.nanoTime();
+    isTimedOut = false;
     if (isFrozen) {
       isFrozen = false;
       eventBus.send("game.freeze", new JsonObject().put("frozen", false));
@@ -154,7 +162,8 @@ public class StateReceiverSystem implements GameSystem {
   }
 
   private void handleHostUpdate(World world, JsonObject update) {
-    lastHostUpdateTime = System.currentTimeMillis();
+    lastHostUpdateTime = System.nanoTime();
+    isTimedOut = false;
     if (isFrozen) {
       isFrozen = false;
       eventBus.send("game.freeze", new JsonObject().put("frozen", false));
