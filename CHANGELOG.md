@@ -1,3 +1,12 @@
+## [2.4.2](https://github.com/mircoterenzi/donkey-kong/compare/v2.4.1...v2.4.2) (2026-10-13)
+
+
+### Bug Fixes
+
+* clarify connection loss handling in report documentation ([311aae3](https://github.com/mircoterenzi/donkey-kong/commit/311aae3667ba7a202e9370f9aba1b62a924601ae))
+* update game over logic to handle connection loss for guests and hosts ([2bcd7bc](https://github.com/mircoterenzi/donkey-kong/commit/2bcd7bc22543a0ad3ede03c0a70789ccfaeab3ee))
+* update guest reconnection timeout constant and update end game logic ([93056e4](https://github.com/mircoterenzi/donkey-kong/commit/93056e45b2b2b4aecdfeebe49f137229ce2f31ef))
+
 ## [2.4.1](https://github.com/mircoterenzi/donkey-kong/compare/v2.4.0...v2.4.1) (2026-10-13)
 
 
