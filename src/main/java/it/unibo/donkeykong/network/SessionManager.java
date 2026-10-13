@@ -89,7 +89,10 @@ public class SessionManager {
                         return;
                       }
                       LOG.warning("Disconnected from game session");
-                      stopSessionAndShowGameOver("GUEST");
+
+                      if ("HOST".equals(myRole)) {
+                        stopSessionAndShowGameOver("GUEST");
+                      }
                     }));
 
     vertx
