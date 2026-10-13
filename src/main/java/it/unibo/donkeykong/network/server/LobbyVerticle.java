@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static it.unibo.donkeykong.core.Constants.GUEST_RECONNECTION;
+
 /**
  * LobbyVerticle is a Vert.x verticle that manages the game lobby for a multiplayer game. It handles
  * WebSocket connections, delegates UDP discovery, and manages game state.
@@ -106,15 +108,12 @@ public class LobbyVerticle extends AbstractVerticle {
 
               guestReconnectTimerId =
                   vertx.setTimer(
-                      30000,
+                    GUEST_RECONNECTION,
                       id -> {
                         System.out.println(
                             "Guest did not reconnect in time, game over. Winner: HOST");
-                        endGame("GUEST_TIMEOUT", Role.HOST);
+                        endGame("GUEST_TIMEOUT", "NONE");
                       });
-            } else if (role == Role.HOST) {
-              System.out.println("Host disconnected, game over. Winner: GUEST");
-              endGame("HOST_DISCONNECTED", Role.GUEST);
             }
           } else {
             if (role == Role.GUEST) {
@@ -202,12 +201,12 @@ public class LobbyVerticle extends AbstractVerticle {
               case GOAL_REACHED -> {
                 // Spectators can't reach the goal
                 if (role == Role.SPECTATOR) return;
-                if (gameStarted) endGame("GOAL_REACHED", role);
+                if (gameStarted) endGame("GOAL_REACHED", role.name());
               }
               case PLAYER_DIED -> {
                 // Spectators can't die
                 if (role == Role.SPECTATOR) return;
-                if (gameStarted) endGame("PLAYER_DIED", role.opponent());
+                if (gameStarted) endGame("PLAYER_DIED", role.opponent().name());
               }
               default -> System.out.println("Ignored: " + type);
             }
@@ -247,9 +246,9 @@ public class LobbyVerticle extends AbstractVerticle {
     }
   }
 
-  private void endGame(String reason, Role winner) {
+  private void endGame(String reason, String winner) {
     gameStarted = false;
-    broadcastGameOver(reason, winner.name());
+    broadcastGameOver(reason, winner);
   }
 
   private void broadcastGameOver(String reason, String winner) {
