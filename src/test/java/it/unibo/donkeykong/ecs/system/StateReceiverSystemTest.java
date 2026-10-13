@@ -1,6 +1,7 @@
 package it.unibo.donkeykong.ecs.system;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -56,5 +57,23 @@ public class StateReceiverSystemTest {
                 testContext.completeNow();
               });
         });
+  }
+
+  @Test
+  void testConnectionDropTriggersFreeze(Vertx vertx, VertxTestContext testContext) {
+    vertx
+        .eventBus()
+        .<JsonObject>consumer(
+            "game.freeze",
+            msg -> testContext.verify(
+                () -> {
+                  assertTrue(
+                      msg.body().getBoolean("frozen"), "Il payload deve indicare frozen = true");
+                  testContext.completeNow();
+                }));
+
+    vertx.setTimer(
+        1600,
+        id -> world.update(0.1f));
   }
 }

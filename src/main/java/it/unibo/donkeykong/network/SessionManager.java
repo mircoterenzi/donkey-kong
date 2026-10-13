@@ -91,6 +91,17 @@ public class SessionManager {
                       LOG.warning("Disconnected from game session");
                       stopSessionAndShowGameOver("NONE");
                     }));
+
+    vertx
+        .eventBus()
+        .<JsonObject>consumer(
+            "game.timeout",
+            msg ->
+                Platform.runLater(
+                    () -> {
+                      LOG.warning("Game timed out: not receiving updates from host for too long");
+                      stopSessionAndShowGameOver("NONE");
+                    }));
   }
 
   private void stopSessionAndShowGameOver(String winner) {

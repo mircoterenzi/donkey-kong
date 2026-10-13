@@ -334,7 +334,11 @@ the same lifecycle:
    transition and broadcasts the final outcome to every connected client.
 5. **`WAITING_RECONNECT`**: If the guest loses its connection, its local gameplay is suspended while the client attempts
    to reconnect to the session. A successful reconnection causes the client to receive a `RESTORE_STATE` message with
-   the avatar's coordinates and remaining lives, after which the world and game loop resume.
+   the avatar's coordinates and remaining lives, after which the world and game loop resume. To detect this connection
+   drop locally, the guest and spectator clients monitor the incoming `HOST_UPDATE` messages. If no updates are received
+   for 1.5 seconds, the clients assume a network drop and freeze their local rendering to prevent divergent gameplay. If
+   the connection remains broken and no messages arrive for 40 seconds, the clients locally time out, clean up the
+   session, and force a transition to `GAME_OVER`.
 6. **`GAME_OVER`**: When the client receives `GAME_OVER`, it stops processing gameplay updates, displays the result
    identified by the server, and releases the active game resources. The user can then return to the main menu or exit
    the application.
@@ -348,9 +352,12 @@ the same lifecycle:
   limits conflicting updates and provides a clear authority model for resolving state changes.
 - **Connection Loss and Recovery:** A temporary loss of connectivity by the guest does not immediately terminate the
   match. The active session enters a recovery window during which the guest's last known state is retained and the
-  remaining participants are informed of the interruption. If the guest reconnects in time, the session restores the
-  last synchronized player state and resumes normal communication. This approach tolerates short-lived network
-  interruptions while avoiding uncontrolled divergence between the two players.
+  remaining participants are informed of the interruption. On guest side, he actively monitor his connection status by
+  tracking incoming host updates. If no updates arrive for 1.5 seconds, they freeze their local simulation to prevent
+  the game from continuing in an isolated, desynchronized state. If the connection is lost for more than 40 seconds, the
+  clients locally time out and terminate the match. If the guest reconnects in time, the session restores the last
+  synchronized player state and resumes normal communication. This approach tolerates short-lived network interruptions
+  while avoiding uncontrolled divergence between the two players.
 - **Component Failure:** The host is a critical component because it maintains the authoritative shared simulation. Its
   disconnection cannot be recovered without risking inconsistent game state, so the current match is terminated and the
   session is reset. A spectator failure has no effect on the match: spectators are passive consumers of replicated

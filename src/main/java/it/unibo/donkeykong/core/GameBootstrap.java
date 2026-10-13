@@ -26,6 +26,9 @@ public class GameBootstrap {
   private AnimationTimer gameLoop;
   private StateReceiverSystem stateReceiverSystem;
 
+  private boolean isFrozen = false;
+  private RenderingSystem renderingSystem;
+
   public Scene buildGameScene(Vertx vertx, String myRole, boolean isReconnect) {
     final World world = new WorldImpl();
 
@@ -84,6 +87,12 @@ public class GameBootstrap {
     world.addSystem(new EventDispatchSystem());
     world.addSystem(new NetworkBroadcastSystem(vertx.eventBus(), myRole));
 
+    vertx
+        .eventBus()
+        .<JsonObject>consumer(
+            "game.freeze",
+            msg -> this.isFrozen = msg.body().getBoolean("frozen", false));
+
     final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
     final Rectangle2D screen = Screen.getPrimary().getVisualBounds();
     final double windowHeight = screen.getHeight() * 0.9;
@@ -98,7 +107,8 @@ public class GameBootstrap {
     scene.setOnKeyReleased(e -> inputHandler.handleKeyEvent(e.getCode(), false));
 
     world.addSystem(new AnimationSystem());
-    world.addSystem(new RenderingSystem(canvas, gameStartTime));
+    this.renderingSystem = new RenderingSystem(canvas, gameStartTime);
+    world.addSystem(this.renderingSystem);
 
     this.gameLoop =
         new AnimationTimer() {
@@ -112,7 +122,13 @@ public class GameBootstrap {
             }
             if (now - lastUpdate >= TARGET_FPS_NANO) {
               final float deltaTime = (now - lastUpdate) / 1_000_000_000f;
-              world.update(deltaTime);
+
+              if (isFrozen) {
+                if (stateReceiverSystem != null) stateReceiverSystem.update(world, deltaTime);
+                if (renderingSystem != null) renderingSystem.update(world, deltaTime);
+              } else {
+                world.update(deltaTime);
+              }
               lastUpdate = now;
             }
           }
