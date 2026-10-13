@@ -1,3 +1,17 @@
+# [2.4.0](https://github.com/mircoterenzi/donkey-kong/compare/v2.3.0...v2.4.0) (2026-10-13)
+
+
+### Bug Fixes
+
+* implement game state freeze on connection loss and timeout handling for guest ad spectator ([4b18c03](https://github.com/mircoterenzi/donkey-kong/commit/4b18c03fec3f338b0948955e6ea7c8d7db093182))
+* update session handling to win game for guest on host disconnection ([871708c](https://github.com/mircoterenzi/donkey-kong/commit/871708c0566c2cca60dab22f3a6f42a25173e171))
+
+
+### Features
+
+* implement timeout and freeze logic for guest and spectator connections ([e2494d4](https://github.com/mircoterenzi/donkey-kong/commit/e2494d4f970f92b1fb3225dc3f2100700ba35ac5))
+* implement timeout and freeze logic for guest and spectator connections ([1c511ca](https://github.com/mircoterenzi/donkey-kong/commit/1c511ca8a356258de81030b7ea10881018f91c95))
+
 # [2.3.0](https://github.com/mircoterenzi/donkey-kong/compare/v2.2.1...v2.3.0) (2026-10-12)
 
 
