@@ -1,5 +1,7 @@
 package it.unibo.donkeykong.network.server;
 
+import static it.unibo.donkeykong.core.Constants.GUEST_RECONNECTION;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.json.JsonObject;
@@ -10,8 +12,6 @@ import it.unibo.donkeykong.network.protocol.Role;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import static it.unibo.donkeykong.core.Constants.GUEST_RECONNECTION;
 
 /**
  * LobbyVerticle is a Vert.x verticle that manages the game lobby for a multiplayer game. It handles
@@ -108,7 +108,7 @@ public class LobbyVerticle extends AbstractVerticle {
 
               guestReconnectTimerId =
                   vertx.setTimer(
-                    GUEST_RECONNECTION,
+                      GUEST_RECONNECTION,
                       id -> {
                         System.out.println(
                             "Guest did not reconnect in time, game over. Winner: HOST");
