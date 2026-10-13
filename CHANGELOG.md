@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/mircoterenzi/donkey-kong/compare/v2.4.0...v2.4.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* ensure game over is triggered for guest only when host disconnects ([ef0f35c](https://github.com/mircoterenzi/donkey-kong/commit/ef0f35c726e50391fec3efc293fbf5509d84ee53))
+
 # [2.4.0](https://github.com/mircoterenzi/donkey-kong/compare/v2.3.0...v2.4.0) (2026-10-13)
 
 
