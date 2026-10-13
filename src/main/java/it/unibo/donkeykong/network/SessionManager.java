@@ -90,7 +90,7 @@ public class SessionManager {
                       }
                       LOG.warning("Disconnected from game session");
 
-                      if("HOST".equals(myRole)) {
+                      if ("HOST".equals(myRole)) {
                         stopSessionAndShowGameOver("NONE");
                       } else {
                         LOG.info("Connection lost. Relying on freeze/timeout flow for recovery.");

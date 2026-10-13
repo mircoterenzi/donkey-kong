@@ -1,5 +1,8 @@
 package it.unibo.donkeykong.ecs.system;
 
+import static it.unibo.donkeykong.core.Constants.FREEZE_GUEST;
+import static it.unibo.donkeykong.core.Constants.TIMEOUT_GUEST;
+
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
@@ -18,9 +21,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-import static it.unibo.donkeykong.core.Constants.FREEZE_GUEST;
-import static it.unibo.donkeykong.core.Constants.TIMEOUT_GUEST;
 
 public class StateReceiverSystem implements GameSystem {
 

@@ -88,7 +88,10 @@ public class GameBootstrap {
     world.addSystem(new EventDispatchSystem());
     world.addSystem(new NetworkBroadcastSystem(vertx.eventBus(), myRole));
 
-    this.freezeConsumer = vertx.eventBus().consumer("game.freeze", msg -> this.isFrozen = msg.body().getBoolean("frozen", false));
+    this.freezeConsumer =
+        vertx
+            .eventBus()
+            .consumer("game.freeze", msg -> this.isFrozen = msg.body().getBoolean("frozen", false));
 
     final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
     final Rectangle2D screen = Screen.getPrimary().getVisualBounds();
