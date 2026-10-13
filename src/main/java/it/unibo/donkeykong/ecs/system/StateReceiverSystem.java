@@ -27,6 +27,9 @@ public class StateReceiverSystem implements GameSystem {
   private final EventBus eventBus;
   private final EntityFactory entityFactory;
   private final String myRole;
+
+  private long lastHostUpdateTime = System.currentTimeMillis();
+  private boolean isFrozen = false;
   private boolean isGuestDisconnected = false;
 
   public StateReceiverSystem(EventBus eventBus, String myRole, EntityFactory entityFactory) {
@@ -61,6 +64,16 @@ public class StateReceiverSystem implements GameSystem {
   public void update(World world, float deltaTime) {
     for (Consumer<World> action; (action = pending.poll()) != null; ) {
       action.accept(world);
+    }
+
+    if ("GUEST".equals(myRole) || "SPECTATOR".equals(myRole)) {
+      long elapsed = System.currentTimeMillis() - lastHostUpdateTime;
+      if (elapsed > 40000) {
+        eventBus.send("game.timeout", new JsonObject());
+      } else if (elapsed > 1500 && !isFrozen) {
+        isFrozen = true;
+        eventBus.send("game.freeze", new JsonObject().put("frozen", true));
+      }
     }
   }
 
@@ -99,6 +112,12 @@ public class StateReceiverSystem implements GameSystem {
   }
 
   private void handleRestoreState(World world, JsonObject restoreStateData) {
+    lastHostUpdateTime = System.currentTimeMillis();
+    if (isFrozen) {
+      isFrozen = false;
+      eventBus.send("game.freeze", new JsonObject().put("frozen", false));
+    }
+
     findByType(world, "GUEST")
         .ifPresent(
             guestEntity -> {
@@ -135,6 +154,11 @@ public class StateReceiverSystem implements GameSystem {
   }
 
   private void handleHostUpdate(World world, JsonObject update) {
+    lastHostUpdateTime = System.currentTimeMillis();
+    if (isFrozen) {
+      isFrozen = false;
+      eventBus.send("game.freeze", new JsonObject().put("frozen", false));
+    }
     HostUpdateMessage msg = update.mapTo(HostUpdateMessage.class);
 
     applyPlayerUpdate(
