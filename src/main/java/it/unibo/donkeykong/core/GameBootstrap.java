@@ -90,8 +90,7 @@ public class GameBootstrap {
     vertx
         .eventBus()
         .<JsonObject>consumer(
-            "game.freeze",
-            msg -> this.isFrozen = msg.body().getBoolean("frozen", false));
+            "game.freeze", msg -> this.isFrozen = msg.body().getBoolean("frozen", false));
 
     final double aspectRatio = Constants.WORLD_WIDTH / (double) Constants.WORLD_HEIGHT;
     final Rectangle2D screen = Screen.getPrimary().getVisualBounds();

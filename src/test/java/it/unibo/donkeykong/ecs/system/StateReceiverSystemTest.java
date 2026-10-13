@@ -65,15 +65,15 @@ public class StateReceiverSystemTest {
         .eventBus()
         .<JsonObject>consumer(
             "game.freeze",
-            msg -> testContext.verify(
-                () -> {
-                  assertTrue(
-                      msg.body().getBoolean("frozen"), "Il payload deve indicare frozen = true");
-                  testContext.completeNow();
-                }));
+            msg ->
+                testContext.verify(
+                    () -> {
+                      assertTrue(
+                          msg.body().getBoolean("frozen"),
+                          "Il payload deve indicare frozen = true");
+                      testContext.completeNow();
+                    }));
 
-    vertx.setTimer(
-        1600,
-        id -> world.update(0.1f));
+    vertx.setTimer(1600, id -> world.update(0.1f));
   }
 }
