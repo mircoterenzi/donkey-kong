@@ -303,7 +303,8 @@ The server behavior is modeled through four states, each representing a distinct
 3. **`WAITING_RECONNECT`**: A fault-tolerance state. It occurs when, during an active match, the guest drops the
    connection. The game "freezes" for the guest, while the server waits for a maximum timeout (30 seconds). If the guest
    reconnects within this window, the server restores its last known state and resumes the match. If the timeout
-   expires, the server declares the host as the winner and transitions to `GAME_OVER`.
+   expires, the server declares a connection loss (no winner) and transitions to `GAME_OVER`. Similarly, if the host
+   disconnects, the match is immediately terminated with a connection loss for all participants.
 4. **`GAME_OVER`**: The terminal state where the match ends due to victory, defeat, or definitive disconnection. The
    server can either reset the lobby to `WAITING_PLAYERS` or shut down entirely.
 
